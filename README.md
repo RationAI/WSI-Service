@@ -6,8 +6,6 @@ implementation of the EMPAIA WSI-Service to stream whole slide images tile-based
 
 # TODO
 
-* get regions from all levels
-* auto-download test file
 * gitlab ci -> Docker to registry
 * write README
 * add swagger
