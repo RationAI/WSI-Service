@@ -24,11 +24,12 @@ class Slide:
 
         return info
 
+    # FIXME: use level coordinates, enable all pyramid levels
     def get_region(self, level, start_x, start_y, size_x, size_y):
         level_0_start_x = start_x# * (2**level)
         level_0_start_y = start_y# * (2**level)
         rgba_img = self.openslide_slide.read_region((level_0_start_x, level_0_start_y), level, (size_x, size_y))
-        return rgba_img#.convert('RGB')
+        return rgba_img.convert('RGB')
 
     def get_thumbnail(self, max_x, max_y):
         return self.openslide_slide.get_thumbnail((max_x, max_y))
@@ -37,4 +38,4 @@ class Slide:
         if not 'label' in self.openslide_slide.associated_images:
             raise NotFound()
         label_rgba = self.openslide_slide.associated_images['label']
-        return label_rgba#.convert('RGB')
+        return label_rgba.convert('RGB')
