@@ -54,10 +54,10 @@ def create_blueprint(name, config):
         label = slide.get_label()
         return make_image_response(label, image_type, quality)
 
-    @api.route('/slides/<slide_id>/region/<int:level>/start/<signed_int:start_x>/<signed_int:start_y>/size/<int:size_x>/<int:size_y>')
-    @api.route('/slides/<slide_id>/region/<int:level>/start/<signed_int:start_x>/<signed_int:start_y>/size/<int:size_x>/<int:size_y>/type/<image_type>')
-    @api.route('/slides/<slide_id>/region/<int:level>/start/<signed_int:start_x>/<signed_int:start_y>/size/<int:size_x>/<int:size_y>/type/jpg/quality/<int:quality>')
-    @api.route('/slides/<slide_id>/region/<int:level>/start/<signed_int:start_x>/<signed_int:start_y>/size/<int:size_x>/<int:size_y>/type/jpeg/quality/<int:quality>')
+    @api.route('/slides/<slide_id>/region/level/<int:level>/start/<signed_int:start_x>/<signed_int:start_y>/size/<int:size_x>/<int:size_y>')
+    @api.route('/slides/<slide_id>/region/level/<int:level>/start/<signed_int:start_x>/<signed_int:start_y>/size/<int:size_x>/<int:size_y>/type/<image_type>')
+    @api.route('/slides/<slide_id>/region/level/<int:level>/start/<signed_int:start_x>/<signed_int:start_y>/size/<int:size_x>/<int:size_y>/type/jpg/quality/<int:quality>')
+    @api.route('/slides/<slide_id>/region/level/<int:level>/start/<signed_int:start_x>/<signed_int:start_y>/size/<int:size_x>/<int:size_y>/type/jpeg/quality/<int:quality>')
     def get_slide_region(slide_id, level, start_x, start_y, size_x, size_y, image_type='jpeg', quality=90):
         slide = api.slide_source.get_slide(slide_id)
         img = slide.get_region(level, start_x, start_y, size_x, size_y)
