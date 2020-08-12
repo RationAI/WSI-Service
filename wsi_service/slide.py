@@ -11,8 +11,13 @@ class Slide:
         self.openslide_slide = openslide_slide
         self.num_levels = self._calc_num_levels()
 
+        # fake tile size, #TODO use openslide internal tile size if available
+        self.tile_extent = 512
+
+
     def close(self):
         self.openslide_slide.close()
+
 
     def _calc_num_levels(self):
         min_extent = min(self.openslide_slide.dimensions)
@@ -21,17 +26,21 @@ class Slide:
         else:
             return 0
 
+
     def get_info(self):
-        info = {}
-        # get slide extent
-        info['extent'] = {'x': self.openslide_slide.dimensions[0], 'y': self.openslide_slide.dimensions[1]}
-        # get num levels
-        info['num_levels'] = self.num_levels
-        # get slide resolution
-        info['pixel_size_nm'] = int(round(1000 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X])))
-        # fake tile size, #TODO use openslide internal tile size if available
-        info['tile_extent'] = {'x': 256, 'y': 256}
-        return info
+        return {
+            'extent': {
+                'x': self.openslide_slide.dimensions[0],
+                'y': self.openslide_slide.dimensions[1]
+            },
+            'num_levels': self.num_levels,
+            'pixel_size_nm': int(round(1000 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X]))),
+            'tile_extent': {
+                'x': self.tile_extent,
+                'y': self.tile_extent
+            },
+        }
+
 
     #TODO: Optimize by caching high level
     def get_region(self, level, start_x, start_y, size_x, size_y):
@@ -44,11 +53,17 @@ class Slide:
         rgba_img = base_img.resize((size_x, size_y), resample=PIL.Image.BILINEAR, reducing_gap=1.0)
         return rgba_img.convert('RGB')
 
+
     def get_thumbnail(self, max_x, max_y):
         return self.openslide_slide.get_thumbnail((max_x, max_y))
+
 
     def get_label(self):
         if not 'label' in self.openslide_slide.associated_images:
             raise NotFound()
         label_rgba = self.openslide_slide.associated_images['label']
         return label_rgba.convert('RGB')
+
+
+    def get_tile(self, level, tile_x, tile_y):
+        return self.get_region(level, tile_x * self.tile_extent, tile_y * self.tile_extent, self.tile_extent, self.tile_extent)

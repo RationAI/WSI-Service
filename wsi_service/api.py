@@ -63,5 +63,14 @@ def create_blueprint(name, config):
         img = slide.get_region(level, start_x, start_y, size_x, size_y)
         return make_image_response(img, image_type, quality)
 
+    @api.route('/slides/<slide_id>/tile/level/<int:level>/tile/<signed_int:tile_x>/<signed_int:tile_y>')
+    @api.route('/slides/<slide_id>/tile/level/<int:level>/tile/<signed_int:tile_x>/<signed_int:tile_y>/type/<image_type>')
+    @api.route('/slides/<slide_id>/tile/level/<int:level>/tile/<signed_int:tile_x>/<signed_int:tile_y>/type/jpg/quality/<int:quality>')
+    @api.route('/slides/<slide_id>/tile/level/<int:level>/tile/<signed_int:tile_x>/<signed_int:tile_y>/type/jpeg/quality/<int:quality>')
+    def get_slide_tile(slide_id, level, tile_x, tile_y, image_type='jpeg', quality=90):
+        slide = api.slide_source.get_slide(slide_id)
+        img = slide.get_tile(level, tile_x, tile_y)
+        return make_image_response(img, image_type, quality)
+
 
     return api
