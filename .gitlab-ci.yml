@@ -1,21 +1,15 @@
-image: gitlab/dind
-
 stages:
 - build
-- deploy
     
 build_docker_image:
     stage: build
-    tags:
-    - asprunner    
-    script: 
-    - docker build -t registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service .
-      
-push_docker_image:
-    stage: deploy
     only:
     - master
+    image:
+        name: gcr.io/kaniko-project/executor:debug
+        entrypoint: [""]
     tags:
     - asprunner    
     script:
-    - docker push registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"gitlab-ci-token\",\"password\":\"$CI_JOB_TOKEN\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE
