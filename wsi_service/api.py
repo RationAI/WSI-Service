@@ -147,7 +147,7 @@ def create_blueprint(name, config, swagger_tags):
             '200': {
                 'description': 'OK',
                 'schema': {
-                    'type':'object'
+                    'type':'file'
                 }
             },
             '404': {
@@ -184,7 +184,7 @@ def create_blueprint(name, config, swagger_tags):
             '200': {
                 'description': 'OK',
                 'schema': {
-                    'type':'object'
+                    'type':'file'
                 }
             },
             '404': {
@@ -254,7 +254,7 @@ def create_blueprint(name, config, swagger_tags):
             '200': {
                 'description': 'OK',
                 'schema': {
-                    'type':'object'
+                    'type':'file'
                 }
             },
             '404': {
@@ -315,7 +315,7 @@ def create_blueprint(name, config, swagger_tags):
             '200': {
                 'description': 'OK',
                 'schema': {
-                    'type':'object'
+                    'type':'file'
                 }
             },
             '404': {

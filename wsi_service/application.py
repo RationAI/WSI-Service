@@ -40,7 +40,8 @@ def create_app(data_dir, config_class_string):
     content_security_policy={
         'default-src': "'self'",
         'script-src': ["'self'", "'unsafe-inline'"],
-        'style-src': ["'self'", "'unsafe-inline'"]
+        'style-src': ["'self'", "'unsafe-inline'"],
+        'img-src': ["'self'", "blob:", "data:"]
     }
     Talisman(app, force_https=False, session_cookie_secure=False, content_security_policy=content_security_policy)
 
