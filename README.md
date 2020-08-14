@@ -24,11 +24,17 @@ optional arguments:
 ```
 
 ### Run as Docker
-Build (or download turnkey ready) the docker image
+Download the turnkey ready docker image
+```
+docker pull registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service
+```
+
+or build the docker image yourself from source
 ```
 cd PATH_OF_DOCKERFILE
-docker build -t wsi-service .
+docker build -t registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service .
 ```
+Of course, it can be tagged e.g. with only *wsi-service*, here the tag is just used for consitency with following commands.
 
 Run the docker image, for example:
 ```
@@ -38,7 +44,7 @@ docker run \
   --rm \
   -v PATH_TO_DATA_DIR_ON_HOST:/data \
   -v PATH_TO_REPOSITORY_ROOT:/wsi_service \
-  wsi-service \
+  registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service \
     --load-example-data \
 ```
 
@@ -54,5 +60,5 @@ Short explanation of the parameters used:
 
 # TODO
 
-* gitlab ci -> Docker to registry
 * pass-through tiles
+* Optimize retrieval of high levels by caching
