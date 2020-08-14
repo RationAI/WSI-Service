@@ -4,10 +4,14 @@ stages:
   
   build_docker_image:
     stage: build
+    tags:
+        - asprunner    
     script: 
       - docker build -t registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service .
   
   push_docker_image:
     stage: push
+    tags:
+        - asprunner    
     script:
       - docker push registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service
