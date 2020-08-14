@@ -36,27 +36,35 @@ docker build -t registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-servi
 ```
 Of course, it can be tagged e.g. with only *wsi-service*, here the tag is just used for consitency with following commands.
 
-Run the docker image, for example:
+Run the docker image, for example (minimal test):
+```
+docker run -it --rm -p 8080:8080 registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service --load-example-data
+```
+
+Or with more options
 ```
 docker run \
+  -it \
   -p 8080:8080 \
-  -u $(id -u ${USER}):$(id -g ${USER}) \
   --rm \
   -v PATH_TO_DATA_DIR_ON_HOST:/data \
   -v PATH_TO_REPOSITORY_ROOT:/wsi_service \
   registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service \
-    --load-example-data \
+    --debug
 ```
 
 Short explanation of the parameters used:
 
+* ```-it``` initializes an interactive tty
 * ```-p 8080:8080``` forward the port
-* ```-u $(id -u ${USER}):$(id -g ${USER})``` recommendet, runs container with current user instead of root
 * ```--rm``` optional, remove if container should be reused (recommended)
 * ```-v PATH_TO_DATA_DIR_ON_HOST:/data``` optional, if not set, empty dir will be used. Make sure container user (-u) has read access
 * ```-v PATH_TO_REPOSITORY_ROOT:/wsi_service``` optional, will use the source code of host and automatically restart server on changes
-* ```--load-example-data``` optional, add (more) python parameters here as shown above
+* ```--load-example-data``` optional, download example image before starting the server (parameters after the image name are passed to the python module)
+* ```--debug``` optional, use debug config (parameters after the image name are passed to the python module)
 
+
+Afterwards, visit http://localhost:8080
 
 # TODO
 
