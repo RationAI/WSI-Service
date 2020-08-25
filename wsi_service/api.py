@@ -327,6 +327,7 @@ def create_blueprint(name, config, swagger_tags):
         }
     })
     @api.route('/slides/<slide_id>/tile/level/<int:level>/tile/<signed_int:tile_x>/<signed_int:tile_y>')
+    @image_request('jpeg', 90)
     def get_slide_tile(slide_id, level, tile_x, tile_y, image_format, image_quality):
         """
         Get tile of the slide. Extent of the tile is given in slide metadata. Level 0 is highest
