@@ -26,19 +26,19 @@ optional arguments:
 ### Run as Docker
 Download the turnkey ready docker image
 ```
-docker pull registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service
+docker pull registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/mevis/wsi-service
 ```
 
 or build the docker image yourself from source
 ```
 cd PATH_OF_DOCKERFILE
-docker build -t registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service .
+docker build -t registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/mevis/wsi-service .
 ```
 Of course, it can be tagged e.g. with only *wsi-service*, here the tag is just used for consitency with following commands.
 
 Run the docker image, for example (minimal test):
 ```
-docker run -it --rm -p 8080:8080 registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service --load-example-data
+docker run -it --rm -p 8080:8080 registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/mevis/wsi-service --load-example-data
 ```
 
 Or with more options
@@ -49,7 +49,7 @@ docker run \
   --rm \
   -v PATH_TO_DATA_DIR_ON_HOST:/data \
   -v PATH_TO_REPOSITORY_ROOT:/wsi_service \
-  registry.gitlab.cc-asp.fraunhofer.de:4567/empaia-mevis/wsi-service \
+  registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/mevis/wsi-service \
     --debug
 ```
 
