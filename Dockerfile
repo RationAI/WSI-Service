@@ -12,8 +12,6 @@ RUN mkdir /openslide_deps
 RUN cp /usr/lib/x86_64-linux-gnu/libopenslide.so.0 /openslide_deps
 RUN ldd /usr/lib/x86_64-linux-gnu/libopenslide.so.0 \
   | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp -v '{}' /openslide_deps
-RUN du -sh /openslide_deps
-RUN du -sh /usr/local/lib/python3.5/site-packages
 
 
 FROM gcr.io/distroless/python3
