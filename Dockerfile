@@ -1,4 +1,4 @@
-FROM python:3.7 AS build
+FROM python:3.5-stretch AS build
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
@@ -12,11 +12,13 @@ RUN mkdir /openslide_deps
 RUN cp /usr/lib/x86_64-linux-gnu/libopenslide.so.0 /openslide_deps
 RUN ldd /usr/lib/x86_64-linux-gnu/libopenslide.so.0 \
   | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp -v '{}' /openslide_deps
+RUN du -sh /openslide_deps
+RUN du -sh /usr/local/lib/python3.5/site-packages
 
 
-FROM gcr.io/distroless/python3-debian10
+FROM gcr.io/distroless/python3
 
-COPY --from=build /usr/local/lib/python3.7/site-packages/ /usr/lib/python3.7/.
+COPY --from=build /usr/local/lib/python3.5/site-packages/ /usr/lib/python3.5/.
 COPY --from=build /openslide_deps/* /usr/lib/x86_64-linux-gnu/
 
 ADD . /wsi_service
