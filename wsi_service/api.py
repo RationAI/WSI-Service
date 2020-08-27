@@ -1,8 +1,9 @@
 from flask import Blueprint, current_app, jsonify, request
+from werkzeug.exceptions import RequestEntityTooLarge
 
 import wsi_service.version
 from flasgger import swag_from
-from wsi_service.api_utils import make_image_response, image_request
+from wsi_service.api_utils import image_request, make_image_response
 from wsi_service.slide_source import SlideSource
 
 _swagger_slide_id_param = {
@@ -47,6 +48,7 @@ _swagger_image_quality_param = lambda default : {
 
 def create_blueprint(name, config, swagger_tags):
     api = Blueprint(name, __name__)
+    api.config = config
     api.slide_source = SlideSource(
         config['DATA_DIR'],
         config['INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS'])
@@ -292,6 +294,9 @@ def create_blueprint(name, config, swagger_tags):
             '404': {
                 'description': 'Invalid slide_id'
             },
+            '413': {
+                'description': 'Requested region is too large'
+            },
             '500': {
                 'description': 'Malformed parameters'
             }
@@ -305,6 +310,8 @@ def create_blueprint(name, config, swagger_tags):
         resolution and half the extent of the previous level. Coordinates are given with respect
         to the requested level.
         """
+        if size_x * size_y > api.config.get('MAX_RETURNED_REGION_SIZE',  float('Inf')):
+            raise RequestEntityTooLarge('Requested region may not contain more than %d pixels' % api.config['MAX_RETURNED_REGION_SIZE'])
         slide = api.slide_source.get_slide(slide_id)
         img = slide.get_region(level, start_x, start_y, size_x, size_y)
         return make_image_response(img, image_format, image_quality)
