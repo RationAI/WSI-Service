@@ -203,6 +203,38 @@ def create_blueprint(name, config, swagger_tags):
         return make_image_response(label, image_format, image_quality)
 
 
+    @swag_from({
+        'tags': swagger_tags,
+        'parameters': [
+            _swagger_slide_id_param,
+            _swagger_image_format_param(default='jpeg'),
+            _swagger_image_quality_param(default=90)
+        ],
+        'produces': [
+            'image/*'
+        ],
+        'responses': {
+            '200': {
+                'description': 'OK',
+                'schema': {
+                    'type':'file'
+                }
+            },
+            '404': {
+                'description': 'Invalid slide_id'
+            }
+        }
+    })
+    @api.route('/slides/<slide_id>/macro')
+    @image_request('jpeg', 90)
+    def get_slide_macro(slide_id, image_format, image_quality):
+        """
+        The macro image of the slide
+        """
+        slide = api.slide_source.get_slide(slide_id)
+        macro = slide.get_macro()
+        return make_image_response(macro, image_format, image_quality)
+
 
     @swag_from({
         'tags': swagger_tags,

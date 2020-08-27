@@ -57,13 +57,17 @@ class Slide:
     def get_thumbnail(self, max_x, max_y):
         return self.openslide_slide.get_thumbnail((max_x, max_y))
 
+    def _get_associated_image(self, associated_image_name):
+        if not associated_image_name in self.openslide_slide.associated_images:
+            raise NotFound()
+        associated_image_rgba = self.openslide_slide.associated_images[associated_image_name]
+        return associated_image_rgba.convert('RGB')
 
     def get_label(self):
-        if not 'label' in self.openslide_slide.associated_images:
-            raise NotFound()
-        label_rgba = self.openslide_slide.associated_images['label']
-        return label_rgba.convert('RGB')
+        return self._get_associated_image('label')
 
+    def get_macro(self):
+        return self._get_associated_image('macro')
 
     def get_tile(self, level, tile_x, tile_y):
         return self.get_region(level, tile_x * self.tile_extent, tile_y * self.tile_extent, self.tile_extent, self.tile_extent)
