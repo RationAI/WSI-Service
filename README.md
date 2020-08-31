@@ -1,6 +1,6 @@
 # wsi-service
 
-implementation of the EMPAIA WSI-Service to stream whole slide images tile-based via HTTP
+Implementation of the EMPAIA WSI-Service to stream whole slide images tile-based via HTTP
 
 ## How to run
 WSI-Service is a python module and can be run either locally or via docker.
