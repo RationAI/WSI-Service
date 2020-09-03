@@ -8,6 +8,9 @@ RUN apt-get update \
 ADD requirements.txt /requirements.txt
 RUN pip3 install -r requirements.txt
 
+ADD . /wsi_service
+RUN pip3 install -e /wsi_service
+
 RUN mkdir /openslide_deps
 RUN cp /usr/lib/x86_64-linux-gnu/libopenslide.so.0 /openslide_deps
 RUN ldd /usr/lib/x86_64-linux-gnu/libopenslide.so.0 \
@@ -18,13 +21,12 @@ RUN mkdir /data
 
 FROM gcr.io/distroless/python3:nonroot
 
-COPY --from=build /usr/local/lib/python3.5/site-packages/ /usr/lib/python3.5/.
-COPY --from=build /openslide_deps/* /usr/lib/x86_64-linux-gnu/
 
-ADD . /wsi_service
-USER root
+COPY --from=build --chown=nonroot:nonroot /usr/local/lib/python3.5/site-packages/ /usr/lib/python3.5/.
+COPY --from=build --chown=nonroot:nonroot /openslide_deps/* /usr/lib/x86_64-linux-gnu/
+
+COPY --from=build --chown=nonroot:nonroot /wsi_service /wsi_service
 RUN python -m pip install -e /wsi_service
-USER nonroot
 
 COPY --from=build --chown=nonroot:nonroot /data /data
 VOLUME ["/data"]
