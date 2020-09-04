@@ -25,9 +25,10 @@ def init_swagger(app):
     }
     Swagger(app, template=template)
 
-def create_app(data_dir, config_class_string):
+def create_app(mapper_address, data_dir, config_class_string):
     app = Flask(__name__)
     app.config.from_object(config_class_string)
+    app.config['MAPPER_ADDRESS'] = mapper_address
     app.config['DATA_DIR'] = data_dir
 
     # add signed_int url type
