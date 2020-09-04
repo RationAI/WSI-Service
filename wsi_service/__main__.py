@@ -7,8 +7,8 @@ from werkzeug.serving import is_running_from_reloader
 
 from wsi_service.application import create_app
 
-parser = argparse.ArgumentParser(description='webserice that serves histological whole-slide-images')
-parser.add_argument('data_dir', help='path to histo data, should point to directory with folders as cases')
+parser = argparse.ArgumentParser(description='Webserice that serves histological whole-slide-images')
+parser.add_argument('data_dir', help='Base path to histo data')
 parser.add_argument('--port', default=8080, help='Port the WSI-Service listens to')
 parser.add_argument('--debug', dest='debug', action='store_true', help='Use the debug config')
 parser.add_argument('--load-example-data', dest='load_example_data', action='store_true', help='This will download an example image into the data folder before starting the server')
