@@ -36,6 +36,7 @@ class SlideSource:
         with self.lock:
             if not global_slide_id in self.opened_slides:
                 try:
+                    self._map_slide(global_slide_id)
                     filepath = os.path.join(self.data_dir, self.slide_map[global_slide_id]['storage_address'])
                     slide = Slide(OpenSlide(filepath))
                     self.opened_slides[global_slide_id] = ExpiringSlide(slide, None)
