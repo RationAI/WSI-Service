@@ -333,4 +333,78 @@ def create_blueprint(name, config, swagger_tags):
         return make_image_response(img, image_format, image_quality)
 
 
+    # TODO: activate these endpoints only in local mode
+    # TODO: try to put them into a separate class
+    # TODO: implement file system search based on master branch
+
+    import os
+    @swag_from({
+        'tags': swagger_tags,
+        'parameters': [
+            {
+                'name': 'global_case_id',
+                'description': 'Arbitrary global case id. Changing the id will not alter results.',
+                'in': 'path',
+                'type': 'string',
+                'required': 'true'
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'OK'
+            },
+            '404': {
+                'description': '-'
+            }
+        }
+    })
+    @api.route('/cases/<global_case_id>/slides/')
+    def get_slide(global_case_id):
+        """
+        (Only in local filesystem mode) Browse the local directory and return slide ids for each available file.
+        """
+        slides = [{
+            "global_case_id": global_case_id,
+            "storage_type": "local",
+            "global_slide_id": "55088b76dd8b446b9daa4605502dec6e",
+            "storage_address": os.path.join(config['DATA_DIR'],"Antibody Supervised Learning/he_crop_jpg.tif"),
+            "local_slide_id": ""
+        }]     
+          
+        return jsonify(slides)
+
+    @swag_from({
+        'tags': swagger_tags,
+        'parameters': [
+            {
+                'name': 'global_slide_id',
+                'in': 'path',
+                'type': 'string',
+                'required': 'true'
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'OK'
+            },
+            '404': {
+                'description': '-'
+            }
+        }
+    })
+    @api.route('/slides/<global_slide_id>')
+    def get_available_slides(global_slide_id):
+        """
+        (Only in local filesystem mode) Browse the local directory and return slide ids for each available file.
+        """
+        slide = {
+            "global_case_id": -1,
+            "storage_type": "local",
+            "global_slide_id": "55088b76dd8b446b9daa4605502dec6e",
+            "storage_address": os.path.join(config['DATA_DIR'],"Antibody Supervised Learning/he_crop_jpg.tif"),
+            "local_slide_id": ""
+        }     
+          
+        return jsonify(slide)
+
     return api
