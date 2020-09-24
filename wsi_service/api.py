@@ -7,7 +7,7 @@ import wsi_service.version
 from flasgger import swag_from
 from wsi_service.api_utils import image_request, make_image_response
 from wsi_service.slide_source import SlideSource
-
+from wsi_service.local_mapper import LocalMapper
 
 _swagger_global_slide_id_param = {
     'name': 'global_slide_id',
@@ -335,7 +335,6 @@ def create_blueprint(name, config, swagger_tags):
 
     # TODO: activate these endpoints only in local mode (switch to FastApi first https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/wsi-service/-/issues/4)
     # TODO: try to put them into a separate class (switch to FastApi first https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/wsi-service/-/issues/4)
-    # TODO: implement file system search based on master branch
 
     import os
     @swag_from({
@@ -363,13 +362,16 @@ def create_blueprint(name, config, swagger_tags):
         """
         (Only in local filesystem mode) Browse the local directory and return slide ids for each available file.
         """
-        slides = [{
-            "global_case_id": global_case_id,
-            "storage_type": "local",
-            "global_slide_id": "55088b76dd8b446b9daa4605502dec6e",
-            "storage_address": os.path.join(config['DATA_DIR'],"Antibody Supervised Learning/he_crop_jpg.tif"),
-            "local_slide_id": ""
-        }]     
+        localmapper = LocalMapper(api.config['DATA_DIR'])
+        slides = localmapper.get_slides(global_case_id)
+        print(slides)
+        # slides = [{
+        #     "global_case_id": global_case_id,
+        #     "storage_type": "local",
+        #     "global_slide_id": "55088b76dd8b446b9daa4605502dec6e",
+        #     "storage_address": os.path.join(config['DATA_DIR'],"Antibody Supervised Learning/he_crop_jpg.tif"),
+        #     "local_slide_id": ""
+        # }]     
           
         return jsonify(slides)
 
@@ -395,15 +397,18 @@ def create_blueprint(name, config, swagger_tags):
     @api.route('/slides/<global_slide_id>')
     def get_available_slides(global_slide_id):
         """
-        (Only in local filesystem mode) Browse the local directory and return slide ids for each available file.
+        (Only in local filesystem mode) Return slide storage data for a given global_slide_id.
         """
-        slide = {
-            "global_case_id": -1,
-            "storage_type": "local",
-            "global_slide_id": "55088b76dd8b446b9daa4605502dec6e",
-            "storage_address": os.path.join(config['DATA_DIR'],"Antibody Supervised Learning/he_crop_jpg.tif"),
-            "local_slide_id": ""
-        }     
+        localmapper = LocalMapper(api.config['DATA_DIR'])
+        slide = localmapper.get_slide(global_slide_id)
+        print(slide)
+        # slide = {
+        #     "global_case_id": -1,
+        #     "storage_type": "local",
+        #     "global_slide_id": "55088b76dd8b446b9daa4605502dec6e",
+        #     "storage_address": os.path.join(config['DATA_DIR'],"Antibody Supervised Learning/he_crop_jpg.tif"),
+        #     "local_slide_id": ""
+        # }     
           
         return jsonify(slide)
 
