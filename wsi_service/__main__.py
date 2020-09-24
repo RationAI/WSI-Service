@@ -26,7 +26,7 @@ if args.load_example_data and not is_running_from_reloader():
 
 config_class_string = 'wsi_service.config.Debug' if args.debug else 'wsi_service.config.Production'
 if args.local_mode:
-    app = create_app('http://localhost:8080/api/v1/slides/{global_slide_id}', args.data_dir, config_class_string)
+    app = create_app("http://localhost:{}/api/v1/slides/{global_slide_id}".format(args.port,global_slide_id='{global_slide_id}'), args.data_dir, config_class_string)
 else:
     app = create_app(args.mapper_address, args.data_dir, config_class_string)
 app.run('0.0.0.0', port=args.port, threaded=True, debug=args.debug)
