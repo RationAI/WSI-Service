@@ -377,6 +377,34 @@ def create_blueprint(name, config, swagger_tags):
 
     @swag_from({
         'tags': swagger_tags,
+        'responses': {
+            '200': {
+                'description': 'OK'
+            },
+            '404': {
+                'description': '-'
+            }
+        }
+    })
+    @api.route('/cases/')
+    def get_cases():
+        """
+        (Only in local filesystem mode) Browse the local directory and return case ids for each available directory.
+        """
+        localmapper = LocalMapper(api.config['DATA_DIR'])
+        cases = localmapper.get_cases()
+        # slides = [{
+        #     "global_case_id": global_case_id,
+        #     "storage_type": "local",
+        #     "global_slide_id": "55088b76dd8b446b9daa4605502dec6e",
+        #     "storage_address": os.path.join(config['DATA_DIR'],"Antibody Supervised Learning/he_crop_jpg.tif"),
+        #     "local_slide_id": ""
+        # }]     
+          
+        return jsonify(cases)
+
+    @swag_from({
+        'tags': swagger_tags,
         'parameters': [
             {
                 'name': 'global_slide_id',

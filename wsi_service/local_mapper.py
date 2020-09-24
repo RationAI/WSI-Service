@@ -43,7 +43,10 @@ class LocalMapper:
 
     # returns list of dict
     def get_cases(self):
-        return sorted(list(self.case_map.keys()))
+        case_data = []
+        for case_id in self.case_map:
+            case_data.append({'global_case_id': case_id, 'local_case_id': self.case_map[case_id]['local_case_id']})
+        return case_data
 
     # returns list of dict
     def get_slides(self, case_id):
