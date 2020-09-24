@@ -333,8 +333,8 @@ def create_blueprint(name, config, swagger_tags):
         return make_image_response(img, image_format, image_quality)
 
 
-    # TODO: activate these endpoints only in local mode
-    # TODO: try to put them into a separate class
+    # TODO: activate these endpoints only in local mode (switch to FastApi first https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/wsi-service/-/issues/4)
+    # TODO: try to put them into a separate class (switch to FastApi first https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/wsi-service/-/issues/4)
     # TODO: implement file system search based on master branch
 
     import os
