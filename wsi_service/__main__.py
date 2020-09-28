@@ -19,7 +19,7 @@ args = parser.parse_args()
 if args.load_example_data and not is_running_from_reloader():
     os.mkdir('/data/example')
     print('Beginning file download (169.33MB)...')
-    url = 'http://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/CMU-1.svs'
+    url = 'https://nextcloud.empaia.org/s/Hyfgf5nMqGkcPLF/download'
     urlretrieve(url, '/data/example/CMU-1.svs')
     print('Done')
 
