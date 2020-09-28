@@ -11,15 +11,15 @@ Install using pip. Start via
 python3 -m wsi_service [OPTIONS] data_dir
 
 positional arguments:
-  data_dir             path to histo data, should point to directory with
-                       folders as cases
+  data_dir             Base path to histo data
 
 optional arguments:
-  -h, --help           show this help message and exit
+  -h, --help           Show this help message and exit
   --port PORT          Port the WSI-Service listens to
   --debug              Use the debug config
   --load-example-data  This will download an example image into the data
                        folder before starting the server
+  --mapper-address     Mapper-Service Address
 
 ```
 
