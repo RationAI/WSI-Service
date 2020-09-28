@@ -7,7 +7,6 @@ from openslide import OpenSlide
 import requests
 
 from wsi_service.slide import Slide
-from wsi_service.utils import sanitize_id
 
 
 class ExpiringSlide:

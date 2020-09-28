@@ -6,7 +6,6 @@ from werkzeug.exceptions import NotFound
 
 from openslide import OpenSlide
 from wsi_service.slide import Slide
-from wsi_service.utils import sanitize_id
 from uuid import uuid5, NAMESPACE_URL
 
 
