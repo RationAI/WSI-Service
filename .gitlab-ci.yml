@@ -7,13 +7,10 @@ run_tests:
     only:
     - 6-add-tests-to-wsi-service
     image:
-        name: python:3.7
-        entrypoint: [""]
+        name: python
     tags:
     - asprunner
     script:
-    - apt-get update
-    - apt-get install -y python3-openslide
-    - pip3 install -r requirements.txt
+    - apt-get update && apt-get install -y python3-openslide
     - pip3 install -e .
-    - pytest --pyargs wsi_service
+    - pytest
