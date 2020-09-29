@@ -46,10 +46,10 @@ class Slide:
             (2**level) / self.openslide_slide.level_downsamples[base_level], 3)
 
         base_size = (round(size_x * remaining_downsample_factor),
-                    round(size_y * remaining_downsample_factor)
-        base_img=self.openslide_slide.read_region(
+                     round(size_y * remaining_downsample_factor))
+        base_img = self.openslide_slide.read_region(
             lvl0_location, base_level, base_size)
-        rgba_img=base_img.resize(
+        rgba_img = base_img.resize(
             (size_x, size_y), resample=PIL.Image.BILINEAR, reducing_gap=1.0)
         return rgba_img.convert('RGB')
 
@@ -59,7 +59,7 @@ class Slide:
     def _get_associated_image(self, associated_image_name):
         if not associated_image_name in self.openslide_slide.associated_images:
             raise HTTPException(status_code=400)
-        associated_image_rgba=self.openslide_slide.associated_images[associated_image_name]
+        associated_image_rgba = self.openslide_slide.associated_images[associated_image_name]
         return associated_image_rgba.convert('RGB')
 
     def get_label(self):

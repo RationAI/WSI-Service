@@ -36,8 +36,8 @@ def make_image_response(pil_image, image_format,
 
 
 def validate_image_request(image_format, image_quality):
-    if image_format not in supported_image_formats and
-    image_format not in alternative_spellings:
+    if (image_format not in supported_image_formats and
+            image_format not in alternative_spellings):
         raise HTTPException(
             status_code=400,
             detail="Provided image format parameter not supported")
