@@ -1,9 +1,6 @@
 ImageResponses = {
     200: {
         "content": {"image/*": {}}
-    },
-    404: {
-        'detail': 'Invalid global_slide_id'
     }
 }
 

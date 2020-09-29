@@ -11,3 +11,11 @@ class SlideInfo(BaseModel):
     num_levels: int = Field(..., description="Number of levels in image pyramid")
     pixel_size_nm: int = Field(..., description="Pixel Size in nm (finest level, level=0)")
     tile_extent: Extent = Field(..., description="Tile extent")
+
+
+class SlideMapperInfo(BaseModel):
+    global_slide_id: str
+    global_case_id: str
+    local_slide_id: str
+    storage_type: str
+    storage_address: str

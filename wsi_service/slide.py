@@ -13,10 +13,8 @@ class Slide:
         # fake tile size, #TODO use openslide internal tile size if available
         self.tile_extent = 512
 
-
     def close(self):
         self.openslide_slide.close()
-
 
     def _calc_num_levels(self):
         min_extent = min(self.openslide_slide.dimensions)
@@ -24,7 +22,6 @@ class Slide:
             return int(math.log2(min_extent) + 1)
         else:
             return 0
-
 
     def get_info(self):
         return {
@@ -40,7 +37,6 @@ class Slide:
             },
         }
 
-
     #TODO: Optimize by caching high level
     def get_region(self, level, start_x, start_y, size_x, size_y):
         lvl0_location = start_x * (2**level), start_y * (2**level)
@@ -51,7 +47,6 @@ class Slide:
         base_img = self.openslide_slide.read_region(lvl0_location, base_level, base_size)
         rgba_img = base_img.resize((size_x, size_y), resample=PIL.Image.BILINEAR, reducing_gap=1.0)
         return rgba_img.convert('RGB')
-
 
     def get_thumbnail(self, max_x, max_y):
         return self.openslide_slide.get_thumbnail((max_x, max_y))

@@ -16,7 +16,6 @@ class ExpiringSlide:
 
 
 class SlideSource:
-
     def __init__(self, mapper_address, data_dir, timeout):
         atexit.register(self.close)
         self.lock = Lock()
@@ -41,13 +40,15 @@ class SlideSource:
                     self.opened_slides[global_slide_id] = ExpiringSlide(slide, None)
                 except KeyError:
                     raise HTTPException(status_code=400)
-            # reset slide expiration
-            expiringSlide = self.opened_slides[global_slide_id]
-            if expiringSlide.timer is not None:
-                expiringSlide.timer.cancel()
-            expiringSlide.timer = Timer(self.timeout, self._close_slide, [global_slide_id])
-            expiringSlide.timer.start()
+            self._reset_slide_expiration(global_slide_id)
         return self.opened_slides[global_slide_id].slide
+
+    def _reset_slide_expiration(self, global_slide_id):
+        expiring_slide = self.opened_slides[global_slide_id]
+        if expiring_slide.timer is not None:
+            expiring_slide.timer.cancel()
+        expiring_slide.timer = Timer(self.timeout, self._close_slide, [global_slide_id])
+        expiring_slide.timer.start()
 
     def _map_slide(self, global_slide_id):
         slide = self._get_slide(global_slide_id)

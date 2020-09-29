@@ -1,8 +1,6 @@
-from functools import wraps, partial
 from io import BytesIO
 
 from starlette.responses import StreamingResponse
-from PIL import Image
 from fastapi import HTTPException
 
 
