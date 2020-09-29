@@ -7,7 +7,7 @@ run_tests:
     only:
     - 6-add-tests-to-wsi-service
     image:
-        name: python:3.7-stretch
+        name: python:3.7
         entrypoint: [""]
     tags:
     - asprunner
