@@ -6,7 +6,7 @@ Implementation of the EMPAIA WSI-Service to stream whole slide images tile-based
 WSI-Service is a python module and can be run either locally or via docker.
 
 ### Run local 
-Install using pip within this folder
+Make sure [OpenSlide](https://openslide.org/download/) is installed. Install using pip within this folder
 ```
 pip3 install -e .
 ```
