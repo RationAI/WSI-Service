@@ -92,8 +92,8 @@ def get_slide_macro(
     return make_image_response(macro, image_format, image_quality)
 
 
-@api.get(
-    '/slides/{global_slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}', responses=ImageRegionResponse, response_class=StreamingResponse)
+@api.get('/slides/{global_slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}',
+         responses=ImageRegionResponse, response_class=StreamingResponse)
 def get_slide_region(
         global_slide_id: str,
         level: int = Path(
