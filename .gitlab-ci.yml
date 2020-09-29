@@ -22,7 +22,7 @@ build_and_test_docker_image:
     tags:
     - asprunner    
     script:
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile_test
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile_test --destination $CI_REGISTRY_IMAGE:test --no-push
 
 build_and_push_docker_image:
     stage: build_and_push
