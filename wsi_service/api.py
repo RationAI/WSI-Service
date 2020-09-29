@@ -6,7 +6,9 @@ from wsi_service.settings import Settings
 from wsi_service.local_mapper import LocalMapper
 from wsi_service.slide_source import SlideSource
 from wsi_service.api_utils import validate_image_request, make_image_response
-from wsi_service.models import SlideInfo, ImageQualityQuery, ImageFormatsQuery, ImageResponses, ImageRegionResponse
+from wsi_service.models import SlideInfo
+from wsi_service.queries import ImageQualityQuery, ImageFormatsQuery
+from wsi_service.responses import ImageResponses, ImageRegionResponse
 
 
 settings = Settings()
