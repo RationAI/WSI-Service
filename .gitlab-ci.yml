@@ -9,5 +9,7 @@ run_tests:
     image:
         name: python
         entrypoint: [""]
+    tags:
+    - asprunner
     script:
     - python --version
