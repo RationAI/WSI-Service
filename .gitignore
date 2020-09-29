@@ -149,3 +149,4 @@ dmypy.json
 # Others
 data
 .DS_Store
+.vscode/settings.json

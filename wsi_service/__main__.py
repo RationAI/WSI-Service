@@ -5,18 +5,19 @@ from urllib.request import urlretrieve
 import uvicorn
 
 
-def set_env_from_args(port, data_dir, mapper_address, local_mode):
+def set_env_from_args(data_dir, mapper_address, local_mode):
     os.environ["data_dir"] = data_dir
     os.environ["local_mode"] = str(local_mode)
     os.environ["mapper_address"] = mapper_address
 
 
-def load_example_data():
-    os.mkdir('/data/example')
-    print('Beginning file download (169.33MB)...')
-    url = 'https://nextcloud.empaia.org/s/Hyfgf5nMqGkcPLF/download'
-    urlretrieve(url, '/data/example/CMU-1.svs')
-    print('Done')
+def load_example_data(download_folder='/data/example'):
+    if not os.path.exists(download_folder):
+        os.mkdir(download_folder)
+        print('Beginning file download (169.33MB)...')
+        url = 'https://nextcloud.empaia.org/s/Hyfgf5nMqGkcPLF/download'
+        urlretrieve(url, os.path.join(download_folder, 'CMU-1.svs'))
+        print('Done')
 
 
 def main():
@@ -50,7 +51,6 @@ def main():
         load_example_data()
 
     set_env_from_args(
-        args.port,
         args.data_dir,
         args.mapper_address,
         args.mapper_address == default_mapper_address)

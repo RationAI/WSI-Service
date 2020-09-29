@@ -68,7 +68,16 @@ Short explanation of the parameters used:
 
 Afterwards, visit http://localhost:8080
 
-# TODO
-
-* pass-through tiles
-* Optimize retrieval of high levels by caching
+Run tests with
+```
+pytest --pyargs wsi_service
+```
+or using Docker with
+```
+docker run \
+  -it \
+  --rm \
+  --entrypoint python3 \
+  registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service \
+  -m pytest --pyargs wsi_service
+```

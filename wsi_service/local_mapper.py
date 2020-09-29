@@ -15,7 +15,7 @@ class LocalMapper:
         self._collect_all_folders_as_cases(data_dir)
         for case_id, case in self.case_map.items():
             case_dir = os.path.join(data_dir, case["local_case_id"])
-            self._collect_all_files_as_slides(case_id, case_dir)
+            self._collect_all_files_as_slides(data_dir, case_id, case_dir)
 
     def _collect_all_folders_as_cases(self, data_dir):
         for d in os.listdir(data_dir):
@@ -24,7 +24,7 @@ class LocalMapper:
                 case_id = uuid5(NAMESPACE_URL, d).hex
                 self.case_map[case_id] = {'local_case_id': d, 'slides': []}
 
-    def _collect_all_files_as_slides(self, case_id, case_dir):
+    def _collect_all_files_as_slides(self, data_dir, case_id, case_dir):
         for f in os.listdir(case_dir):
             absfile = os.path.join(case_dir, f)
             if OpenSlide.detect_format(absfile):
@@ -34,10 +34,10 @@ class LocalMapper:
                     self.case_map[case_id]["slides"].append(slide_id)
                     self.slide_map[slide_id] = {
                         'global_case_id': case_id,
-                        'storage_address': absfile,
+                        'storage_address': absfile.replace(data_dir, ''),
                         'global_slide_id': slide_id,
                         'local_slide_id': raw_slide_id,
-                        'storage_type': "local",
+                        'storage_type': "fs",
                     }
 
     def get_cases(self):
