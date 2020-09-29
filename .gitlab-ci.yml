@@ -16,3 +16,4 @@ run_tests:
     - apt-get install -y python3-openslide
     - pip3 install -r requirements.txt
     - pip3 install -e .
+    - pytest --pyargs wsi_service
