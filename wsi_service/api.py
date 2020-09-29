@@ -46,7 +46,9 @@ def get_slide_thumbnail(
     max_y: int = Path(None, example=100, description="Maximum height of thumbnail"),
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery):
-
+    """
+    Thumbnail of the slide
+    """
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(global_slide_id)
     thumbnail = slide.get_thumbnail(max_x, max_y)
@@ -59,7 +61,7 @@ def get_slide_label(
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery):
     """
-    The label image of the slide
+    Label image of the slide
     """
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(global_slide_id)
@@ -73,7 +75,7 @@ def get_slide_macro(
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery):
     """
-    The macro image of the slide
+    Macro image of the slide
     """
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(global_slide_id)
