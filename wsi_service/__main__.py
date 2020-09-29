@@ -1,22 +1,17 @@
 import argparse
 import os
-import sys
 from urllib.request import urlretrieve
 
-from werkzeug.serving import is_running_from_reloader
+import uvicorn
 
-from wsi_service.application import create_app
 
-parser = argparse.ArgumentParser(description='Webserice that serves histological whole-slide-images')
-parser.add_argument('data_dir', help='Base path to histo data')
-parser.add_argument('--port', default=8080, help='Port the WSI-Service listens to')
-parser.add_argument('--debug', dest='debug', action='store_true', help='Use the debug config')
-parser.add_argument('--load-example-data', dest='load_example_data', action='store_true', help='This will download an example image into the data folder before starting the server')
-parser.add_argument('--mapper-address', default='http://mapper-service:8000/slides/{global_slide_id}', help='Mapper-Service Address')
-parser.add_argument('--local-mode', dest='local_mode', action='store_true', help='Run WSI-Service in local mode with a minimal local filesystem mapper. Local mode ignores --mapper-address.')
-args = parser.parse_args()
+def set_env_from_args(port, data_dir, mapper_address, local_mode):
+    os.environ["data_dir"] = data_dir
+    os.environ["local_mode"] = str(local_mode)
+    os.environ["mapper_address"] = mapper_address
 
-if args.load_example_data and not is_running_from_reloader():
+
+def load_example_data():
     os.mkdir('/data/example')
     print('Beginning file download (169.33MB)...')
     url = 'https://nextcloud.empaia.org/s/Hyfgf5nMqGkcPLF/download'
@@ -24,9 +19,47 @@ if args.load_example_data and not is_running_from_reloader():
     print('Done')
 
 
-config_class_string = 'wsi_service.config.Debug' if args.debug else 'wsi_service.config.Production'
-if args.local_mode:
-    app = create_app("http://localhost:{}/api/v1/slides/{global_slide_id}".format(args.port,global_slide_id='{global_slide_id}'), args.data_dir, config_class_string)
-else:
-    app = create_app(args.mapper_address, args.data_dir, config_class_string)
-app.run('0.0.0.0', port=args.port, threaded=True, debug=args.debug)
+def main():
+    default_port = 8080
+    default_mapper_address = f'http://localhost:{default_port}/slides/' + \
+        '{global_slide_id}'
+    parser = argparse.ArgumentParser(
+        description='Webservice that serves histological whole-slide-images')
+    parser.add_argument('data_dir', help='Base path to histo data')
+    parser.add_argument(
+        '--port',
+        default=default_port,
+        help='Port the WSI-Service listens to')
+    parser.add_argument(
+        '--debug',
+        dest='debug',
+        action='store_true',
+        help='Use the debug config')
+    parser.add_argument(
+        '--load-example-data',
+        dest='load_example_data',
+        action='store_true',
+        help='This will download an example image into the data folder before starting the server')
+    parser.add_argument(
+        '--mapper-address',
+        default=default_mapper_address,
+        help='Mapper-Service Address')
+    args = parser.parse_args()
+
+    if args.load_example_data:
+        load_example_data()
+
+    set_env_from_args(
+        args.port,
+        args.data_dir,
+        args.mapper_address,
+        args.mapper_address == default_mapper_address)
+    uvicorn.run(
+        "wsi_service.api:api",
+        host="0.0.0.0",
+        port=int(args.port),
+        reload=args.debug)
+
+
+if __name__ == '__main__':
+    main()

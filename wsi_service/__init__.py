@@ -1,2 +1,1 @@
-from wsi_service.application import create_app
 from wsi_service.version import __version__
