@@ -1,443 +1,133 @@
-import sys
+from fastapi import FastAPI, HTTPException
+from fastapi.encoders import jsonable_encoder
 
-from flask import Blueprint, current_app, jsonify, request
-from werkzeug.exceptions import RequestEntityTooLarge
-
-import wsi_service.version
-from flasgger import swag_from
-from wsi_service.api_utils import image_request, make_image_response
-from wsi_service.slide_source import SlideSource
+from wsi_service.settings import Settings
 from wsi_service.local_mapper import LocalMapper
-
-_swagger_global_slide_id_param = {
-    'name': 'global_slide_id',
-    'description': 'global slide id',
-    'in': 'path',
-    'type': 'string',
-    'required': 'true'
-}
-
-_swagger_image_format_param = lambda default : {
-    'name': 'image_format',
-    'description': 'image format of the thumbnail',
-    'in': 'query',
-    'type': 'string',
-    'enum': [
-        'jpg',
-        'jpeg',
-        'png',
-        'tif',
-        'tiff',
-        'bmp',
-        'gif'
-    ],
-    'default': default
-}
-
-_swagger_image_quality_param = lambda default : {
-    'name': 'image_quality',
-    'description': 'image quality (0-100) of the thumbnail (only considered for specific formats)',
-    'in': 'query',
-    'type': 'int',
-    'min': 0,
-    'max': 100,
-    'default': default
-}
+from wsi_service.slide_source import SlideSource
+from wsi_service.api_utils import validate_image_request, make_image_response
+from wsi_service.models import SlideInfo
 
 
-def create_blueprint(name, config, swagger_tags):
-    api = Blueprint(name, __name__)
-    api.config = config
-    api.slide_source = SlideSource(
-        config['MAPPER_ADDRESS'],
-        config['DATA_DIR'],
-        config['INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS'])
+settings = Settings()
+
+api = FastAPI(
+    title=settings.title,
+    description=settings.description,
+    version=settings.version,
+    docs_url="/", 
+    redoc_url=None
+)
+
+slide_source = SlideSource(
+    settings.mapper_address, 
+    settings.data_dir, 
+    settings.max_returned_region_size
+)
 
 
-    @swag_from({
-        'tags': swagger_tags,
-        'parameters': [
-            _swagger_global_slide_id_param
-        ],
-        'responses': {
-            '200': {
-                'description': 'OK'
-            },
-            '404': {
-                'description': 'Invalid global_slide_id'
-            }
+@api.get('/slides/{global_slide_id}/info', response_model=SlideInfo)
+def get_slide_info(global_slide_id: str):
+    """
+    Metadata for slide with given id
+    """
+    slide = slide_source.get_slide(global_slide_id)
+    return slide.get_info()
+
+
+@api.get('/slides/{global_slide_id}/thumbnail/max_size/{max_x}/{max_y}')
+def get_slide_thumbnail(global_slide_id: str, max_x: int, max_y: int, image_format: str = "jpeg", image_quality: int = 90):
+    """
+    Thumbnail of slide with given maximum size
+    """
+    validate_image_request(image_format, image_quality)
+    slide = slide_source.get_slide(global_slide_id)
+    thumbnail = slide.get_thumbnail(max_x, max_y)
+    return make_image_response(thumbnail, image_format, image_quality)
+
+
+@api.get('/slides/{global_slide_id}/label')
+def get_slide_label(global_slide_id: str, image_format: str = "jpeg", image_quality: int = 90):
+    """
+    The label image of the slide
+    """
+    validate_image_request(image_format, image_quality)
+    slide = slide_source.get_slide(global_slide_id)
+    label = slide.get_label()
+    return make_image_response(label, image_format, image_quality)
+
+
+@api.get('/slides/{global_slide_id}/macro')
+def get_slide_macro(global_slide_id: str, image_format: str = "jpeg", image_quality: int = 90):
+    """
+    The macro image of the slide
+    """
+    validate_image_request(image_format, image_quality)
+    slide = slide_source.get_slide(global_slide_id)
+    macro = slide.get_macro()
+    return make_image_response(macro, image_format, image_quality)
+
+
+@api.get(
+    '/slides/{global_slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}',
+    responses={
+        200: {
+            "content": {"image/*": {}}
         }
-    })
-    @api.route('/slides/<global_slide_id>/info')
-    def get_slide_info(global_slide_id):
-        """
-        Metadata for slide with given id
-        """
-        slide = api.slide_source.get_slide(global_slide_id)
-        return jsonify(slide.get_info())
+    }
+)
+def get_slide_region(global_slide_id: str, level: int, start_x: int, start_y: int, size_x: int, size_y: int, image_format: str = "jpeg", image_quality: int = 90):
+    """
+    Get region of the slide. Level 0 is highest (original) resolution. Each level has half the
+    resolution and half the extent of the previous level. Coordinates are given with respect
+    to the requested level.
+    """
+    validate_image_request(image_format, image_quality)
+    if size_x * size_y > settings.max_returned_region_size:
+        raise HTTPException(status_code=413, detail=f'Requested region may not contain more than {settings.max_returned_region_size} pixels')
+    slide = slide_source.get_slide(global_slide_id)
+    img = slide.get_region(level, start_x, start_y, size_x, size_y)
+    return make_image_response(img, image_format, image_quality)
 
 
-    @swag_from({
-        'tags': swagger_tags,
-        'parameters': [
-            _swagger_global_slide_id_param,
-            {
-                'name': 'max_x',
-                'description': 'maximum width of thumbnail',
-                'in': 'path',
-                'type': 'integer',
-                'required': 'true'
-            },
-            {
-                'name': 'max_y',
-                'description': 'maximum height of thumbnail',
-                'in': 'path',
-                'type': 'integer',
-                'required': 'true'
-            },
-            _swagger_image_format_param(default='jpeg'),
-            _swagger_image_quality_param(default=90)
-        ],
-        'produces': [
-            'image/*'
-        ],
-        'responses': {
-            '200': {
-                'description': 'OK',
-                'schema': {
-                    'type':'file'
-                }
-            },
-            '404': {
-                'description': 'Invalid global_slide_id'
-            },
-            '500': {
-                'description': 'Malformed parameters'
-            }
-        }
-    })
-    @api.route('/slides/<global_slide_id>/thumbnail/max_size/<int:max_x>/<int:max_y>')
-    @image_request('jpeg', 90)
-    def get_slide_thumbnail(global_slide_id, max_x, max_y, image_format, image_quality):
-        """
-        Thumbnail of slide with given maximum size
-        """
-        slide = api.slide_source.get_slide(global_slide_id)
-        thumbnail = slide.get_thumbnail(max_x, max_y)
-        return make_image_response(thumbnail, image_format, image_quality)
+@api.get('/slides/{global_slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}')
+def get_slide_tile(global_slide_id: str, level: int, tile_x: int, tile_y: int, image_format: str = "jpeg", image_quality: int = 90):
+    """
+    Get tile of the slide. Extent of the tile is given in slide metadata. Level 0 is highest
+    (original) resolution. Each level has half the resolution and half the extent of the
+    previous level. Coordinates are given with respect to tiles, i.e. tile coordinate n is the
+    n-th tile in the respective dimension.
+    """
+    validate_image_request(image_format, image_quality)
+    slide = slide_source.get_slide(global_slide_id)
+    img = slide.get_tile(level, tile_x, tile_y)
+    return make_image_response(img, image_format, image_quality)
 
 
-    @swag_from({
-        'tags': swagger_tags,
-        'parameters': [
-            _swagger_global_slide_id_param,
-            _swagger_image_format_param(default='jpeg'),
-            _swagger_image_quality_param(default=90)
-        ],
-        'produces': [
-            'image/*'
-        ],
-        'responses': {
-            '200': {
-                'description': 'OK',
-                'schema': {
-                    'type':'file'
-                }
-            },
-            '404': {
-                'description': 'Invalid global_slide_id'
-            }
-        }
-    })
-    @api.route('/slides/<global_slide_id>/label')
-    @image_request('jpeg', 90)
-    def get_slide_label(global_slide_id, image_format, image_quality):
-        """
-        The label image of the slide
-        """
-        slide = api.slide_source.get_slide(global_slide_id)
-        label = slide.get_label()
-        return make_image_response(label, image_format, image_quality)
+if settings.local_mode:
 
-
-    @swag_from({
-        'tags': swagger_tags,
-        'parameters': [
-            _swagger_global_slide_id_param,
-            _swagger_image_format_param(default='jpeg'),
-            _swagger_image_quality_param(default=90)
-        ],
-        'produces': [
-            'image/*'
-        ],
-        'responses': {
-            '200': {
-                'description': 'OK',
-                'schema': {
-                    'type':'file'
-                }
-            },
-            '404': {
-                'description': 'Invalid global_slide_id'
-            }
-        }
-    })
-    @api.route('/slides/<global_slide_id>/macro')
-    @image_request('jpeg', 90)
-    def get_slide_macro(global_slide_id, image_format, image_quality):
-        """
-        The macro image of the slide
-        """
-        slide = api.slide_source.get_slide(global_slide_id)
-        macro = slide.get_macro()
-        return make_image_response(macro, image_format, image_quality)
-
-
-    @swag_from({
-        'tags': swagger_tags,
-        'parameters': [
-            _swagger_global_slide_id_param,
-            {
-                'name': 'level',
-                'description': 'pyramid level of region',
-                'in': 'path',
-                'type': 'integer',
-                'min': 0,
-                'required': 'true'
-            },
-            {
-                'name': 'start_x',
-                'description': 'x component of start coordinate of requested region',
-                'in': 'path',
-                'type': 'integer',
-                'required': 'true'
-            },
-            {
-                'name': 'start_y',
-                'description': 'y component of start coordinate of requested region',
-                'in': 'path',
-                'type': 'integer',
-                'required': 'true'
-            },
-            {
-                'name': 'size_x',
-                'description': 'width of requested region',
-                'in': 'path',
-                'type': 'integer',
-                'required': 'true'
-            },
-            {
-                'name': 'size_y',
-                'description': 'height of requested region',
-                'in': 'path',
-                'type': 'integer',
-                'required': 'true'
-            },
-            _swagger_image_format_param(default='jpeg'),
-            _swagger_image_quality_param(default=90)
-        ],
-        'produces': [
-            'image/*'
-        ],
-        'responses': {
-            '200': {
-                'description': 'OK',
-                'schema': {
-                    'type':'file'
-                }
-            },
-            '404': {
-                'description': 'Invalid global_slide_id'
-            },
-            '413': {
-                'description': 'Requested region is too large'
-            },
-            '500': {
-                'description': 'Malformed parameters'
-            }
-        }
-    })
-    @api.route('/slides/<global_slide_id>/region/level/<int:level>/start/<signed_int:start_x>/<signed_int:start_y>/size/<int:size_x>/<int:size_y>')
-    @image_request('jpeg', 90)
-    def get_slide_region(global_slide_id, level, start_x, start_y, size_x, size_y, image_format, image_quality):
-        """
-        Get region of the slide. Level 0 is highest (original) resolution. Each level has half the
-        resolution and half the extent of the previous level. Coordinates are given with respect
-        to the requested level.
-        """
-        if size_x * size_y > api.config.get('MAX_RETURNED_REGION_SIZE',  float('Inf')):
-            raise RequestEntityTooLarge('Requested region may not contain more than %d pixels' % api.config['MAX_RETURNED_REGION_SIZE'])
-        slide = api.slide_source.get_slide(global_slide_id)
-        img = slide.get_region(level, start_x, start_y, size_x, size_y)
-        return make_image_response(img, image_format, image_quality)
-
-
-    @swag_from({
-        'tags': swagger_tags,
-        'parameters': [
-            _swagger_global_slide_id_param,
-            {
-                'name': 'level',
-                'description': 'pyramid level of region',
-                'in': 'path',
-                'type': 'integer',
-                'min': 0,
-                'required': 'true'
-            },
-            {
-                'name': 'tile_x',
-                'description': 'request the tile_x-th tile in x dimension',
-                'in': 'path',
-                'type': 'integer',
-                'required': 'true'
-            },
-            {
-                'name': 'tile_y',
-                'description': 'request the tile_y-th tile in y dimension',
-                'in': 'path',
-                'type': 'integer',
-                'required': 'true'
-            },
-            _swagger_image_format_param(default='jpeg'),
-            _swagger_image_quality_param(default=90)
-        ],
-        'produces': [
-            'image/*'
-        ],
-        'responses': {
-            '200': {
-                'description': 'OK',
-                'schema': {
-                    'type':'file'
-                }
-            },
-            '404': {
-                'description': 'Invalid global_slide_id'
-            },
-            '500': {
-                'description': 'Malformed parameters'
-            }
-        }
-    })
-    @api.route('/slides/<global_slide_id>/tile/level/<int:level>/tile/<signed_int:tile_x>/<signed_int:tile_y>')
-    @image_request('jpeg', 90)
-    def get_slide_tile(global_slide_id, level, tile_x, tile_y, image_format, image_quality):
-        """
-        Get tile of the slide. Extent of the tile is given in slide metadata. Level 0 is highest
-        (original) resolution. Each level has half the resolution and half the extent of the
-        previous level. Coordinates are given with respect to tiles, i.e. tile coordinate n is the
-        n-th tile in the respective dimension.
-        """
-        slide = api.slide_source.get_slide(global_slide_id)
-        img = slide.get_tile(level, tile_x, tile_y)
-        return make_image_response(img, image_format, image_quality)
-
-
-    # TODO: activate these endpoints only in local mode (switch to FastApi first https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/wsi-service/-/issues/4)
-    # TODO: try to put them into a separate class (switch to FastApi first https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/wsi-service/-/issues/4)
-
-    import os
-    @swag_from({
-        'tags': swagger_tags,
-        'parameters': [
-            {
-                'name': 'global_case_id',
-                'description': 'Arbitrary global case id. Changing the id will not alter results.',
-                'in': 'path',
-                'type': 'string',
-                'required': 'true'
-            }
-        ],
-        'responses': {
-            '200': {
-                'description': 'OK'
-            },
-            '404': {
-                'description': '-'
-            }
-        }
-    })
-    @api.route('/cases/<global_case_id>/slides/')
-    def get_slide(global_case_id):
-        """
-        (Only in local filesystem mode) Browse the local directory and return slide ids for each available file.
-        """
-        localmapper = LocalMapper(api.config['DATA_DIR'])
-        slides = localmapper.get_slides(global_case_id)
-        print(slides)
-        # slides = [{
-        #     "global_case_id": global_case_id,
-        #     "storage_type": "local",
-        #     "global_slide_id": "55088b76dd8b446b9daa4605502dec6e",
-        #     "storage_address": os.path.join(config['DATA_DIR'],"Antibody Supervised Learning/he_crop_jpg.tif"),
-        #     "local_slide_id": ""
-        # }]     
-          
-        return jsonify(slides)
-
-    @swag_from({
-        'tags': swagger_tags,
-        'responses': {
-            '200': {
-                'description': 'OK'
-            },
-            '404': {
-                'description': '-'
-            }
-        }
-    })
-    @api.route('/cases/')
+    @api.get('/cases/')
     def get_cases():
         """
-        (Only in local filesystem mode) Browse the local directory and return case ids for each available directory.
+        (Only in local mode) Browse the local directory and return case ids for each available directory.
         """
-        localmapper = LocalMapper(api.config['DATA_DIR'])
+        localmapper = LocalMapper(settings.data_dir)
         cases = localmapper.get_cases()
-        # slides = [{
-        #     "global_case_id": global_case_id,
-        #     "storage_type": "local",
-        #     "global_slide_id": "55088b76dd8b446b9daa4605502dec6e",
-        #     "storage_address": os.path.join(config['DATA_DIR'],"Antibody Supervised Learning/he_crop_jpg.tif"),
-        #     "local_slide_id": ""
-        # }]     
-          
-        return jsonify(cases)
+        return cases
 
-    @swag_from({
-        'tags': swagger_tags,
-        'parameters': [
-            {
-                'name': 'global_slide_id',
-                'in': 'path',
-                'type': 'string',
-                'required': 'true'
-            }
-        ],
-        'responses': {
-            '200': {
-                'description': 'OK'
-            },
-            '404': {
-                'description': '-'
-            }
-        }
-    })
-    @api.route('/slides/<global_slide_id>')
-    def get_available_slides(global_slide_id):
+    @api.get('/cases/{global_case_id}/slides/')
+    def get_available_slides(global_case_id: str):
         """
-        (Only in local filesystem mode) Return slide storage data for a given global_slide_id.
+        (Only in local mode) Browse the local directory and return slide ids for each available file.
         """
-        localmapper = LocalMapper(api.config['DATA_DIR'])
+        localmapper = LocalMapper(settings.data_dir)
+        slides = localmapper.get_slides(global_case_id)
+        return slides
+
+    @api.get('/slides/{global_slide_id}')
+    def get_slide(global_slide_id: str):
+        """
+        (Only in local mode) Return slide storage data for a given global_slide_id.
+        """
+        localmapper = LocalMapper(settings.data_dir)
         slide = localmapper.get_slide(global_slide_id)
-        print(slide)
-        # slide = {
-        #     "global_case_id": -1,
-        #     "storage_type": "local",
-        #     "global_slide_id": "55088b76dd8b446b9daa4605502dec6e",
-        #     "storage_address": os.path.join(config['DATA_DIR'],"Antibody Supervised Learning/he_crop_jpg.tif"),
-        #     "local_slide_id": ""
-        # }     
-          
-        return jsonify(slide)
-
-    return api
+        return slide

@@ -1,4 +1,4 @@
-FROM python:3.5-stretch AS build
+FROM python:3.7-stretch AS build
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
@@ -19,16 +19,16 @@ RUN ldd /usr/lib/x86_64-linux-gnu/libopenslide.so.0 \
 RUN mkdir /data
 
 
-FROM gcr.io/distroless/python3:nonroot
+FROM gcr.io/distroless/python3-debian10
 
 
-COPY --from=build --chown=nonroot:nonroot /usr/local/lib/python3.5/site-packages/ /usr/lib/python3.5/.
-COPY --from=build --chown=nonroot:nonroot /openslide_deps/* /usr/lib/x86_64-linux-gnu/
+COPY --from=build /usr/local/lib/python3.7/site-packages/ /usr/lib/python3.7/.
+COPY --from=build /openslide_deps/* /usr/lib/x86_64-linux-gnu/
 
-COPY --from=build --chown=nonroot:nonroot /wsi_service /wsi_service
+COPY --from=build /wsi_service /wsi_service
 RUN python -m pip install -e /wsi_service
 
-COPY --from=build --chown=nonroot:nonroot /data /data
+COPY --from=build /data /data
 VOLUME ["/data"]
 
 EXPOSE 8080/tcp

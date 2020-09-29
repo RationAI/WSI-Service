@@ -1,8 +1,7 @@
 import math
 
 import PIL
-from werkzeug.exceptions import NotFound
-
+from fastapi import HTTPException
 import openslide
 
 
@@ -59,7 +58,7 @@ class Slide:
 
     def _get_associated_image(self, associated_image_name):
         if not associated_image_name in self.openslide_slide.associated_images:
-            raise NotFound()
+            raise HTTPException(status_code=400)
         associated_image_rgba = self.openslide_slide.associated_images[associated_image_name]
         return associated_image_rgba.convert('RGB')
 

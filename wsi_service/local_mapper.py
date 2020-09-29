@@ -2,11 +2,11 @@ import atexit
 import os
 from threading import Lock, Timer
 
-from werkzeug.exceptions import NotFound
-
 from openslide import OpenSlide
-from wsi_service.slide import Slide
+from fastapi import HTTPException
 from uuid import uuid5, NAMESPACE_URL
+
+from wsi_service.slide import Slide
 
 
 class LocalMapper:
@@ -55,7 +55,7 @@ class LocalMapper:
                 slide_data.append(self.slide_map[slide_id])
             return slide_data
         except KeyError:
-            raise NotFound()
+            raise HTTPException(status_code=400)
 
 
     def get_slide(self, slide_id):

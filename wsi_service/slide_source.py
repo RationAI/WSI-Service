@@ -2,7 +2,7 @@ import atexit
 import os
 from threading import Lock, Timer
 
-from werkzeug.exceptions import NotFound
+from fastapi import HTTPException
 from openslide import OpenSlide
 import requests
 
@@ -40,7 +40,7 @@ class SlideSource:
                     slide = Slide(OpenSlide(filepath))
                     self.opened_slides[global_slide_id] = ExpiringSlide(slide, None)
                 except KeyError:
-                    raise NotFound()
+                    raise HTTPException(status_code=400)
             # reset slide expiration
             expiringSlide = self.opened_slides[global_slide_id]
             if expiringSlide.timer is not None:
