@@ -32,7 +32,7 @@ class SlideSource:
 
     def get_slide(self, global_slide_id):
         with self.lock:
-            if not global_slide_id in self.opened_slides:
+            if global_slide_id not in self.opened_slides:
                 try:
                     self._map_slide(global_slide_id)
                     filepath = os.path.join(

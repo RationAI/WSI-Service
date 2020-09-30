@@ -67,7 +67,7 @@ class Slide:
         return self.openslide_slide.get_thumbnail((max_x, max_y))
 
     def _get_associated_image(self, associated_image_name):
-        if not associated_image_name in self.openslide_slide.associated_images:
+        if associated_image_name not in self.openslide_slide.associated_images:
             raise HTTPException(status_code=400)
         associated_image_rgba = self.openslide_slide.associated_images[
             associated_image_name

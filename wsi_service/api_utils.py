@@ -14,21 +14,18 @@ supported_image_formats = {
 alternative_spellings = {"jpg": "jpeg", "tif": "tiff"}
 
 
-def make_image_response(
-    pil_image, image_format, image_quality, resize_x=None, resize_y=None
-):
+def make_image_response(pil_image, image_format, image_quality):
     if image_format in alternative_spellings:
         image_format = alternative_spellings[image_format]
 
-    if image_format in supported_image_formats:
-        io = BytesIO()
-        pil_image.save(io, format=image_format, quality=image_quality)
-        io.seek(0)
-        return StreamingResponse(io, media_type=supported_image_formats[image_format])
-    else:
+    if image_format not in supported_image_formats:
         raise HTTPException(
             status_code=400, detail="Provided image format parameter not supported"
         )
+    mem = BytesIO()
+    pil_image.save(mem, format=image_format, quality=image_quality)
+    mem.seek(0)
+    return StreamingResponse(mem, media_type=supported_image_formats[image_format])
 
 
 def validate_image_request(image_format, image_quality):
