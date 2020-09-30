@@ -1,9 +1,7 @@
 import io
-import os
 
 import PIL.Image as Image
 import pytest
-import requests
 import requests_mock
 
 from wsi_service.models import SlideInfo
@@ -31,7 +29,7 @@ def get_image(response):
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 def test_get_slide_info_valid(client, **kwargs):
-    mock = setup_mock(kwargs)
+    setup_mock(kwargs)
     response = client.get("/slides/b465382a4db159d2b7c8da5c917a2280/info")
     assert response.status_code == 200
     slide_info = SlideInfo.parse_obj(response.json())
@@ -49,7 +47,7 @@ def test_get_slide_info_valid(client, **kwargs):
     [("jpeg", 90), ("jpeg", 95), ("png", 0), ("bmp", 0), ("gif", 0), ("tiff", 0)],
 )
 def test_get_slide_thumbnail_valid(client, image_format, image_quality, **kwargs):
-    mock = setup_mock(kwargs)
+    setup_mock(kwargs)
     max_size_x = 21
     max_size_y = 22
     response = client.get(
@@ -71,7 +69,7 @@ def test_get_slide_thumbnail_valid(client, image_format, image_quality, **kwargs
     [("jpeg", 90), ("jpeg", 95), ("png", 0), ("bmp", 0), ("gif", 0), ("tiff", 0)],
 )
 def test_get_slide_label_valid(client, image_format, image_quality, **kwargs):
-    mock = setup_mock(kwargs)
+    setup_mock(kwargs)
     response = client.get(
         f"/slides/b465382a4db159d2b7c8da5c917a2280/label?image_format={image_format}&image_quality={image_quality}",
         stream=True,
@@ -90,7 +88,7 @@ def test_get_slide_label_valid(client, image_format, image_quality, **kwargs):
     [("jpeg", 90), ("jpeg", 95), ("png", 0), ("bmp", 0), ("gif", 0), ("tiff", 0)],
 )
 def test_get_slide_macro_valid(client, image_format, image_quality, **kwargs):
-    mock = setup_mock(kwargs)
+    setup_mock(kwargs)
     response = client.get(
         f"/slides/b465382a4db159d2b7c8da5c917a2280/macro?image_format={image_format}&image_quality={image_quality}",
         stream=True,
@@ -109,7 +107,7 @@ def test_get_slide_macro_valid(client, image_format, image_quality, **kwargs):
     [("jpeg", 90), ("jpeg", 95), ("png", 0), ("bmp", 0), ("gif", 0), ("tiff", 0)],
 )
 def test_get_slide_region_valid(client, image_format, image_quality, **kwargs):
-    mock = setup_mock(kwargs)
+    setup_mock(kwargs)
     level = 0
     start_x = 15000
     start_y = 15000
@@ -134,8 +132,8 @@ def test_get_slide_region_valid(client, image_format, image_quality, **kwargs):
     "image_format, image_quality",
     [("jpeg", 90), ("jpeg", 95), ("png", 0), ("bmp", 0), ("gif", 0), ("tiff", 0)],
 )
-def test_get_slide_region_valid(client, image_format, image_quality, **kwargs):
-    mock = setup_mock(kwargs)
+def test_get_slide_tile_valid(client, image_format, image_quality, **kwargs):
+    setup_mock(kwargs)
     level = 0
     tile_x = 21
     tile_y = 22

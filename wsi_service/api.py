@@ -1,7 +1,6 @@
 from typing import List
 
-from fastapi import FastAPI, HTTPException, Path, Query
-from fastapi.encoders import jsonable_encoder
+from fastapi import FastAPI, HTTPException, Path
 from fastapi.responses import StreamingResponse
 
 from wsi_service.api_utils import make_image_response, validate_image_request
