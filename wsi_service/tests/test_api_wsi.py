@@ -1,14 +1,17 @@
 
 import os
+import io
 
+import pytest
+import PIL.Image as Image
 import requests
 import requests_mock
+
 from wsi_service.tests.test_api_helpers import client, client_no_data
 from wsi_service.models import SlideInfo
 
 
-@requests_mock.Mocker(real_http=True, kw='requests_mock')
-def test_url(client, **kwargs):
+def setup_mock(kwargs):
     mock = kwargs['requests_mock']
     mock.get('http://testserver/slides/b465382a4db159d2b7c8da5c917a2280', 
         json={
@@ -19,7 +22,18 @@ def test_url(client, **kwargs):
             'storage_address': 'example/CMU-1.svs'
         }
     )
+    return mock
+
+
+def get_image(response):
+    return Image.open(io.BytesIO(response.raw.data))
+
+
+@requests_mock.Mocker(real_http=True, kw='requests_mock')
+def test_get_slide_info_valid(client, **kwargs):
+    mock = setup_mock(kwargs)
     response = client.get("/slides/b465382a4db159d2b7c8da5c917a2280/info")
+    assert response.status_code == 200
     slide_info = SlideInfo.parse_obj(response.json())
     assert slide_info.num_levels == 16
     assert slide_info.pixel_size_nm == 499
@@ -27,3 +41,19 @@ def test_url(client, **kwargs):
     assert slide_info.extent.y == 32914
     assert slide_info.tile_extent.x == 512
     assert slide_info.tile_extent.y == 512
+
+
+@requests_mock.Mocker(real_http=True, kw='requests_mock')
+@pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("jpeg", 95), ("png", 0), ("bmp", 0), ("gif", 0), ("tiff", 0)])
+def test_get_slide_thumbnail_valid(client, image_format, image_quality, **kwargs):
+    mock = setup_mock(kwargs)
+    max_size_x = 21
+    max_size_y = 22
+    response = client.get(f"/slides/b465382a4db159d2b7c8da5c917a2280/thumbnail/max_size/{max_size_x}/{max_size_y}?image_format={image_format}&image_quality={image_quality}", stream=True)
+    assert response.status_code == 200
+    assert response.headers['content-type'] == f'image/{image_format}'
+    image = get_image(response)
+    x, y = image.size
+    assert (x == max_size_x) or (y == max_size_y)
+    if image_format in ['png', 'bmp', 'tiff']:
+        assert image.getpixel((10, 10)) == (248, 252, 249)
