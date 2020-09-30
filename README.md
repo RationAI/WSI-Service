@@ -68,7 +68,7 @@ Short explanation of the parameters used:
 
 Afterwards, visit http://localhost:8080
 
-Run tests with
+### Run tests 
 ```
 pytest --pyargs wsi_service
 ```

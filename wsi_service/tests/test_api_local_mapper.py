@@ -1,45 +1,7 @@
+
 import os
-import shutil
-from importlib import reload
 
-import pytest
-from fastapi.testclient import TestClient
-
-from wsi_service.__main__ import load_example_data
-
-
-def setup_environment_variables():
-    test_folder = os.path.dirname(os.path.realpath(__file__))
-    os.environ["data_dir"] = os.path.join(test_folder, 'data/')
-    os.environ["local_mode"] = str(True)
-    os.environ["mapper_address"] = "http://localhost:8080/slides/{global_slide_id}"
-
-
-def get_client():
-    import wsi_service.api
-    reload(wsi_service.api)
-    return TestClient(wsi_service.api.api)
-
-
-@pytest.fixture()
-def client():
-    setup_environment_variables()
-    if not os.path.exists(os.environ["data_dir"]):
-        os.mkdir(os.environ["data_dir"])
-    load_example_data(os.path.join(os.environ["data_dir"], 'example'))
-    yield get_client()
-
-
-@pytest.fixture()
-def client_no_data():
-    setup_environment_variables()
-    data_dir = os.environ['data_dir']
-    del os.environ['data_dir']
-    os.environ["data_dir"] = os.path.join(data_dir, 'empty')
-    if not os.path.exists(os.environ["data_dir"]):
-        os.mkdir(os.environ["data_dir"])
-    yield get_client()
-    shutil.rmtree(os.environ["data_dir"])
+from wsi_service.tests.test_api_helpers import client, client_no_data
 
 
 def test_get_cases_valid(client):
@@ -92,7 +54,7 @@ def test_get_cases_two_empty_cases(client_no_data):
     assert len(cases) == 2
 
 
-def test_get_available_slides_empy_case(client_no_data):
+def test_get_available_slides_empty_case(client_no_data):
     os.mkdir(os.path.join(os.environ["data_dir"], "case0"))
     response = client_no_data.get("/cases/")
     assert response.status_code == 200
