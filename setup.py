@@ -6,8 +6,6 @@ from setuptools import setup, find_packages
 # load requirements
 with open('requirements.txt') as f:
     install_requires = f.read().splitlines()
-install_requires = [i.split('==')[0]
-                    for i in install_requires]  # remove specific version
 
 # load version
 versionfile = open('wsi_service/version.py', "rt").read()
@@ -26,5 +24,6 @@ setup(
     long_description=__doc__,
     packages=find_packages(),
     zip_safe=False,
-    install_requires=install_requires
+    install_requires=install_requires,
+    python_requires='>=3.6'
 )
