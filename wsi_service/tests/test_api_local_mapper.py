@@ -1,4 +1,3 @@
-
 import os
 
 from wsi_service.tests.test_api_helpers import client, client_no_data
@@ -24,7 +23,7 @@ def test_get_available_slides_valid(client):
     assert slides[0]["global_case_id"] == "f8b723230e405a08bd7f039dfb85a9b2"
     assert slides[0]["local_slide_id"] == "CMU-1"
     assert slides[0]["storage_type"] == "fs"
-    assert slides[0]["storage_address"].endswith('example/CMU-1.svs')
+    assert slides[0]["storage_address"].endswith("example/CMU-1.svs")
 
 
 def test_get_slide_valid(client):
@@ -36,7 +35,7 @@ def test_get_slide_valid(client):
     assert slide["global_case_id"] == "f8b723230e405a08bd7f039dfb85a9b2"
     assert slide["local_slide_id"] == "CMU-1"
     assert slide["storage_type"] == "fs"
-    assert slide["storage_address"].endswith('example/CMU-1.svs')
+    assert slide["storage_address"].endswith("example/CMU-1.svs")
 
 
 def test_get_cases_no_data(client_no_data):
@@ -44,6 +43,7 @@ def test_get_cases_no_data(client_no_data):
     assert response.status_code == 200
     cases = response.json()
     assert len(cases) == 0
+
 
 def test_get_cases_two_empty_cases(client_no_data):
     os.mkdir(os.path.join(os.environ["data_dir"], "case0"))
@@ -69,10 +69,16 @@ def test_get_available_slides_empty_case(client_no_data):
 def test_get_available_slides_invalid_global_case_id(client):
     response = client.get("/cases/invalid_id/slides/")
     assert response.status_code == 400
-    assert response.json()["detail"] == "Case with global_case_id invalid_id does not exist"
+    assert (
+        response.json()["detail"]
+        == "Case with global_case_id invalid_id does not exist"
+    )
 
 
 def test_get_slide_invalid_global_slide_id(client):
     response = client.get("/slides/invalid_id")
     assert response.status_code == 400
-    assert response.json()["detail"] == "Slide with global_slide_id invalid_id does not exist"
+    assert (
+        response.json()["detail"]
+        == "Slide with global_slide_id invalid_id does not exist"
+    )

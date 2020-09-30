@@ -3,6 +3,18 @@ stages:
 - build_and_test
 - build_and_push
 
+run_static_analysis:
+    stage: test
+    image:
+        name: python
+    tags:
+    - asprunner
+    script:
+    - apt-get update && apt-get install -y python3-openslide
+    - pip3 install isort black
+    - isort . --check --profile black
+    - black . --check
+
 run_tests:
     stage: test
     image:
