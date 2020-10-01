@@ -6,6 +6,7 @@ from importlib import reload
 import PIL.Image as Image
 import pytest
 from fastapi.testclient import TestClient
+
 from wsi_service.__main__ import load_example_data
 
 
