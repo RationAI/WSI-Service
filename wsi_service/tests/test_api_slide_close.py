@@ -2,10 +2,12 @@ import time
 
 import pytest
 import requests_mock
-
 from wsi_service.models import SlideInfo
-from wsi_service.tests.test_api_helpers import (client_changed_timeout,
-                                                get_image, setup_mock)
+from wsi_service.tests.test_api_helpers import (
+    client_changed_timeout,
+    get_image,
+    setup_mock,
+)
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
