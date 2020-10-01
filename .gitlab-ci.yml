@@ -10,9 +10,9 @@ run_static_analysis:
     tags:
     - asprunner
     script:
-    - pip3 install isort black pylint pycodestyle
-    - isort . --check --profile black
+    - pip3 install black isort pylint pycodestyle
     - black . --check
+    - isort . --check --profile black
     - pylint wsi_service --disable=all --enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode --extension-pkg-whitelist=pydantic
     - pycodestyle wsi_service --ignore=E501,W503
 
@@ -25,7 +25,7 @@ run_test:
     script:
     - apt-get update && apt-get install -y python3-openslide
     - pip3 install -e .
-    - pytest
+    - pytest --cov=wsi_service wsi_service/tests/
 
 run_build_docker:
     stage: build_docker
