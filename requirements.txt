@@ -1,6 +1,9 @@
+black
 fastapi
+isort
 openslide-wrapper
 Pillow
+pylint
 pytest
 pytest-cov
 requests

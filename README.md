@@ -1,4 +1,4 @@
-# wsi-service
+# WSI Service
 
 Implementation of the EMPAIA WSI-Service to stream whole slide images tile-based via HTTP
 
@@ -6,7 +6,7 @@ Implementation of the EMPAIA WSI-Service to stream whole slide images tile-based
 WSI-Service is a python module and can be run either locally or via docker.
 
 ### Run local 
-Make sure [OpenSlide](https://openslide.org/download/) is installed. Install using pip within this folder
+Make sure [OpenSlide](https://openslide.org/download/) is installed. Install WSI Service by running the following line within this folder
 ```
 pip3 install -e .
 ```
@@ -64,15 +64,36 @@ Short explanation of the parameters used:
 * ```--rm``` optional, remove if container should be reused (recommended)
 * ```-v PATH_TO_DATA_DIR_ON_HOST:/data``` optional, if not set, empty dir will be used. Make sure container user (-u) has read access
 * ```-v PATH_TO_REPOSITORY_ROOT:/wsi_service``` optional, will use the source code of host and automatically restart server on changes
-* ```--debug``` optional, use debug config (parameters after the image name are passed to the python module)
+* ```--debug``` optional, use debug config and activate reload
 
 Afterwards, visit http://localhost:8080
+
+
+## Development
+
+### Use debug to activate reload
+
+Service is reloaded after code changes. Activate locally with
+```
+python3 -m wsi_service --debug data_dir
+```
+or using docker with
+```
+docker run \
+  -it \
+  -p 8080:8080 \
+  --rm \
+  -v PATH_TO_DATA_DIR_ON_HOST:/data \
+  -v PATH_TO_REPOSITORY_ROOT:/wsi_service \
+  registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service \
+  --debug
+```
 
 ### Run tests 
 ```
 pytest --pyargs wsi_service
 ```
-or using Docker with
+or using docker with
 ```
 docker run \
   -it \
@@ -81,3 +102,23 @@ docker run \
   registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service \
   -m pytest --pyargs wsi_service
 ```
+
+### Run static code analysis and fix issues
+
+If you are using VS Code there are already default [settings](https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/wsi-service/-/blob/6-add-tests-to-wsi-service/.vscode/settings.json) that will sort your imports and reformat the code on save. Furthermore, there will be standard pylint warnings from VS Code that should be fixed manually.
+
+To start the automatic import sorter from console run
+```
+isort .
+```
+
+To start the automatic formatter from console run
+```
+black .
+```
+
+To start pylint from console run
+```
+pylint wsi_service --disable=all --enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode --extension-pkg-whitelist=pydantic
+```
+following [VS Code](https://code.visualstudio.com/docs/python/linting#_default-pylint-rules).
