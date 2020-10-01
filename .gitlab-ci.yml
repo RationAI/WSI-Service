@@ -13,10 +13,9 @@ run_static_analysis:
     - pip3 install black isort pylint pycodestyle
     - black . --check
     - isort . --check --profile black
-    - pylint wsi_service --disable=all --enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode --extension-pkg-whitelist=pydantic
-    - pycodestyle wsi_service --ignore=E501,W503
+    - pylint wsi_service --disable=all --enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode --extension-pkg-whitelist=pydantic --disable=F0401
 
-run_test:
+    run_test:
     stage: test
     image:
         name: python
