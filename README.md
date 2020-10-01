@@ -108,14 +108,14 @@ docker run \
 
 If you are using VS Code there are already default [settings](https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/wsi-service/-/blob/6-add-tests-to-wsi-service/.vscode/settings.json) that will sort your imports and reformat the code on save. Furthermore, there will be standard pylint warnings from VS Code that should be fixed manually.
 
-To start the automatic import sorter from console run
-```
-isort .
-```
-
 To start the automatic formatter from console run
 ```
 black .
+```
+
+To start the automatic import sorter from console run
+```
+isort . --profile black
 ```
 
 To start pylint from console run

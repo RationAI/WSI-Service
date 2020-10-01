@@ -9,5 +9,9 @@
     // setup automatic import sort
     "editor.codeActionsOnSave": {
         "source.organizeImports": true
-    }
+    },
+    "python.sortImports.args": [
+        "--profile",
+        "black",
+    ],
 }
