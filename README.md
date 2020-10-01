@@ -1,11 +1,11 @@
 # WSI Service
 
-Implementation of the EMPAIA WSI-Service to stream whole slide images tile-based via HTTP
+Implementation of the EMPAIA WSI Service to stream whole slide images tile-based via HTTP
 
 ## How to run
-WSI-Service is a python module and can be run either locally or via docker.
+WSI Service is a python module and can be run either locally or via docker.
 
-### Run local 
+### Run locally
 Make sure [OpenSlide](https://openslide.org/download/) is installed. Install WSI Service by running the following line within this folder
 ```
 pip3 install -e .
@@ -20,14 +20,15 @@ positional arguments:
 
 optional arguments:
   -h, --help           Show this help message and exit
-  --port PORT          Port the WSI-Service listens to
+  --port PORT          Port the WSI Service listens to
   --debug              Use the debug config
   --load-example-data  This will download an example image into the data
                        folder before starting the server
   --mapper-address     Mapper-Service Address
 ```
+Afterwards, visit http://localhost:8080
 
-### Run as Docker
+### Run with docker
 Download the turnkey ready docker image
 ```
 docker pull registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service
