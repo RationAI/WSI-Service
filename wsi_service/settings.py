@@ -4,8 +4,8 @@ from wsi_service.version import __version__
 
 
 class Settings(BaseSettings):
-    title: str = "WSI-Service"
-    description: str = "EMPAIA WSI-Service to stream whole slide images"
+    title: str = "WSI Service"
+    description: str = "EMPAIA WSI Service to stream whole slide images"
     version: str = __version__
 
     data_dir: str

@@ -1,0 +1,2 @@
+[run]
+omit = wsi_service/tests/*,wsi_service/__*

@@ -28,6 +28,9 @@ COPY --from=build /openslide_deps/* /usr/lib/x86_64-linux-gnu/
 COPY --from=build /wsi_service /wsi_service
 RUN python -m pip install -e /wsi_service
 
+RUN python -m pytest --pyargs /wsi_service  \
+  && python -c "import shutil; shutil.rmtree('/wsi_service/wsi_service/tests/data')" 
+
 COPY --from=build /data /data
 VOLUME ["/data"]
 

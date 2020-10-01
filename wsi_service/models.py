@@ -7,15 +7,11 @@ class Extent(BaseModel):
 
 
 class SlideInfo(BaseModel):
-    extent: Extent = Field(
-        ...,
-        description="Image extent (finest level, level=0)")
-    num_levels: int = Field(
-        ...,
-        description="Number of levels in image pyramid")
+    extent: Extent = Field(..., description="Image extent (finest level, level=0)")
+    num_levels: int = Field(..., description="Number of levels in image pyramid")
     pixel_size_nm: int = Field(
-        ...,
-        description="Pixel Size in nm (finest level, level=0)")
+        ..., description="Pixel Size in nm (finest level, level=0)"
+    )
     tile_extent: Extent = Field(..., description="Tile extent")
 
 
