@@ -67,3 +67,4 @@ class SlideSource:
             if global_slide_id in self.opened_slides:
                 self.opened_slides[global_slide_id].slide.close()
                 del self.opened_slides[global_slide_id]
+                del self.slide_map[global_slide_id]

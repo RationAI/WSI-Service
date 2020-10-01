@@ -1,30 +1,7 @@
-import io
-
-import PIL.Image as Image
 import pytest
 import requests_mock
-
 from wsi_service.models import SlideInfo
-from wsi_service.tests.test_api_helpers import client, client_no_data
-
-
-def setup_mock(kwargs):
-    mock = kwargs["requests_mock"]
-    mock.get(
-        "http://testserver/slides/b465382a4db159d2b7c8da5c917a2280",
-        json={
-            "global_slide_id": "b465382a4db159d2b7c8da5c917a2280",
-            "global_case_id": "f8b723230e405a08bd7f039dfb85a9b2",
-            "local_slide_id": "CMU-1",
-            "storage_type": "fs",
-            "storage_address": "example/CMU-1.svs",
-        },
-    )
-    return mock
-
-
-def get_image(response):
-    return Image.open(io.BytesIO(response.raw.data))
+from wsi_service.tests.test_api_helpers import client, get_image, setup_mock
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")

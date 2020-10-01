@@ -22,7 +22,9 @@ api = FastAPI(
 )
 
 slide_source = SlideSource(
-    settings.mapper_address, settings.data_dir, settings.max_returned_region_size
+    settings.mapper_address,
+    settings.data_dir,
+    settings.inactive_histo_image_timeout_seconds,
 )
 
 
