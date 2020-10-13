@@ -42,7 +42,7 @@ class SlideSource:
                     slide = Slide(OpenSlide(filepath))
                     self.opened_slides[global_slide_id] = ExpiringSlide(slide, None)
                 except KeyError:
-                    raise HTTPException(status_code=400)
+                    raise HTTPException(status_code=404)
             self._reset_slide_expiration(global_slide_id)
         return self.opened_slides[global_slide_id].slide
 

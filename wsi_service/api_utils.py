@@ -23,7 +23,10 @@ def make_image_response(pil_image, image_format, image_quality):
             status_code=400, detail="Provided image format parameter not supported"
         )
     mem = BytesIO()
-    pil_image.save(mem, format=image_format, quality=image_quality)
+    if image_format == "png":
+        pil_image.save(mem, format=image_format, optimize=(image_quality > 0))
+    else:
+        pil_image.save(mem, format=image_format, quality=image_quality)
     mem.seek(0)
     return StreamingResponse(mem, media_type=supported_image_formats[image_format])
 

@@ -18,7 +18,7 @@ def test_slide_source_timeout(client_changed_timeout, **kwargs):
     setup_mock(kwargs)
     assert len(slide_source.opened_slides.keys()) == 0
     assert len(slide_source.slide_map.keys()) == 0
-    response = client.get("/slides/b465382a4db159d2b7c8da5c917a2280/info")
+    response = client.get("/slides/f863c2ef155654b1af0387acc7ebdb60/info")
     assert response.status_code == 200
     assert len(slide_source.opened_slides.keys()) == 1
     assert len(slide_source.slide_map.keys()) == 1

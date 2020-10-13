@@ -30,16 +30,47 @@ class Slide:
                 "y": self.openslide_slide.dimensions[1],
             },
             "num_levels": self.num_levels,
-            "pixel_size_nm": int(
+            "pixel_size_nm": self.get_pixel_size(),
+            "tile_extent": {"x": self.tile_extent, "y": self.tile_extent},
+        }
+
+    def get_pixel_size(self):
+        if (
+            self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR]
+            == "generic-tiff"
+        ):
+            if self.openslide_slide.properties["tiff.ResolutionUnit"] == "centimeter":
+                pixel_size_nm = int(
+                    round(
+                        1e8
+                        / float(
+                            self.openslide_slide.properties[
+                                "tiff.XResolution"
+                            ]  # pixel per centimeter
+                        )
+                    )
+                )
+            else:
+                raise ("Metadata is not supported in this file.")
+
+        elif (
+            self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "aperio"
+            or self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR]
+            == "mirax"
+            or self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR]
+            == "hamamatsu"
+        ):
+            pixel_size_nm = int(
                 round(
                     1000
                     * float(
                         self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X]
                     )
                 )
-            ),
-            "tile_extent": {"x": self.tile_extent, "y": self.tile_extent},
-        }
+            )
+        else:
+            raise ("Metadata is not supported in this image format.")
+        return pixel_size_nm
 
     # TODO: Optimize by caching high level
     def get_region(self, level, start_x, start_y, size_x, size_y):
@@ -68,7 +99,7 @@ class Slide:
 
     def _get_associated_image(self, associated_image_name):
         if associated_image_name not in self.openslide_slide.associated_images:
-            raise HTTPException(status_code=400)
+            raise HTTPException(status_code=404)
         associated_image_rgba = self.openslide_slide.associated_images[
             associated_image_name
         ]
