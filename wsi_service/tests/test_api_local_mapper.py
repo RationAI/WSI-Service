@@ -7,35 +7,38 @@ def test_get_cases_valid(client):
     response = client.get("/cases/")
     assert response.status_code == 200
     cases = response.json()
-    assert len(cases) == 1
+    assert len(cases) == 9
     assert len(cases[0].keys()) == 2
-    assert cases[0]["global_case_id"] == "f8b723230e405a08bd7f039dfb85a9b2"
-    assert cases[0]["local_case_id"] == "example"
+    case = list(filter(lambda case: case["local_case_id"] == "Olympus", cases))[0]
+    assert case["global_case_id"] == "7a32e2c36ca756d9b7df0b627ace4c12"
 
 
 def test_get_available_slides_valid(client):
-    response = client.get("/cases/f8b723230e405a08bd7f039dfb85a9b2/slides/")
+    response = client.get("/cases/4593f30c39d75d2385c6c8811c4ae7e0/slides/")
     assert response.status_code == 200
     slides = response.json()
+    slide = list(filter(lambda slide: slide["local_slide_id"] == "CMU-1.svs", slides))[
+        0
+    ]
     assert len(slides) == 1
     assert len(slides[0].keys()) == 5
-    assert slides[0]["global_slide_id"] == "b465382a4db159d2b7c8da5c917a2280"
-    assert slides[0]["global_case_id"] == "f8b723230e405a08bd7f039dfb85a9b2"
-    assert slides[0]["local_slide_id"] == "CMU-1"
-    assert slides[0]["storage_type"] == "fs"
-    assert slides[0]["storage_address"].endswith("example/CMU-1.svs")
+    assert slide["global_slide_id"] == "f863c2ef155654b1af0387acc7ebdb60"
+    assert slide["global_case_id"] == "4593f30c39d75d2385c6c8811c4ae7e0"
+    assert slide["local_slide_id"] == "CMU-1.svs"
+    assert slide["storage_type"] == "fs"
+    assert slide["storage_address"].endswith("Aperio/CMU-1.svs")
 
 
 def test_get_slide_valid(client):
-    response = client.get("/slides/b465382a4db159d2b7c8da5c917a2280")
+    response = client.get("/slides/4b0ec5e0ec5e5e05ae9e500857314f20")
     assert response.status_code == 200
     slide = response.json()
     assert len(slide.keys()) == 5
-    assert slide["global_slide_id"] == "b465382a4db159d2b7c8da5c917a2280"
-    assert slide["global_case_id"] == "f8b723230e405a08bd7f039dfb85a9b2"
-    assert slide["local_slide_id"] == "CMU-1"
+    assert slide["global_slide_id"] == "4b0ec5e0ec5e5e05ae9e500857314f20"
+    assert slide["global_case_id"] == "491e1f7180445b1e805cdc128ba884b7"
+    assert slide["local_slide_id"] == "CMU-1.tiff"
     assert slide["storage_type"] == "fs"
-    assert slide["storage_address"].endswith("example/CMU-1.svs")
+    assert slide["storage_address"].endswith("Generic TIFF/CMU-1.tiff")
 
 
 def test_get_cases_no_data(client_no_data):

@@ -1,5 +1,6 @@
 import argparse
 import os
+import zipfile
 from urllib.request import urlretrieve
 
 import uvicorn
@@ -11,12 +12,15 @@ def set_env_from_args(data_dir, mapper_address, local_mode):
     os.environ["mapper_address"] = mapper_address
 
 
-def load_example_data(download_folder="/data/example"):
-    if not os.path.exists(download_folder):
-        os.mkdir(download_folder)
-        print("Beginning file download (169.33MB)...")
-        url = "https://nextcloud.empaia.org/s/Hyfgf5nMqGkcPLF/download"
-        urlretrieve(url, os.path.join(download_folder, "CMU-1.svs"))
+def load_example_data(download_folder="/data"):
+    if not os.path.exists(os.path.join(download_folder, "Aperio")):
+        print("Beginning file download (13 GB)...")
+        url = "https://nextcloud.empaia.org/s/4fpdFEn69gqgrgK/download"
+        urlretrieve(url, os.path.join(download_folder, "..", "testdata.zip"))
+        with zipfile.ZipFile(
+            os.path.join(download_folder, "..", "testdata.zip"), "r"
+        ) as zip_ref:
+            zip_ref.extractall(os.path.join(download_folder, ".."))
         print("Done")
 
 

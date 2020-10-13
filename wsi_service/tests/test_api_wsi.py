@@ -6,15 +6,26 @@ from wsi_service.tests.test_api_helpers import client, get_image, setup_mock
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
-def test_get_slide_info_valid(client, **kwargs):
+@pytest.mark.parametrize(
+    "global_slide_id, num_levels, pixel_size_nm, x, y",
+    [
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", 16, 499, 46000, 32914),  # tiff
+        ("f863c2ef155654b1af0387acc7ebdb60", 16, 499, 46000, 32914),  # svs
+        ("c801ce3d1de45f2996e6a07b2d449bca", 17, 227, 122880, 110592),  # ndpi
+        ("7304006194f8530b9e19df1310a3670f", 17, 234, 101832, 219976),  # mrxs
+    ],
+)
+def test_get_slide_info_valid(
+    client, global_slide_id, num_levels, pixel_size_nm, x, y, **kwargs
+):
     setup_mock(kwargs)
-    response = client.get("/slides/b465382a4db159d2b7c8da5c917a2280/info")
+    response = client.get(f"/slides/{global_slide_id}/info")
     assert response.status_code == 200
     slide_info = SlideInfo.parse_obj(response.json())
-    assert slide_info.num_levels == 16
-    assert slide_info.pixel_size_nm == 499
-    assert slide_info.extent.x == 46000
-    assert slide_info.extent.y == 32914
+    assert slide_info.num_levels == num_levels
+    assert slide_info.pixel_size_nm == pixel_size_nm
+    assert slide_info.extent.x == x
+    assert slide_info.extent.y == y
     assert slide_info.tile_extent.x == 512
     assert slide_info.tile_extent.y == 512
 
@@ -22,77 +33,178 @@ def test_get_slide_info_valid(client, **kwargs):
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
     "image_format, image_quality",
-    [("jpeg", 90), ("jpeg", 95), ("png", 0), ("bmp", 0), ("gif", 0), ("tiff", 0)],
+    [
+        ("jpeg", 90),
+        ("jpeg", 95),
+        ("png", 0),
+        ("png", 1),
+        ("bmp", 0),
+        ("gif", 0),
+        ("tiff", 0),
+    ],
 )
-def test_get_slide_thumbnail_valid(client, image_format, image_quality, **kwargs):
+@pytest.mark.parametrize(
+    "global_slide_id, return_value, testpixel",
+    [
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", 200, (247, 250, 249)),
+        ("f863c2ef155654b1af0387acc7ebdb60", 200, (244, 249, 247)),
+        ("c801ce3d1de45f2996e6a07b2d449bca", 200, (211, 199, 221)),
+        ("7304006194f8530b9e19df1310a3670f", 200, (226, 155, 217)),
+    ],
+)
+def test_get_slide_thumbnail_valid(
+    client,
+    image_format,
+    image_quality,
+    global_slide_id,
+    return_value,
+    testpixel,
+    **kwargs,
+):
     setup_mock(kwargs)
     max_size_x = 21
     max_size_y = 22
     response = client.get(
-        f"/slides/b465382a4db159d2b7c8da5c917a2280/thumbnail/max_size/{max_size_x}/{max_size_y}?image_format={image_format}&image_quality={image_quality}",
+        f"/slides/{global_slide_id}/thumbnail/max_size/{max_size_x}/{max_size_y}?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
-    assert response.status_code == 200
+    assert response.status_code == return_value
     assert response.headers["content-type"] == f"image/{image_format}"
     image = get_image(response)
     x, y = image.size
     assert (x == max_size_x) or (y == max_size_y)
     if image_format in ["png", "bmp", "tiff"]:
-        assert image.getpixel((10, 10)) == (248, 252, 249)
+        assert image.getpixel((5, 5)) == testpixel
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
     "image_format, image_quality",
-    [("jpeg", 90), ("jpeg", 95), ("png", 0), ("bmp", 0), ("gif", 0), ("tiff", 0)],
+    [
+        ("jpeg", 90),
+        ("jpeg", 95),
+        ("png", 0),
+        ("png", 1),
+        ("bmp", 0),
+        ("gif", 0),
+        ("tiff", 0),
+    ],
 )
-def test_get_slide_label_valid(client, image_format, image_quality, **kwargs):
+@pytest.mark.parametrize(
+    "global_slide_id, has_label",
+    [
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", False),
+        ("f863c2ef155654b1af0387acc7ebdb60", True),
+        ("c801ce3d1de45f2996e6a07b2d449bca", False),
+        ("7304006194f8530b9e19df1310a3670f", True),
+    ],
+)
+def test_get_slide_label_valid(
+    client, image_format, image_quality, global_slide_id, has_label, **kwargs
+):
     setup_mock(kwargs)
     response = client.get(
-        f"/slides/b465382a4db159d2b7c8da5c917a2280/label?image_format={image_format}&image_quality={image_quality}",
+        f"/slides/{global_slide_id}/label?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
-    assert response.status_code == 200
-    assert response.headers["content-type"] == f"image/{image_format}"
-    image = get_image(response)
-    if image_format in ["png", "bmp", "tiff"]:
-        image.thumbnail((1, 1))
-        assert image.getpixel((0, 0)) == (126, 91, 50)
+    if has_label:
+        assert response.status_code == 200
+        assert response.headers["content-type"] == f"image/{image_format}"
+        image = get_image(response)
+        if image_format in ["png", "bmp", "tiff"] and global_slide_id in [
+            "4b0ec5e0ec5e5e05ae9e500857314f20",
+            "f863c2ef155654b1af0387acc7ebdb60",
+            "c801ce3d1de45f2996e6a07b2d449bca",
+        ]:
+            image.thumbnail((1, 1))
+            assert image.getpixel((0, 0)) == (126, 91, 50)
+    else:
+        assert response.status_code == 404
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
     "image_format, image_quality",
-    [("jpeg", 90), ("jpeg", 95), ("png", 0), ("bmp", 0), ("gif", 0), ("tiff", 0)],
+    [
+        ("jpeg", 90),
+        ("jpeg", 95),
+        ("png", 0),
+        ("png", 1),
+        ("bmp", 0),
+        ("gif", 0),
+        ("tiff", 0),
+    ],
 )
-def test_get_slide_macro_valid(client, image_format, image_quality, **kwargs):
+@pytest.mark.parametrize(
+    "global_slide_id, return_value, testpixel",
+    [
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", 404, ()),
+        ("f863c2ef155654b1af0387acc7ebdb60", 200, (178, 181, 179)),
+        ("c801ce3d1de45f2996e6a07b2d449bca", 200, (200, 196, 198)),
+        ("7304006194f8530b9e19df1310a3670f", 200, (211, 211, 211)),
+    ],
+)
+def test_get_slide_macro_valid(
+    client,
+    image_format,
+    image_quality,
+    global_slide_id,
+    return_value,
+    testpixel,
+    **kwargs,
+):
     setup_mock(kwargs)
     response = client.get(
-        f"/slides/b465382a4db159d2b7c8da5c917a2280/macro?image_format={image_format}&image_quality={image_quality}",
+        f"/slides/{global_slide_id}/macro?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
-    assert response.status_code == 200
-    assert response.headers["content-type"] == f"image/{image_format}"
-    image = get_image(response)
-    if image_format in ["png", "bmp", "tiff"]:
-        image.thumbnail((1, 1))
-        assert image.getpixel((0, 0)) == (178, 181, 179)
+    assert response.status_code == return_value
+    if return_value == 200:
+        assert response.headers["content-type"] == f"image/{image_format}"
+        image = get_image(response)
+        if image_format in ["png", "bmp", "tiff"]:
+            image.thumbnail((1, 1))
+            assert image.getpixel((0, 0)) == testpixel
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
     "image_format, image_quality",
-    [("jpeg", 90), ("jpeg", 95), ("png", 0), ("bmp", 0), ("gif", 0), ("tiff", 0)],
+    [
+        ("jpeg", 90),
+        ("jpeg", 95),
+        ("png", 0),
+        ("png", 1),
+        ("bmp", 0),
+        ("gif", 0),
+        ("tiff", 0),
+    ],
 )
-def test_get_slide_region_valid(client, image_format, image_quality, **kwargs):
+@pytest.mark.parametrize(
+    "global_slide_id,  testpixel, start_x, start_y",
+    [
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", (223, 217, 222), 15000, 15000),
+        ("f863c2ef155654b1af0387acc7ebdb60", (223, 217, 222), 15000, 15000),
+        ("c801ce3d1de45f2996e6a07b2d449bca", (218, 217, 225), 15000, 15000),
+        ("7304006194f8530b9e19df1310a3670f", (221, 170, 219), 50000, 90000),
+    ],
+)
+def test_get_slide_region_valid(
+    client,
+    image_format,
+    image_quality,
+    global_slide_id,
+    testpixel,
+    start_x,
+    start_y,
+    **kwargs,
+):
     setup_mock(kwargs)
     level = 0
-    start_x = 15000
-    start_y = 15000
     size_x = 345
     size_y = 543
     response = client.get(
-        f"/slides/b465382a4db159d2b7c8da5c917a2280/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format={image_format}&image_quality={image_quality}",
+        f"/slides/{global_slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
     assert response.status_code == 200
@@ -102,21 +214,45 @@ def test_get_slide_region_valid(client, image_format, image_quality, **kwargs):
     assert (x == size_x) or (y == size_y)
     if image_format in ["png", "bmp", "tiff"]:
         image.thumbnail((1, 1))
-        assert image.getpixel((0, 0)) == (223, 217, 222)
+        assert image.getpixel((0, 0)) == testpixel
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
     "image_format, image_quality",
-    [("jpeg", 90), ("jpeg", 95), ("png", 0), ("bmp", 0), ("gif", 0), ("tiff", 0)],
+    [
+        ("jpeg", 90),
+        ("jpeg", 95),
+        ("png", 0),
+        ("png", 1),
+        ("bmp", 0),
+        ("gif", 0),
+        ("tiff", 0),
+    ],
 )
-def test_get_slide_tile_valid(client, image_format, image_quality, **kwargs):
+@pytest.mark.parametrize(
+    "global_slide_id,  testpixel, tile_x, tile_y",
+    [
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", (246, 246, 246), 21, 22),
+        ("f863c2ef155654b1af0387acc7ebdb60", (246, 246, 246), 21, 22),
+        ("c801ce3d1de45f2996e6a07b2d449bca", (219, 218, 226), 21, 22),
+        ("7304006194f8530b9e19df1310a3670f", (218, 134, 214), 60, 60),
+    ],
+)
+def test_get_slide_tile_valid(
+    client,
+    image_format,
+    image_quality,
+    global_slide_id,
+    testpixel,
+    tile_x,
+    tile_y,
+    **kwargs,
+):
     setup_mock(kwargs)
     level = 0
-    tile_x = 21
-    tile_y = 22
     response = client.get(
-        f"/slides/b465382a4db159d2b7c8da5c917a2280/tile/level/{level}/tile/{tile_x}/{tile_y}?image_format={image_format}&image_quality={image_quality}",
+        f"/slides/{global_slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
     assert response.status_code == 200
@@ -126,4 +262,4 @@ def test_get_slide_tile_valid(client, image_format, image_quality, **kwargs):
     assert (x == 512) or (y == 512)
     if image_format in ["png", "bmp", "tiff"]:
         image.thumbnail((1, 1))
-        assert image.getpixel((0, 0)) == (246, 246, 246)
+        assert image.getpixel((0, 0)) == testpixel

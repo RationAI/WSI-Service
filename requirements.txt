@@ -9,3 +9,4 @@ pytest-cov
 requests
 requests_mock
 uvicorn
+zipfile36
