@@ -11,8 +11,11 @@ from wsi_service.__main__ import load_example_data
 
 
 def setup_environment_variables():
-    test_folder = os.path.dirname(os.path.realpath(__file__))
-    os.environ["data_dir"] = os.path.join(test_folder, "data", "OpenSlide_adapted")
+    if os.path.exists("/data/OpenSlide_adapted"):
+        os.environ["data_dir"] = "/data/OpenSlide_adapted"
+    else:
+        test_folder = os.path.dirname(os.path.realpath(__file__))
+        os.environ["data_dir"] = os.path.join(test_folder, "data", "OpenSlide_adapted")
     os.environ["local_mode"] = str(True)
     os.environ["mapper_address"] = "http://testserver/slides/{global_slide_id}"
 
