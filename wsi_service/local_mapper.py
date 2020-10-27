@@ -28,16 +28,20 @@ class LocalMapper:
         for f in os.listdir(case_dir):
             absfile = os.path.join(case_dir, f)
             if OpenSlide.detect_format(absfile):
-                raw_slide_id = f
-                slide_id = uuid5(NAMESPACE_URL, raw_slide_id).hex
+                slide_id = uuid5(NAMESPACE_URL, f).hex
                 if slide_id not in self.slide_map:
                     self.case_map[case_id]["slides"].append(slide_id)
                     self.slide_map[slide_id] = {
-                        "global_case_id": case_id,
-                        "storage_address": absfile.replace(data_dir + "/", ""),
                         "global_slide_id": slide_id,
-                        "local_slide_id": raw_slide_id,
                         "storage_type": "fs",
+                        "storage_addresses": [
+                            {
+                                "address": absfile.replace(data_dir + "/", ""),
+                                "main_address": True,
+                                "global_storage_address_id": slide_id,
+                                "global_slide_id": slide_id,
+                            }
+                        ],
                     }
 
     def get_cases(self):

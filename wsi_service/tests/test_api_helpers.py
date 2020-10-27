@@ -67,40 +67,60 @@ def setup_mock(kwargs):
         "http://testserver/slides/f863c2ef155654b1af0387acc7ebdb60",
         json={
             "global_slide_id": "f863c2ef155654b1af0387acc7ebdb60",
-            "global_case_id": "4593f30c39d75d2385c6c8811c4ae7e0",
-            "local_slide_id": "CMU-1.svs",
             "storage_type": "fs",
-            "storage_address": "Aperio/CMU-1.svs",
+            "storage_addresses": [
+                {
+                    "address": "Aperio/CMU-1.svs",
+                    "main_address": True,
+                    "global_storage_address_id": "f863c2ef155654b1af0387acc7ebdb60",
+                    "global_slide_id": "f863c2ef155654b1af0387acc7ebdb60",
+                }
+            ],
         },
     )
     mock.get(
         "http://testserver/slides/4b0ec5e0ec5e5e05ae9e500857314f20",
         json={
             "global_slide_id": "4b0ec5e0ec5e5e05ae9e500857314f20",
-            "global_case_id": "491e1f7180445b1e805cdc128ba884b7",
-            "local_slide_id": "CMU-1.tiff",
             "storage_type": "fs",
-            "storage_address": "Generic TIFF/CMU-1.tiff",
+            "storage_addresses": [
+                {
+                    "address": "Generic TIFF/CMU-1.tiff",
+                    "main_address": True,
+                    "global_storage_address_id": "4b0ec5e0ec5e5e05ae9e500857314f20",
+                    "global_slide_id": "4b0ec5e0ec5e5e05ae9e500857314f20",
+                }
+            ],
         },
     )
     mock.get(
         "http://testserver/slides/7304006194f8530b9e19df1310a3670f",
         json={
             "global_slide_id": "7304006194f8530b9e19df1310a3670f",
-            "global_case_id": "7636186ead725a9e9738dd4c623ece45",
-            "local_slide_id": "Mirax2.2-1.mrxs",
             "storage_type": "fs",
-            "storage_address": "MIRAX/Mirax2.2-1.mrxs",
+            "storage_addresses": [
+                {
+                    "address": "MIRAX/Mirax2.2-1.mrxs",
+                    "main_address": True,
+                    "global_storage_address_id": "7304006194f8530b9e19df1310a3670f",
+                    "global_slide_id": "7304006194f8530b9e19df1310a3670f",
+                }
+            ],
         },
     )
     mock.get(
         "http://testserver/slides/c801ce3d1de45f2996e6a07b2d449bca",
         json={
             "global_slide_id": "c801ce3d1de45f2996e6a07b2d449bca",
-            "global_case_id": "5b231a7f8cff5678958959bfae23b793",
-            "local_slide_id": "OS-1.ndpi",
             "storage_type": "fs",
-            "storage_address": "Hamamatsu/OS-1.ndpi",
+            "storage_addresses": [
+                {
+                    "address": "Hamamatsu/OS-1.ndpi",
+                    "main_address": True,
+                    "global_storage_address_id": "c801ce3d1de45f2996e6a07b2d449bca",
+                    "global_slide_id": "c801ce3d1de45f2996e6a07b2d449bca",
+                }
+            ],
         },
     )
     return mock

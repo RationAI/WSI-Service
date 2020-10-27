@@ -37,7 +37,7 @@ class SlideSource:
                     self._map_slide(global_slide_id)
                     filepath = os.path.join(
                         self.data_dir,
-                        self.slide_map[global_slide_id]["storage_address"],
+                        self.slide_map[global_slide_id]["address"],
                     )
                     slide = Slide(OpenSlide(filepath))
                     self.opened_slides[global_slide_id] = ExpiringSlide(slide, None)
@@ -54,13 +54,17 @@ class SlideSource:
         expiring_slide.timer.start()
 
     def _map_slide(self, global_slide_id):
-        slide = self._get_slide(global_slide_id)
         if global_slide_id not in self.slide_map:
-            self.slide_map[global_slide_id] = slide
+            storage_address = self._get_slide_main_storage_address(global_slide_id)
+            self.slide_map[global_slide_id] = storage_address
 
-    def _get_slide(self, global_slide_id):
+    def _get_slide_main_storage_address(self, global_slide_id):
         r = requests.get(self.mapper_address.format(global_slide_id=global_slide_id))
-        return r.json()
+        slide = r.json()
+        for storage_address in slide["storage_addresses"]:
+            if storage_address["main_address"]:
+                return storage_address
+        return slide["storage_addresses"][0]
 
     def _close_slide(self, global_slide_id):
         with self.lock:
