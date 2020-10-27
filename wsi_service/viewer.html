@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/css/ol.css" type="text/css">
+    <style>
+        .map {
+            display: block;
+            position: absolute;
+            height: auto;
+            bottom: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+        }
+
+        .ol-scale-line {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 1px;
+            bottom: 8px;
+            left: 8px;
+            padding: 2px;
+            position: absolute;
+        }
+
+        .ol-scale-line-inner {
+            border-bottom: 1px solid black;
+            border-left: 1px solid black;
+            border-right: 1px solid black;
+            color: black;
+            font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+            font-size: 15px;
+            text-align: center;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/build/ol.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>viewer</title>
+</head>
+
+<body>
+    <div id="map" class="map"></div>
+    <script type="text/javascript">
+        function setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions) {
+            let projection = new ol.proj.Projection({
+                code: 'pixels',
+                units: 'pixels',
+                metersPerUnit: pixelSizeNm * 1e-9,
+                getPointResolution: function (resolution) {
+                    return resolution
+                }
+            })
+            ol.proj.addProjection(projection)
+            var minLevel = 5
+            let tileGrid = new ol.tilegrid.TileGrid({
+                resolutions: resolutions,
+                extent: extent,
+                tileSize: tileSize,
+                minZoom: numLevels - minLevel - 1,
+            })
+            let view = new ol.View({
+                resolutions: resolutions,
+                extent: extent,
+                projection: 'pixels',
+                center: ol.extent.getCenter(extent),
+                enableRotation: false,
+                showFullExtent: true,
+                constrainOnlyCenter: true
+            })
+            let source = new ol.source.XYZ({
+                url: 'unused',
+                tileGrid: tileGrid,
+                projection: 'pixels',
+                transition: 0,
+            })
+            source.setTileLoadFunction(function (tile) {
+                let level = numLevels - tile.tileCoord[0] - 1
+                let x = tile.tileCoord[1]
+                let y = tile.tileCoord[2]
+                url = `/slides/${globalSlideId}/tile/level/${level}/tile/${x}/${y}`
+                tile.getImage().src = url;
+            });
+            let histoLayer = new ol.layer.Tile({
+                source: source
+            })
+            let map = new ol.Map({
+                target: 'map',
+                layers: [histoLayer],
+                view: view,
+                controls: []
+            })
+            let scaleLineControl = new ol.control.ScaleLine({ minWidth: 100 })
+            map.addControl(scaleLineControl)
+            map.getView().fit(extent, map.getSize())
+            map.render()
+        }
+
+        function getResolutions(numLevels) {
+            let resolutions = []
+            for (let i = 0; i < numLevels; i++) {
+                resolutions.push(Math.pow(2, numLevels - i - 1))
+            }
+            return resolutions
+        }
+
+        let globalSlideId = "REPLACE_GLOBAL_SLIDE_ID"
+
+        axios.get(`/slides/${globalSlideId}/info`)
+            .then(function (response) {
+                wsiInfo = response.data
+
+                let pixelSizeNm = wsiInfo.pixel_size_nm
+                let extent = [0, 0, wsiInfo.extent.x, wsiInfo.extent.y]
+                let tileSize = [wsiInfo.tile_extent.x, wsiInfo.tile_extent.y]
+                let numLevels = wsiInfo.num_levels
+                let resolutions = getResolutions(numLevels)
+
+                setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions)
+            })
+    </script>
+</body>
+
+</html>

@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel, Field
 
 
@@ -15,9 +17,14 @@ class SlideInfo(BaseModel):
     tile_extent: Extent = Field(..., description="Tile extent")
 
 
-class SlideMapperInfo(BaseModel):
+class StorageAddress(BaseModel):
+    address: str
+    main_address: bool
+    global_storage_address_id: str
     global_slide_id: str
-    global_case_id: str
-    local_slide_id: str
+
+
+class SlideStorage(BaseModel):
+    global_slide_id: str
     storage_type: str
-    storage_address: str
+    storage_addresses: List[StorageAddress]

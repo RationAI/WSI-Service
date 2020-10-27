@@ -1,11 +1,13 @@
+import os
+import pathlib
 from typing import List
 
 from fastapi import FastAPI, HTTPException, Path
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 
 from wsi_service.api_utils import make_image_response, validate_image_request
 from wsi_service.local_mapper import LocalMapper
-from wsi_service.models import SlideInfo, SlideMapperInfo
+from wsi_service.models import SlideInfo, SlideStorage
 from wsi_service.queries import ImageFormatsQuery, ImageQualityQuery
 from wsi_service.responses import ImageRegionResponse, ImageResponses
 from wsi_service.settings import Settings
@@ -175,7 +177,7 @@ if settings.local_mode:
         cases = localmapper.get_cases()
         return cases
 
-    @api.get("/cases/{global_case_id}/slides/", response_model=List[SlideMapperInfo])
+    @api.get("/cases/{global_case_id}/slides/", response_model=List[SlideStorage])
     def get_available_slides(global_case_id: str):
         """
         (Only in local mode) Browse the local directory and return slide ids for each available file.
@@ -184,7 +186,7 @@ if settings.local_mode:
         slides = localmapper.get_slides(global_case_id)
         return slides
 
-    @api.get("/slides/{global_slide_id}", response_model=SlideMapperInfo)
+    @api.get("/slides/{global_slide_id}", response_model=SlideStorage)
     def get_slide(global_slide_id: str):
         """
         (Only in local mode) Return slide storage data for a given global_slide_id.
@@ -192,3 +194,13 @@ if settings.local_mode:
         localmapper = LocalMapper(settings.data_dir)
         slide = localmapper.get_slide(global_slide_id)
         return slide
+
+    @api.get("/slides/{global_slide_id}/viewer", response_class=HTMLResponse)
+    def view_slide(global_slide_id: str):
+        viewer_html = open(
+            os.path.join(pathlib.Path(__file__).parent.absolute(), "viewer.html"),
+            "r",
+            encoding="utf-8",
+        ).read()
+        viewer_html = viewer_html.replace("REPLACE_GLOBAL_SLIDE_ID", global_slide_id)
+        return viewer_html
