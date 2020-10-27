@@ -8,8 +8,9 @@ run_static_analysis:
     image:
         name: python
     tags:
-    - asprunner
+    - wsi-service-runner
     script:
+    - ls /data
     - pip3 install black isort pylint
     - black . --check
     - isort . --check --profile black
@@ -20,7 +21,7 @@ run_test:
     image:
         name: python
     tags:
-    - asprunner
+    - wsi-service-runner
     script:
     - apt-get update && apt-get install -y python3-openslide
     - pip3 install -e .

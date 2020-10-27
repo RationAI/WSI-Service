@@ -3,7 +3,7 @@ FROM python:3.7-stretch AS build
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
   && apt-get install --no-install-recommends -y \
-     python3-openslide
+  python3-openslide
 
 ADD requirements.txt /requirements.txt
 RUN pip3 install -r requirements.txt
@@ -27,9 +27,6 @@ COPY --from=build /openslide_deps/* /usr/lib/x86_64-linux-gnu/
 
 COPY --from=build /wsi_service /wsi_service
 RUN python -m pip install -e /wsi_service
-
-RUN python -m pytest --pyargs /wsi_service  \
-  && python -c "import shutil; shutil.rmtree('/wsi_service/wsi_service/tests/data')" 
 
 COPY --from=build /data /data
 VOLUME ["/data"]
