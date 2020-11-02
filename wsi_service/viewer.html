@@ -53,12 +53,11 @@
                 }
             })
             ol.proj.addProjection(projection)
-            var minLevel = 5
             let tileGrid = new ol.tilegrid.TileGrid({
                 resolutions: resolutions,
                 extent: extent,
                 tileSize: tileSize,
-                minZoom: numLevels - minLevel - 1,
+                minZoom: 8
             })
             let view = new ol.View({
                 resolutions: resolutions,
@@ -69,21 +68,21 @@
                 showFullExtent: true,
                 constrainOnlyCenter: true
             })
+            function tileUrlFunction(tileCoord) {
+                let level = numLevels - tileCoord[0] - 1
+                let x = tileCoord[1]
+                let y = tileCoord[2]
+                return `/slides/${globalSlideId}/tile/level/${level}/tile/${x}/${y}`
+            }
             let source = new ol.source.XYZ({
-                url: 'unused',
+                tileUrlFunction: tileUrlFunction,
                 tileGrid: tileGrid,
                 projection: 'pixels',
                 transition: 0,
             })
-            source.setTileLoadFunction(function (tile) {
-                let level = numLevels - tile.tileCoord[0] - 1
-                let x = tile.tileCoord[1]
-                let y = tile.tileCoord[2]
-                url = `/slides/${globalSlideId}/tile/level/${level}/tile/${x}/${y}`
-                tile.getImage().src = url;
-            });
             let histoLayer = new ol.layer.Tile({
-                source: source
+                source: source,
+                preload: Infinity
             })
             let map = new ol.Map({
                 target: 'map',
@@ -97,10 +96,10 @@
             map.render()
         }
 
-        function getResolutions(numLevels) {
+        function getResolutions(levels) {
             let resolutions = []
-            for (let i = 0; i < numLevels; i++) {
-                resolutions.push(Math.pow(2, numLevels - i - 1))
+            for (let i = levels.length - 1; i >= 0; i--) {
+                resolutions.push(levels[i].downsample_factor)
             }
             return resolutions
         }
@@ -111,11 +110,11 @@
             .then(function (response) {
                 wsiInfo = response.data
 
-                let pixelSizeNm = wsiInfo.pixel_size_nm
+                let pixelSizeNm = (wsiInfo.pixel_size_nm.x + wsiInfo.pixel_size_nm.y) / 2.0
                 let extent = [0, 0, wsiInfo.extent.x, wsiInfo.extent.y]
                 let tileSize = [wsiInfo.tile_extent.x, wsiInfo.tile_extent.y]
                 let numLevels = wsiInfo.num_levels
-                let resolutions = getResolutions(numLevels)
+                let resolutions = getResolutions(wsiInfo.levels)
 
                 setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions)
             })

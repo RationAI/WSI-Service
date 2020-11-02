@@ -195,7 +195,11 @@ if settings.local_mode:
         slide = localmapper.get_slide(global_slide_id)
         return slide
 
-    @api.get("/slides/{global_slide_id}/viewer", response_class=HTMLResponse)
+    @api.get(
+        "/slides/{global_slide_id}/viewer",
+        response_class=HTMLResponse,
+        include_in_schema=False,
+    )
     def view_slide(global_slide_id: str):
         viewer_html = open(
             os.path.join(pathlib.Path(__file__).parent.absolute(), "viewer.html"),

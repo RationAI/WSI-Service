@@ -7,27 +7,42 @@ from wsi_service.tests.test_api_helpers import client, get_image, setup_mock
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
-    "global_slide_id, num_levels, pixel_size_nm, x, y",
+    "global_slide_id, num_levels, pixel_size_nm, tile_size, x, y",
     [
-        ("4b0ec5e0ec5e5e05ae9e500857314f20", 16, 499, 46000, 32914),  # tiff
-        ("f863c2ef155654b1af0387acc7ebdb60", 16, 499, 46000, 32914),  # svs
-        ("c801ce3d1de45f2996e6a07b2d449bca", 17, 227, 122880, 110592),  # ndpi
-        ("7304006194f8530b9e19df1310a3670f", 17, 234, 101832, 219976),  # mrxs
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", 16, 499, (128, 128), 46000, 32914),  # tiff
+        ("f863c2ef155654b1af0387acc7ebdb60", 16, 499, (256, 256), 46000, 32914),  # svs
+        (
+            "c801ce3d1de45f2996e6a07b2d449bca",
+            17,
+            227,
+            (4096, 8),
+            122880,
+            110592,
+        ),  # ndpi
+        (
+            "7304006194f8530b9e19df1310a3670f",
+            17,
+            234,
+            (256, 256),
+            101832,
+            219976,
+        ),  # mrxs
     ],
 )
 def test_get_slide_info_valid(
-    client, global_slide_id, num_levels, pixel_size_nm, x, y, **kwargs
+    client, global_slide_id, num_levels, pixel_size_nm, tile_size, x, y, **kwargs
 ):
     setup_mock(kwargs)
     response = client.get(f"/slides/{global_slide_id}/info")
     assert response.status_code == 200
     slide_info = SlideInfo.parse_obj(response.json())
     assert slide_info.num_levels == num_levels
-    assert slide_info.pixel_size_nm == pixel_size_nm
+    assert round(slide_info.pixel_size_nm.x) == pixel_size_nm
+    assert round(slide_info.pixel_size_nm.y) == pixel_size_nm
     assert slide_info.extent.x == x
     assert slide_info.extent.y == y
-    assert slide_info.tile_extent.x == 512
-    assert slide_info.tile_extent.y == 512
+    assert slide_info.tile_extent.x == tile_size[0]
+    assert slide_info.tile_extent.y == tile_size[1]
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
@@ -231,12 +246,12 @@ def test_get_slide_region_valid(
     ],
 )
 @pytest.mark.parametrize(
-    "global_slide_id,  testpixel, tile_x, tile_y",
+    "global_slide_id,  testpixel, tile_x, tile_y, tile_size",
     [
-        ("4b0ec5e0ec5e5e05ae9e500857314f20", (246, 246, 246), 21, 22),
-        ("f863c2ef155654b1af0387acc7ebdb60", (246, 246, 246), 21, 22),
-        ("c801ce3d1de45f2996e6a07b2d449bca", (219, 218, 226), 21, 22),
-        ("7304006194f8530b9e19df1310a3670f", (218, 134, 214), 60, 60),
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", (243, 243, 243), 21, 22, (128, 128)),
+        ("f863c2ef155654b1af0387acc7ebdb60", (246, 246, 246), 21, 22, (256, 256)),
+        ("c801ce3d1de45f2996e6a07b2d449bca", (137, 143, 140), 21, 22, (4096, 8)),
+        ("7304006194f8530b9e19df1310a3670f", (255, 255, 255), 60, 60, (256, 256)),
     ],
 )
 def test_get_slide_tile_valid(
@@ -247,6 +262,7 @@ def test_get_slide_tile_valid(
     testpixel,
     tile_x,
     tile_y,
+    tile_size,
     **kwargs,
 ):
     setup_mock(kwargs)
@@ -259,7 +275,7 @@ def test_get_slide_tile_valid(
     assert response.headers["content-type"] == f"image/{image_format}"
     image = get_image(response)
     x, y = image.size
-    assert (x == 512) or (y == 512)
+    assert (x == tile_size[0]) or (y == tile_size[1])
     if image_format in ["png", "bmp", "tiff"]:
         image.thumbnail((1, 1))
         assert image.getpixel((0, 0)) == testpixel
