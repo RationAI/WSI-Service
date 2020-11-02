@@ -4,95 +4,42 @@ import openslide
 import PIL
 from fastapi import HTTPException
 
+from wsi_service.models import Extent, SlideInfo
+from wsi_service.slide_utils import get_slide_info, rgba_to_rgb_with_background_color
+
 
 class Slide:
     def __init__(self, openslide_slide):
         self.openslide_slide = openslide_slide
-        self.num_levels = self._calc_num_levels()
-
-        # fake tile size, #TODO use openslide internal tile size if available
-        self.tile_extent = 512
+        self.slide_info = get_slide_info(self.openslide_slide)
 
     def close(self):
         self.openslide_slide.close()
 
-    def _calc_num_levels(self):
-        min_extent = min(self.openslide_slide.dimensions)
-        if min_extent >= 0:
-            return int(math.log2(min_extent) + 1)
-        else:
-            return 0
-
     def get_info(self):
-        return {
-            "extent": {
-                "x": self.openslide_slide.dimensions[0],
-                "y": self.openslide_slide.dimensions[1],
-            },
-            "num_levels": self.num_levels,
-            "pixel_size_nm": self.get_pixel_size(),
-            "tile_extent": {"x": self.tile_extent, "y": self.tile_extent},
-        }
+        return self.slide_info
 
-    def get_pixel_size(self):
-        if (
-            self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR]
-            == "generic-tiff"
-        ):
-            if self.openslide_slide.properties["tiff.ResolutionUnit"] == "centimeter":
-                pixel_size_nm = int(
-                    round(
-                        1e8
-                        / float(
-                            self.openslide_slide.properties[
-                                "tiff.XResolution"
-                            ]  # pixel per centimeter
-                        )
-                    )
-                )
-            else:
-                raise ("Metadata is not supported in this file.")
-
-        elif (
-            self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "aperio"
-            or self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR]
-            == "mirax"
-            or self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR]
-            == "hamamatsu"
-        ):
-            pixel_size_nm = int(
-                round(
-                    1000
-                    * float(
-                        self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X]
-                    )
-                )
-            )
-        else:
-            raise ("Metadata is not supported in this image format.")
-        return pixel_size_nm
-
-    # TODO: Optimize by caching high level
     def get_region(self, level, start_x, start_y, size_x, size_y):
-        lvl0_location = start_x * (2 ** level), start_y * (2 ** level)
+        downsample_factor = int(self.slide_info.levels[level].downsample_factor)
         base_level = self.openslide_slide.get_best_level_for_downsample(
-            2 ** level + 0.1
+            downsample_factor
         )
-        remaining_downsample_factor = round(
-            (2 ** level) / self.openslide_slide.level_downsamples[base_level], 3
+        remaining_downsample_factor = (
+            downsample_factor / self.openslide_slide.level_downsamples[base_level]
         )
-
         base_size = (
             round(size_x * remaining_downsample_factor),
             round(size_y * remaining_downsample_factor),
         )
+        level_0_location = (start_x * downsample_factor, start_y * downsample_factor)
         base_img = self.openslide_slide.read_region(
-            lvl0_location, base_level, base_size
+            level_0_location, base_level, base_size
         )
         rgba_img = base_img.resize(
             (size_x, size_y), resample=PIL.Image.BILINEAR, reducing_gap=1.0
         )
-        return rgba_img.convert("RGB")
+        rgb_img = rgba_to_rgb_with_background_color(rgba_img)
+        return rgb_img
 
     def get_thumbnail(self, max_x, max_y):
         return self.openslide_slide.get_thumbnail((max_x, max_y))
@@ -114,8 +61,8 @@ class Slide:
     def get_tile(self, level, tile_x, tile_y):
         return self.get_region(
             level,
-            tile_x * self.tile_extent,
-            tile_y * self.tile_extent,
-            self.tile_extent,
-            self.tile_extent,
+            tile_x * self.slide_info.tile_extent.x,
+            tile_y * self.slide_info.tile_extent.y,
+            self.slide_info.tile_extent.x,
+            self.slide_info.tile_extent.y,
         )
