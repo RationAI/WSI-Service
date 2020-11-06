@@ -17,7 +17,7 @@ def setup_environment_variables():
         test_folder = os.path.dirname(os.path.realpath(__file__))
         os.environ["data_dir"] = os.path.join(test_folder, "data", "OpenSlide_adapted")
     os.environ["local_mode"] = str(True)
-    os.environ["mapper_address"] = "http://testserver/slides/{global_slide_id}"
+    os.environ["mapper_address"] = "http://testserver/slides/{slide_id}"
 
 
 def get_client():
@@ -66,14 +66,14 @@ def setup_mock(kwargs):
     mock.get(
         "http://testserver/slides/f863c2ef155654b1af0387acc7ebdb60",
         json={
-            "global_slide_id": "f863c2ef155654b1af0387acc7ebdb60",
+            "slide_id": "f863c2ef155654b1af0387acc7ebdb60",
             "storage_type": "fs",
             "storage_addresses": [
                 {
                     "address": "Aperio/CMU-1.svs",
                     "main_address": True,
-                    "global_storage_address_id": "f863c2ef155654b1af0387acc7ebdb60",
-                    "global_slide_id": "f863c2ef155654b1af0387acc7ebdb60",
+                    "storage_address_id": "f863c2ef155654b1af0387acc7ebdb60",
+                    "slide_id": "f863c2ef155654b1af0387acc7ebdb60",
                 }
             ],
         },
@@ -81,14 +81,14 @@ def setup_mock(kwargs):
     mock.get(
         "http://testserver/slides/4b0ec5e0ec5e5e05ae9e500857314f20",
         json={
-            "global_slide_id": "4b0ec5e0ec5e5e05ae9e500857314f20",
+            "slide_id": "4b0ec5e0ec5e5e05ae9e500857314f20",
             "storage_type": "fs",
             "storage_addresses": [
                 {
                     "address": "Generic TIFF/CMU-1.tiff",
                     "main_address": True,
-                    "global_storage_address_id": "4b0ec5e0ec5e5e05ae9e500857314f20",
-                    "global_slide_id": "4b0ec5e0ec5e5e05ae9e500857314f20",
+                    "storage_address_id": "4b0ec5e0ec5e5e05ae9e500857314f20",
+                    "slide_id": "4b0ec5e0ec5e5e05ae9e500857314f20",
                 }
             ],
         },
@@ -96,14 +96,14 @@ def setup_mock(kwargs):
     mock.get(
         "http://testserver/slides/7304006194f8530b9e19df1310a3670f",
         json={
-            "global_slide_id": "7304006194f8530b9e19df1310a3670f",
+            "slide_id": "7304006194f8530b9e19df1310a3670f",
             "storage_type": "fs",
             "storage_addresses": [
                 {
                     "address": "MIRAX/Mirax2.2-1.mrxs",
                     "main_address": True,
-                    "global_storage_address_id": "7304006194f8530b9e19df1310a3670f",
-                    "global_slide_id": "7304006194f8530b9e19df1310a3670f",
+                    "storage_address_id": "7304006194f8530b9e19df1310a3670f",
+                    "slide_id": "7304006194f8530b9e19df1310a3670f",
                 }
             ],
         },
@@ -111,14 +111,14 @@ def setup_mock(kwargs):
     mock.get(
         "http://testserver/slides/c801ce3d1de45f2996e6a07b2d449bca",
         json={
-            "global_slide_id": "c801ce3d1de45f2996e6a07b2d449bca",
+            "slide_id": "c801ce3d1de45f2996e6a07b2d449bca",
             "storage_type": "fs",
             "storage_addresses": [
                 {
                     "address": "Hamamatsu/OS-1.ndpi",
                     "main_address": True,
-                    "global_storage_address_id": "c801ce3d1de45f2996e6a07b2d449bca",
-                    "global_slide_id": "c801ce3d1de45f2996e6a07b2d449bca",
+                    "storage_address_id": "c801ce3d1de45f2996e6a07b2d449bca",
+                    "slide_id": "c801ce3d1de45f2996e6a07b2d449bca",
                 }
             ],
         },

@@ -27,7 +27,7 @@ def load_example_data(download_folder="/data"):
 def main():
     default_port = 8080
     default_mapper_address = (
-        f"http://localhost:{default_port}/slides/" + "{global_slide_id}"
+        f"http://localhost:{default_port}/slides/" + "{slide_id}/storage"
     )
     parser = argparse.ArgumentParser(
         description="Webservice that serves histological whole-slide-images"
