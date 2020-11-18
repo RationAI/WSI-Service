@@ -7,3 +7,5 @@ ImageFormatsQuery = Query(
 ImageQualityQuery = Query(
     90, ge=0, le=100, description="Image quality (only considered for specific formats)"
 )
+
+ZStackQuery = Query(0, description="Z-Stack layer index z")

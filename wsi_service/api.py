@@ -13,7 +13,7 @@ from wsi_service.local_mapper_models import (
     SlideStorage,
 )
 from wsi_service.models.slide import SlideInfo
-from wsi_service.queries import ImageFormatsQuery, ImageQualityQuery
+from wsi_service.queries import ImageFormatsQuery, ImageQualityQuery, ZStackQuery
 from wsi_service.responses import ImageRegionResponse, ImageResponses
 from wsi_service.settings import Settings
 from wsi_service.slide_source import SlideSource
@@ -129,6 +129,7 @@ def get_slide_region(
     size_y: int = Path(None, example=1024, description="Height of requested region"),
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery,
+    z: int = ZStackQuery,
 ):
     """
     Get region of the slide. Level 0 is highest (original) resolution. Each level has half the
@@ -163,6 +164,7 @@ def get_slide_tile(
     ),
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery,
+    z: int = ZStackQuery,
 ):
     """
     Get tile of the slide. Extent of the tile is given in slide metadata. Level 0 is highest
