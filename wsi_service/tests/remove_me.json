@@ -1,0 +1,165 @@
+{
+    "id": "f863c2ef155654b1af0387acc7ebdb60",
+    "extent": {
+        "x": 46000,
+        "y": 32914,
+        "z": 1
+    },
+    "num_levels": 16,
+    "pixel_size_nm": {
+        "x": 499.0,
+        "y": 499.0,
+        "z": None
+    },
+    "tile_extent": {
+        "x": 256,
+        "y": 256,
+        "z": 1
+    },
+    "levels": [
+        {
+            "extent": {
+                "x": 46000,
+                "y": 32914,
+                "z": 1
+            },
+            "downsample_factor": 1.0,
+            "generated": false
+        },
+        {
+            "extent": {
+                "x": 23000,
+                "y": 16457,
+                "z": 1
+            },
+            "downsample_factor": 2.0,
+            "generated": true
+        },
+        {
+            "extent": {
+                "x": 11500,
+                "y": 8228,
+                "z": 1
+            },
+            "downsample_factor": 4.0,
+            "generated": false
+        },
+        {
+            "extent": {
+                "x": 5750,
+                "y": 4114,
+                "z": 1
+            },
+            "downsample_factor": 8.0,
+            "generated": true
+        },
+        {
+            "extent": {
+                "x": 2875,
+                "y": 2057,
+                "z": 1
+            },
+            "downsample_factor": 16.0,
+            "generated": false
+        },
+        {
+            "extent": {
+                "x": 1437,
+                "y": 1028,
+                "z": 1
+            },
+            "downsample_factor": 32.0,
+            "generated": true
+        },
+        {
+            "extent": {
+                "x": 718,
+                "y": 514,
+                "z": 1
+            },
+            "downsample_factor": 64.0,
+            "generated": true
+        },
+        {
+            "extent": {
+                "x": 359,
+                "y": 257,
+                "z": 1
+            },
+            "downsample_factor": 128.0,
+            "generated": true
+        },
+        {
+            "extent": {
+                "x": 179,
+                "y": 128,
+                "z": 1
+            },
+            "downsample_factor": 256.0,
+            "generated": true
+        },
+        {
+            "extent": {
+                "x": 89,
+                "y": 64,
+                "z": 1
+            },
+            "downsample_factor": 512.0,
+            "generated": true
+        },
+        {
+            "extent": {
+                "x": 44,
+                "y": 32,
+                "z": 1
+            },
+            "downsample_factor": 1024.0,
+            "generated": true
+        },
+        {
+            "extent": {
+                "x": 22,
+                "y": 16,
+                "z": 1
+            },
+            "downsample_factor": 2048.0,
+            "generated": true
+        },
+        {
+            "extent": {
+                "x": 11,
+                "y": 8,
+                "z": 1
+            },
+            "downsample_factor": 4096.0,
+            "generated": true
+        },
+        {
+            "extent": {
+                "x": 5,
+                "y": 4,
+                "z": 1
+            },
+            "downsample_factor": 8192.0,
+            "generated": true
+        },
+        {
+            "extent": {
+                "x": 2,
+                "y": 2,
+                "z": 1
+            },
+            "downsample_factor": 16384.0,
+            "generated": true
+        },
+        {
+            "extent": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            },
+            "downsample_factor": 32768.0,
+            "generated": true
+        }
+    ]
+}

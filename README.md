@@ -17,24 +17,29 @@ There are several endpoints made available by this service:
 * `GET /slides/{slide_id}/info` - Get slide info, e.g.
 ```json
 {
-  "extent": {
-    "x": 46000,
-    "y": 32914
-  },
-  "num_levels": 16,
-  "pixel_size_nm": {
-    "x": 499,
-    "y": 499
-  },
-  "tile_extent": {
-    "x": 256,
-    "y": 256
-  },
-  "levels": [
+    "id": "f863c2ef155654b1af0387acc7ebdb60",
+    "extent": {
+        "x": 46000,
+        "y": 32914,
+        "z": 1
+    },
+    "num_levels": 16,
+    "pixel_size_nm": {
+        "x": 499.0,
+        "y": 499.0,
+        "z": None
+    },
+    "tile_extent": {
+        "x": 256,
+        "y": 256,
+        "z": 1
+    },
+    "levels": [
     {
       "extent": {
         "x": 46000,
-        "y": 32914
+        "y": 32914,
+        "z": 1
       },
       "downsample_factor": 1,
       "generated": false
@@ -42,7 +47,8 @@ There are several endpoints made available by this service:
     {
       "extent": {
         "x": 23000,
-        "y": 16457
+        "y": 16457,
+        "z": 1
       },
       "downsample_factor": 2,
       "generated": true
@@ -53,7 +59,8 @@ There are several endpoints made available by this service:
     {
       "extent": {
         "x": 1,
-        "y": 1
+        "y": 1,
+        "z": 1
       },
       "downsample_factor": 32768,
       "generated": true

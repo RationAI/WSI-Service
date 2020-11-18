@@ -39,7 +39,7 @@ class SlideSource:
                         self.data_dir,
                         self.slide_map[slide_id]["address"],
                     )
-                    slide = Slide(OpenSlide(filepath))
+                    slide = Slide(OpenSlide(filepath), slide_id)
                     self.opened_slides[slide_id] = ExpiringSlide(slide, None)
                 except KeyError:
                     raise HTTPException(status_code=404)

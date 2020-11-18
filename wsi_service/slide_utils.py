@@ -19,6 +19,7 @@ def get_original_levels(openslide_slide):
                 extent=Extent(
                     x=openslide_slide.level_dimensions[level][0],
                     y=openslide_slide.level_dimensions[level][1],
+                    z=1,
                 ),
                 downsample_factor=openslide_slide.level_downsamples[level],
                 generated=False,
@@ -33,6 +34,7 @@ def get_generated_levels(openslide_slide):
         extent = Extent(
             x=openslide_slide.dimensions[0] / (2 ** level),
             y=openslide_slide.dimensions[1] / (2 ** level),
+            z=1,
         )
         downsample_factor = 2 ** level
         levels.append(
@@ -98,15 +100,15 @@ def get_tile_extent(openslide_slide):
     else:
         tile_height = 256
         tile_width = 256
-    return Extent(x=tile_width, y=tile_height)
+    return Extent(x=tile_width, y=tile_height, z=1)
 
 
-def get_slide_info(openslide_slide):
+def get_slide_info(openslide_slide, slide_id):
     levels = get_levels(openslide_slide)
     return SlideInfo(
+        id=slide_id,
         extent=Extent(
-            x=openslide_slide.dimensions[0],
-            y=openslide_slide.dimensions[1],
+            x=openslide_slide.dimensions[0], y=openslide_slide.dimensions[1], z=1
         ),
         pixel_size_nm=get_pixel_size(openslide_slide),
         tile_extent=get_tile_extent(openslide_slide),

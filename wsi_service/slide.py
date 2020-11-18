@@ -9,9 +9,9 @@ from wsi_service.slide_utils import get_slide_info, rgba_to_rgb_with_background_
 
 
 class Slide:
-    def __init__(self, openslide_slide):
+    def __init__(self, openslide_slide, slide_id):
         self.openslide_slide = openslide_slide
-        self.slide_info = get_slide_info(self.openslide_slide)
+        self.slide_info = get_slide_info(self.openslide_slide, slide_id)
 
     def close(self):
         self.openslide_slide.close()
