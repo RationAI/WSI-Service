@@ -4,7 +4,7 @@ from uuid import NAMESPACE_URL, uuid5
 from fastapi import HTTPException
 from openslide import OpenSlide
 
-from wsi_service.models import (
+from wsi_service.local_mapper_models import (
     CaseLocalMapper,
     SlideLocalMapper,
     SlideStorage,

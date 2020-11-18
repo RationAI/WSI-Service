@@ -2,8 +2,7 @@ import time
 
 import pytest
 import requests_mock
-
-from wsi_service.models import SlideInfo
+from wsi_service.models.slide import SlideInfo
 from wsi_service.tests.test_api_helpers import (
     client_changed_timeout,
     get_image,

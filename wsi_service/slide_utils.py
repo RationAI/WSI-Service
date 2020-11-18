@@ -3,7 +3,7 @@ import math
 import openslide
 import PIL
 
-from wsi_service.models import Extent, Level, PixelSizeNm, SlideInfo
+from wsi_service.models.slide import Extent, Level, PixelSizeNm, SlideInfo
 
 
 def calc_num_levels(openslide_slide):

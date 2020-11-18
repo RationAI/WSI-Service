@@ -9,6 +9,8 @@ run_static_analysis:
         name: python
     tags:
     - wsi-service-runner
+    variables:
+        GIT_SUBMODULE_STRATEGY: recursive
     script:
     - ls /data
     - pip3 install black isort pylint
@@ -22,6 +24,8 @@ run_test:
         name: python
     tags:
     - wsi-service-runner
+    variables:
+        GIT_SUBMODULE_STRATEGY: recursive
     script:
     - apt-get update && apt-get install -y python3-openslide
     - pip3 install -e .
@@ -36,6 +40,8 @@ run_build_docker:
         entrypoint: [""]
     tags:
     - asprunner    
+    variables:
+        GIT_SUBMODULE_STRATEGY: recursive
     script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"gitlab-ci-token\",\"password\":\"$CI_JOB_TOKEN\"}}}" > /kaniko/.docker/config.json
     - export BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')

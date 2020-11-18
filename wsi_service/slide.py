@@ -4,7 +4,7 @@ import openslide
 import PIL
 from fastapi import HTTPException
 
-from wsi_service.models import Extent, SlideInfo
+from wsi_service.models.slide import Extent, SlideInfo
 from wsi_service.slide_utils import get_slide_info, rgba_to_rgb_with_background_color
 
 

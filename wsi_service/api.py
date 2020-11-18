@@ -7,12 +7,12 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 
 from wsi_service.api_utils import make_image_response, validate_image_request
 from wsi_service.local_mapper import LocalMapper
-from wsi_service.models import (
+from wsi_service.local_mapper_models import (
     CaseLocalMapper,
-    SlideInfo,
     SlideLocalMapper,
     SlideStorage,
 )
+from wsi_service.models.slide import SlideInfo
 from wsi_service.queries import ImageFormatsQuery, ImageQualityQuery
 from wsi_service.responses import ImageRegionResponse, ImageResponses
 from wsi_service.settings import Settings
