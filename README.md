@@ -68,11 +68,11 @@ There are several endpoints made available by this service:
   ]
 }
 ```
-* `GET /slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?format=jpeg&quality=90&z=0` - Get slide region: Get region of the slide. Level 0 is highest (original) resolution. Each level has half the resolution and half the extent of the previous level. Coordinates are given with respect to the requested level.
-* `GET /slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}?format=jpeg&quality=90&z=0` - Get slide tile: Get tile of the slide. Extent of the tile is given in slide metadata. Level 0 is highest (original) resolution. Each level has half the resolution and half the extent of the previous level. Coordinates are given with respect to tiles, i.e. tile coordinate n is the n-th tile in the respective dimension.
-* `GET /slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}?format=jpeg&quality=90` - Get slide thumbnail image
-* `GET /slides/{slide_id}/label?format=jpeg&quality=90` - Get slide label image
-* `GET /slides/{slide_id}/macro?format=jpeg&quality=90` - Get slide macro image
+* `GET /slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format=jpeg&image_quality=90&z=0` - Get slide region: Get region of the slide. Level 0 is highest (original) resolution. Each level has half the resolution and half the extent of the previous level. Coordinates are given with respect to the requested level.
+* `GET /slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}?image_format=jpeg&image_quality=90&z=0` - Get slide tile: Get tile of the slide. Extent of the tile is given in slide metadata. Level 0 is highest (original) resolution. Each level has half the resolution and half the extent of the previous level. Coordinates are given with respect to tiles, i.e. tile coordinate n is the n-th tile in the respective dimension.
+* `GET /slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}?image_format=jpeg&image_quality=90` - Get slide thumbnail image
+* `GET /slides/{slide_id}/label?image_format=jpeg&image_quality=90` - Get slide label image
+* `GET /slides/{slide_id}/macro?image_format=jpeg&image_quality=90` - Get slide macro image
 
 The last five endpoints all return image data. The image format and its quality (e.g. for jpeg) can be selected. Formats include jpeg, png, tiff, bmp, gif. The region and the tile endpoint also offer the selection of a layer with the index z in a Z-Stack.
 
