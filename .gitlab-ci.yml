@@ -30,8 +30,9 @@ run_test:
     - apt-get update && apt-get install -y python3-openslide
     - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
     - source $HOME/.poetry/env
+    - cd wsi_service
     - poetry install
-    - poetry run pytest --cov=wsi_service wsi_service/tests/
+    - poetry run pytest tests --cov .
 
 run_build_docker:
     stage: build_docker
