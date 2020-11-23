@@ -20,7 +20,15 @@ class Slide:
         return self.slide_info
 
     def get_region(self, level, start_x, start_y, size_x, size_y):
-        downsample_factor = int(self.slide_info.levels[level].downsample_factor)
+        try:
+            downsample_factor = int(self.slide_info.levels[level].downsample_factor)
+        except IndexError:
+            raise HTTPException(
+                422,
+                detail="The requested pyramid level is not available. The coarsest available level is {}.".format(
+                    len(self.slide_info.levels) - 1
+                ),
+            )
         base_level = self.openslide_slide.get_best_level_for_downsample(
             downsample_factor
         )

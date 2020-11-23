@@ -279,3 +279,44 @@ def test_get_slide_tile_valid(
     if image_format in ["png", "bmp", "tiff"]:
         image.thumbnail((1, 1))
         assert image.getpixel((0, 0)) == testpixel
+
+
+@requests_mock.Mocker(real_http=True, kw="requests_mock")
+@pytest.mark.parametrize(
+    "image_format, image_quality",
+    [
+        ("jpeg", 90),
+    ],
+)
+@pytest.mark.parametrize(
+    "slide_id",
+    [
+        "4b0ec5e0ec5e5e05ae9e500857314f20",
+    ],
+)
+@pytest.mark.parametrize(
+    "tile_x, level, expected_response",
+    [
+        (10, 1, 200),  # ok
+        (10, 0, 200),  # ok
+        (10, -1, 422),  # level -1 fails
+        (10, 15, 200),  # level 15 ist coarsest level
+        (10, 16, 422),  # level fails
+    ],
+)
+def test_get_slide_tile_invalid(
+    client,
+    image_format,
+    image_quality,
+    slide_id,
+    tile_x,
+    level,
+    expected_response,
+    **kwargs,
+):
+    setup_mock(kwargs)
+    response = client.get(
+        f"/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_x}?image_format={image_format}&image_quality={image_quality}",
+        stream=True,
+    )
+    assert response.status_code == expected_response
