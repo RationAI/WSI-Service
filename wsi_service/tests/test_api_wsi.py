@@ -1,5 +1,6 @@
 import pytest
 import requests_mock
+
 from wsi_service import settings
 from wsi_service.models.slide import SlideInfo
 from wsi_service.tests.test_api_helpers import client, get_image, setup_mock
