@@ -1,6 +1,6 @@
 import pytest
 import requests_mock
-
+from wsi_service import settings
 from wsi_service.models.slide import SlideInfo
 from wsi_service.tests.test_api_helpers import client, get_image, setup_mock
 
@@ -320,3 +320,31 @@ def test_get_slide_tile_invalid(
         stream=True,
     )
     assert response.status_code == expected_response
+
+
+@requests_mock.Mocker(real_http=True, kw="requests_mock")
+@pytest.mark.parametrize(
+    "tile_size",
+    [-1, 0, 1, 2500, 2501, 5000, 10000],
+)
+def test_get_region_maximum_extent(
+    client,
+    tile_size,
+    **kwargs,
+):
+    wsi_settings = settings.Settings()
+    setup_mock(kwargs)
+    level = 5
+    start_x = 13
+    start_y = 23
+    slide_id = "4b0ec5e0ec5e5e05ae9e500857314f20"
+    response = client.get(
+        f"/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{tile_size}/{tile_size}",
+        stream=True,
+    )
+    if tile_size * tile_size > wsi_settings.max_returned_region_size:
+        assert response.status_code == 413  # payload too large
+    elif tile_size <= 0:
+        assert response.status_code == 422  # Unprocessable Entity
+    else:
+        assert response.status_code == 200

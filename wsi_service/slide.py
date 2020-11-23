@@ -40,13 +40,20 @@ class Slide:
             round(size_y * remaining_downsample_factor),
         )
         level_0_location = (start_x * downsample_factor, start_y * downsample_factor)
-        base_img = self.openslide_slide.read_region(
-            level_0_location, base_level, base_size
-        )
-        rgba_img = base_img.resize(
-            (size_x, size_y), resample=PIL.Image.BILINEAR, reducing_gap=1.0
-        )
-        rgb_img = rgba_to_rgb_with_background_color(rgba_img)
+        try:
+            base_img = self.openslide_slide.read_region(
+                level_0_location, base_level, base_size
+            )
+            rgba_img = base_img.resize(
+                (size_x, size_y), resample=PIL.Image.BILINEAR, reducing_gap=1.0
+            )
+            rgb_img = rgba_to_rgb_with_background_color(rgba_img)
+        except openslide.OpenSlideError as e:
+            raise HTTPException(
+                422,
+                "OpenSlideError: {}".format(e),
+            )
+
         return rgb_img
 
     def get_thumbnail(self, max_x, max_y):
