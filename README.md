@@ -91,9 +91,11 @@ There is also a simple viewer, which can be used by accessing: http://localhost:
 WSI Service is a python module and can be run either locally or via docker.
 
 ### Run locally
-Make sure [OpenSlide](https://openslide.org/download/) is installed. Install WSI Service by running the following line within this folder
+Make sure [OpenSlide](https://openslide.org/download/) and [Poetry](https://python-poetry.org/) is installed. Install WSI Service by running the following lines within this folder
 ```
-pip3 install -e .
+cd wsi_service
+poetry install
+poetry shell
 ```
 
 Start via
@@ -161,6 +163,7 @@ Afterwards, visit http://localhost:8080
 
 Service is reloaded after code changes. Activate locally with
 ```
+poetry shell
 python3 -m wsi_service --debug data_dir
 ```
 or using docker with
@@ -177,7 +180,7 @@ docker run \
 
 ### Run tests 
 ```
-pytest --pyargs wsi_service
+poetry pytest --pyargs wsi_service
 ```
 or using docker with
 ```
