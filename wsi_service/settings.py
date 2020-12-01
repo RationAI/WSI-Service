@@ -1,3 +1,5 @@
+from typing import Set
+
 from pydantic import BaseSettings
 
 from wsi_service.version import __version__
@@ -8,6 +10,7 @@ class Settings(BaseSettings):
     description: str = "EMPAIA WSI Service to stream whole slide images"
     version: str = __version__
 
+    cors_allow_origins: Set[str] = None
     data_dir: str
     mapper_address: str
     local_mode: bool

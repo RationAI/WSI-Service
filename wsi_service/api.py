@@ -3,6 +3,7 @@ import pathlib
 from typing import List
 
 from fastapi import FastAPI, HTTPException, Path
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from wsi_service.api_utils import make_image_response, validate_image_request
@@ -28,6 +29,15 @@ api = FastAPI(
     redoc_url=None,
     root_path=settings.root_path,
 )
+
+if settings.cors_allow_origins:
+    api.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_allow_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 slide_source = SlideSource(
     settings.mapper_address,
