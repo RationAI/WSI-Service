@@ -26,6 +26,7 @@ api = FastAPI(
     version=settings.version,
     docs_url="/",
     redoc_url=None,
+    root_path=settings.root_path,
 )
 
 slide_source = SlideSource(

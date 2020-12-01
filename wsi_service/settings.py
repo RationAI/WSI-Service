@@ -13,3 +13,4 @@ class Settings(BaseSettings):
     local_mode: bool
     inactive_histo_image_timeout_seconds: int = 600
     max_returned_region_size: int = 6250000  # 2500 x 2500
+    root_path: str = None
