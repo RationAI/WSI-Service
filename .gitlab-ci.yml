@@ -28,8 +28,11 @@ run_test:
         GIT_SUBMODULE_STRATEGY: recursive
     script:
     - apt-get update && apt-get install -y python3-openslide
-    - pip3 install -e .
-    - pytest --cov=wsi_service wsi_service/tests/
+    - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+    - source $HOME/.poetry/env
+    - cd wsi_service
+    - poetry install
+    - poetry run pytest tests --cov .
 
 run_build_docker:
     stage: build_docker
