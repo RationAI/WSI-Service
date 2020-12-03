@@ -1,4 +1,6 @@
 class Slide:
+    loader_name = ""
+
     def __init__(self, filepath, slide_id):
         raise (NotImplementedError)
 
