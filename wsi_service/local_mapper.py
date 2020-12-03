@@ -29,9 +29,7 @@ class LocalMapper:
             absdir = os.path.join(data_dir, d)
             if os.path.isdir(absdir):
                 case_id = uuid5(NAMESPACE_URL, d).hex
-                self.case_map[case_id] = CaseLocalMapper(
-                    case_id=case_id, local_case_id=d, slides=[]
-                )
+                self.case_map[case_id] = CaseLocalMapper(case_id=case_id, local_case_id=d, slides=[])
 
     def _collect_all_files_as_slides(self, data_dir, case_id, case_dir):
         for f in os.listdir(case_dir):
@@ -52,9 +50,7 @@ class LocalMapper:
                                 StorageAddress(
                                     address=address,
                                     main_address=True,
-                                    storage_address_id=uuid5(
-                                        NAMESPACE_URL, address
-                                    ).hex,
+                                    storage_address_id=uuid5(NAMESPACE_URL, address).hex,
                                     slide_id=slide_id,
                                 )
                             ],

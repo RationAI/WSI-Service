@@ -79,12 +79,8 @@ def get_pixel_size(openslide_slide):
         or openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "mirax"
         or openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "hamamatsu"
     ):
-        pixel_size_nm_x = 1000.0 * float(
-            openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X]
-        )
-        pixel_size_nm_y = 1000.0 * float(
-            openslide_slide.properties[openslide.PROPERTY_NAME_MPP_Y]
-        )
+        pixel_size_nm_x = 1000.0 * float(openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X])
+        pixel_size_nm_y = 1000.0 * float(openslide_slide.properties[openslide.PROPERTY_NAME_MPP_Y])
     else:
         raise ("Unable to extract pixel size from metadata.")
     return PixelSizeNm(x=pixel_size_nm_x, y=pixel_size_nm_y)
@@ -107,9 +103,7 @@ def get_slide_info(openslide_slide, slide_id):
     levels = get_levels(openslide_slide)
     return SlideInfo(
         id=slide_id,
-        extent=Extent(
-            x=openslide_slide.dimensions[0], y=openslide_slide.dimensions[1], z=1
-        ),
+        extent=Extent(x=openslide_slide.dimensions[0], y=openslide_slide.dimensions[1], z=1),
         pixel_size_nm=get_pixel_size(openslide_slide),
         tile_extent=get_tile_extent(openslide_slide),
         num_levels=len(levels),

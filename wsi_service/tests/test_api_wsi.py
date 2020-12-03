@@ -30,9 +30,7 @@ from wsi_service.tests.test_api_helpers import client, get_image, setup_mock
         ),  # mrxs
     ],
 )
-def test_get_slide_info_valid(
-    client, slide_id, num_levels, pixel_size_nm, tile_size, x, y, **kwargs
-):
+def test_get_slide_info_valid(client, slide_id, num_levels, pixel_size_nm, tile_size, x, y, **kwargs):
     setup_mock(kwargs)
     response = client.get(f"/slides/{slide_id}/info")
     assert response.status_code == 200
@@ -115,9 +113,7 @@ def test_get_slide_thumbnail_valid(
         ("7304006194f8530b9e19df1310a3670f", True),
     ],
 )
-def test_get_slide_label_valid(
-    client, image_format, image_quality, slide_id, has_label, **kwargs
-):
+def test_get_slide_label_valid(client, image_format, image_quality, slide_id, has_label, **kwargs):
     setup_mock(kwargs)
     response = client.get(
         f"/slides/{slide_id}/label?image_format={image_format}&image_quality={image_quality}",
