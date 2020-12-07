@@ -1,12 +1,12 @@
 import atexit
 import os
+import pathlib
 from threading import Lock, Timer
 
 import requests
 from fastapi import HTTPException
-from openslide import OpenSlide
 
-from wsi_service.slide import Slide
+from wsi_service.plugin_loader import load_slide
 
 
 class ExpiringSlide:
@@ -39,7 +39,7 @@ class SlideSource:
                         self.data_dir,
                         self.slide_map[slide_id]["address"],
                     )
-                    slide = Slide(OpenSlide(filepath), slide_id)
+                    slide = load_slide(filepath, slide_id)
                     self.opened_slides[slide_id] = ExpiringSlide(slide, None)
                 except KeyError:
                     raise HTTPException(status_code=404)

@@ -172,12 +172,8 @@ def get_slide_region(
 def get_slide_tile(
     slide_id: str,
     level: int = Path(None, ge=0, example=0, description="Pyramid level of region"),
-    tile_x: int = Path(
-        None, example=0, description="Request the tile_x-th tile in x dimension"
-    ),
-    tile_y: int = Path(
-        None, example=0, description="Request the tile_y-th tile in y dimension"
-    ),
+    tile_x: int = Path(None, example=0, description="Request the tile_x-th tile in x dimension"),
+    tile_y: int = Path(None, example=0, description="Request the tile_y-th tile in y dimension"),
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery,
     z: int = ZStackQuery,

@@ -19,9 +19,7 @@ def test_get_available_slides_valid(client):
     slides = response.json()
     slide = list(
         filter(
-            lambda slide: slide["slide_storage"]["storage_addresses"][0][
-                "address"
-            ].endswith("CMU-1.svs"),
+            lambda slide: slide["slide_storage"]["storage_addresses"][0]["address"].endswith("CMU-1.svs"),
             slides,
         )
     )[0]
@@ -32,17 +30,9 @@ def test_get_available_slides_valid(client):
     assert slide["slide_storage"]["slide_id"] == "f863c2ef155654b1af0387acc7ebdb60"
     assert slide["slide_storage"]["storage_type"] == "fs"
     assert slide["slide_storage"]["storage_addresses"][0]["main_address"] == True
-    assert (
-        slide["slide_storage"]["storage_addresses"][0]["storage_address_id"]
-        == "89262a18eff45876b8aa45c42c334864"
-    )
-    assert slide["slide_storage"]["storage_addresses"][0]["address"].endswith(
-        "Aperio/CMU-1.svs"
-    )
-    assert (
-        slide["slide_storage"]["storage_addresses"][0]["slide_id"]
-        == "f863c2ef155654b1af0387acc7ebdb60"
-    )
+    assert slide["slide_storage"]["storage_addresses"][0]["storage_address_id"] == "89262a18eff45876b8aa45c42c334864"
+    assert slide["slide_storage"]["storage_addresses"][0]["address"].endswith("Aperio/CMU-1.svs")
+    assert slide["slide_storage"]["storage_addresses"][0]["slide_id"] == "f863c2ef155654b1af0387acc7ebdb60"
 
 
 def test_get_slide_valid(client):
@@ -55,17 +45,9 @@ def test_get_slide_valid(client):
     assert slide["slide_storage"]["slide_id"] == "4b0ec5e0ec5e5e05ae9e500857314f20"
     assert slide["slide_storage"]["storage_type"] == "fs"
     assert slide["slide_storage"]["storage_addresses"][0]["main_address"] == True
-    assert (
-        slide["slide_storage"]["storage_addresses"][0]["storage_address_id"]
-        == "ed917cbb17ab54ee84152ba30adfb4d5"
-    )
-    assert slide["slide_storage"]["storage_addresses"][0]["address"].endswith(
-        "Generic TIFF/CMU-1.tiff"
-    )
-    assert (
-        slide["slide_storage"]["storage_addresses"][0]["slide_id"]
-        == "4b0ec5e0ec5e5e05ae9e500857314f20"
-    )
+    assert slide["slide_storage"]["storage_addresses"][0]["storage_address_id"] == "ed917cbb17ab54ee84152ba30adfb4d5"
+    assert slide["slide_storage"]["storage_addresses"][0]["address"].endswith("Generic TIFF/CMU-1.tiff")
+    assert slide["slide_storage"]["storage_addresses"][0]["slide_id"] == "4b0ec5e0ec5e5e05ae9e500857314f20"
 
 
 def test_get_cases_no_data(client_no_data):
