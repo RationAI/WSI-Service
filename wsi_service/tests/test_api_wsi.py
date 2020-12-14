@@ -288,7 +288,7 @@ def test_get_slide_tile_timing(
         stream=True,
     )
     assert response.status_code == 200
-    image = get_image(response)
+    get_image(response)
     toc = timeit.default_timer()
     assert toc - tic < 2
 
