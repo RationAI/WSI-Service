@@ -28,7 +28,7 @@ def get_original_levels(openslide_slide):
     return levels
 
 
-def get_generated_levels(openslide_slide):
+def get_generated_levels(openslide_slide, coarsest_native_level):
     levels = []
     for level in range(calc_num_levels(openslide_slide)):
         extent = Extent(
@@ -37,6 +37,10 @@ def get_generated_levels(openslide_slide):
             z=1,
         )
         downsample_factor = 2 ** level
+        if (
+            downsample_factor > 4 * coarsest_native_level.downsample_factor
+        ):  # only include levels up to two levels below coarsest native level
+            continue
         levels.append(
             Level(
                 extent=extent,
@@ -60,7 +64,7 @@ def check_generated_levels_for_originals(original_levels, generated_levels):
 
 def get_levels(openslide_slide):
     original_levels = get_original_levels(openslide_slide)
-    generated_levels = get_generated_levels(openslide_slide)
+    generated_levels = get_generated_levels(openslide_slide, original_levels[-1])
     check_generated_levels_for_originals(original_levels, generated_levels)
     return generated_levels
 
