@@ -229,6 +229,55 @@ def test_get_slide_region_valid(
         assert image.getpixel((0, 0)) == testpixel
 
 
+import timeit
+
+
+@requests_mock.Mocker(real_http=True, kw="requests_mock")
+@pytest.mark.parametrize(
+    "slide_id,  testpixel, tile_x, tile_y",
+    [
+        (
+            "4b0ec5e0ec5e5e05ae9e500857314f20",
+            1,
+            1,
+        ),
+        (
+            "f863c2ef155654b1af0387acc7ebdb60",
+            1,
+            1,
+        ),
+        (
+            "c801ce3d1de45f2996e6a07b2d449bca",
+            1,
+            1,
+        ),
+        (
+            "7304006194f8530b9e19df1310a3670f",
+            1,
+            1,
+        ),
+    ],
+)
+def test_get_slide_tile_timing(
+    client,
+    slide_id,
+    tile_x,
+    tile_y,
+    **kwargs,
+):
+    setup_mock(kwargs)
+    level = 12
+    tic = timeit.default_timer()
+    response = client.get(
+        f"/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}",
+        stream=True,
+    )
+    assert response.status_code == 200
+    image = get_image(response)
+    toc = timeit.default_timer()
+    assert toc - tic < 2
+
+
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
     "image_format, image_quality",
