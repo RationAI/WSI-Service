@@ -5,6 +5,7 @@ import PIL
 from fastapi import HTTPException
 
 from wsi_service.models.slide import Extent, SlideInfo
+from wsi_service.settings import Settings
 from wsi_service.slide import Slide
 from wsi_service.slide_utils import get_slide_info, rgba_to_rgb_with_background_color
 
@@ -24,6 +25,7 @@ class OpenSlideSlide(Slide):
         return self.slide_info
 
     def get_region(self, level, start_x, start_y, size_x, size_y):
+        settings = Settings()
         try:
             downsample_factor = int(self.slide_info.levels[level].downsample_factor)
         except IndexError:
@@ -40,6 +42,13 @@ class OpenSlideSlide(Slide):
             round(size_y * remaining_downsample_factor),
         )
         level_0_location = (start_x * downsample_factor, start_y * downsample_factor)
+        if base_size[0] * base_size[1] > settings.max_returned_region_size:
+            raise HTTPException(
+                403,
+                "Requested image region is too large. Maximum number of pixels is set to {}, your request is for {} pixels.".format(
+                    settings.max_returned_region_size, base_size[0] * base_size[1]
+                ),
+            )
         try:
             base_img = self.openslide_slide.read_region(level_0_location, base_level, base_size)
             rgba_img = base_img.resize((size_x, size_y), resample=PIL.Image.BILINEAR, reducing_gap=1.0)
