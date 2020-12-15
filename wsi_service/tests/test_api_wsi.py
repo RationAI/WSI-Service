@@ -1,8 +1,8 @@
 import pytest
 import requests_mock
 
-from wsi_service import settings
 from wsi_service.models.slide import SlideInfo
+from wsi_service.settings import Settings
 from wsi_service.tests.test_api_helpers import client, get_image, setup_mock
 
 
@@ -10,11 +10,11 @@ from wsi_service.tests.test_api_helpers import client, get_image, setup_mock
 @pytest.mark.parametrize(
     "slide_id, num_levels, pixel_size_nm, tile_size, x, y",
     [
-        ("4b0ec5e0ec5e5e05ae9e500857314f20", 16, 499, (128, 128), 46000, 32914),  # tiff
-        ("f863c2ef155654b1af0387acc7ebdb60", 16, 499, (256, 256), 46000, 32914),  # svs
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", 12, 499, (128, 128), 46000, 32914),  # tiff
+        ("f863c2ef155654b1af0387acc7ebdb60", 7, 499, (256, 256), 46000, 32914),  # svs
         (
             "c801ce3d1de45f2996e6a07b2d449bca",
-            17,
+            15,
             227,
             (4096, 8),
             122880,
@@ -22,7 +22,7 @@ from wsi_service.tests.test_api_helpers import client, get_image, setup_mock
         ),  # ndpi
         (
             "7304006194f8530b9e19df1310a3670f",
-            17,
+            12,
             234,
             (256, 256),
             101832,
@@ -193,12 +193,12 @@ def test_get_slide_macro_valid(
     ],
 )
 @pytest.mark.parametrize(
-    "slide_id,  testpixel, start_x, start_y",
+    "slide_id,  testpixel, start_x, start_y, size",
     [
-        ("4b0ec5e0ec5e5e05ae9e500857314f20", (223, 217, 222), 15000, 15000),
-        ("f863c2ef155654b1af0387acc7ebdb60", (223, 217, 222), 15000, 15000),
-        ("c801ce3d1de45f2996e6a07b2d449bca", (218, 217, 225), 15000, 15000),
-        ("7304006194f8530b9e19df1310a3670f", (221, 170, 219), 50000, 90000),
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", (223, 217, 222), 15000, 15000, 345),
+        ("f863c2ef155654b1af0387acc7ebdb60", (223, 217, 222), 15000, 15000, 345),
+        ("c801ce3d1de45f2996e6a07b2d449bca", (218, 217, 225), 15000, 15000, 345),
+        ("7304006194f8530b9e19df1310a3670f", (221, 170, 219), 50000, 90000, 345),
     ],
 )
 def test_get_slide_region_valid(
@@ -209,12 +209,13 @@ def test_get_slide_region_valid(
     testpixel,
     start_x,
     start_y,
+    size,
     **kwargs,
 ):
     setup_mock(kwargs)
     level = 0
-    size_x = 345
-    size_y = 543
+    size_x = size
+    size_y = size + 198
     response = client.get(
         f"/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format={image_format}&image_quality={image_quality}",
         stream=True,
@@ -227,6 +228,69 @@ def test_get_slide_region_valid(
     if image_format in ["png", "bmp", "tiff"]:
         image.thumbnail((1, 1))
         assert image.getpixel((0, 0)) == testpixel
+
+
+@requests_mock.Mocker(real_http=True, kw="requests_mock")
+@pytest.mark.parametrize(
+    "slide_id,  testpixel, start_x, start_y, size",
+    [
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", (223, 217, 222), 15000, 15000, 30045),
+        ("f863c2ef155654b1af0387acc7ebdb60", (223, 217, 222), 15000, 15000, 30045),
+        ("c801ce3d1de45f2996e6a07b2d449bca", (218, 217, 225), 15000, 15000, 30045),
+        ("7304006194f8530b9e19df1310a3670f", (221, 170, 219), 50000, 90000, 30045),
+    ],
+)
+def test_get_slide_region_invalid(
+    client,
+    slide_id,
+    testpixel,
+    start_x,
+    start_y,
+    size,
+    **kwargs,
+):
+    setup_mock(kwargs)
+    level = 0
+    size_x = size
+    size_y = size + 198
+    response = client.get(
+        f"/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}",
+        stream=True,
+    )
+    assert response.status_code == 403
+
+
+import timeit
+
+
+@requests_mock.Mocker(real_http=True, kw="requests_mock")
+@pytest.mark.parametrize(
+    "slide_id,  tile_x, tile_y, level",
+    [
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", 1, 1, 11),
+        ("f863c2ef155654b1af0387acc7ebdb60", 1, 1, 6),
+        ("c801ce3d1de45f2996e6a07b2d449bca", 1, 1, 12),
+        ("7304006194f8530b9e19df1310a3670f", 1, 1, 11),
+    ],
+)
+def test_get_slide_tile_timing(
+    client,
+    slide_id,
+    tile_x,
+    tile_y,
+    level,
+    **kwargs,
+):
+    setup_mock(kwargs)
+    tic = timeit.default_timer()
+    response = client.get(
+        f"/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}",
+        stream=True,
+    )
+    assert response.status_code == 200
+    get_image(response)
+    toc = timeit.default_timer()
+    assert toc - tic < 2
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
@@ -280,12 +344,6 @@ def test_get_slide_tile_valid(
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
-    "image_format, image_quality",
-    [
-        ("jpeg", 90),
-    ],
-)
-@pytest.mark.parametrize(
     "slide_id",
     [
         "4b0ec5e0ec5e5e05ae9e500857314f20",
@@ -297,14 +355,12 @@ def test_get_slide_tile_valid(
         (10, 1, 200),  # ok
         (10, 0, 200),  # ok
         (10, -1, 422),  # level -1 fails
-        (10, 15, 200),  # level 15 ist coarsest level
+        (10, 11, 200),  # level 15 ist coarsest level
         (10, 16, 422),  # level fails
     ],
 )
 def test_get_slide_tile_invalid(
     client,
-    image_format,
-    image_quality,
     slide_id,
     tile_x,
     level,
@@ -313,7 +369,7 @@ def test_get_slide_tile_invalid(
 ):
     setup_mock(kwargs)
     response = client.get(
-        f"/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_x}?image_format={image_format}&image_quality={image_quality}",
+        f"/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_x}",
         stream=True,
     )
     assert response.status_code == expected_response
@@ -329,18 +385,18 @@ def test_get_region_maximum_extent(
     tile_size,
     **kwargs,
 ):
-    wsi_settings = settings.Settings()
+    wsi_settings = Settings()
     setup_mock(kwargs)
     level = 5
     start_x = 13
     start_y = 23
-    slide_id = "4b0ec5e0ec5e5e05ae9e500857314f20"
+    slide_id = "7304006194f8530b9e19df1310a3670f"
     response = client.get(
         f"/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{tile_size}/{tile_size}",
         stream=True,
     )
     if tile_size * tile_size > wsi_settings.max_returned_region_size:
-        assert response.status_code == 413  # payload too large
+        assert response.status_code == 403  # requested data too large
     elif tile_size <= 0:
         assert response.status_code == 422  # Unprocessable Entity
     else:
