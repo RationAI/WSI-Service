@@ -4,12 +4,15 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
   && apt-get install --no-install-recommends -y \
-  python3-openslide
+  curl python3-openslide
 
 RUN mkdir /openslide_deps
 RUN cp /usr/lib/x86_64-linux-gnu/libopenslide.so.0 /openslide_deps
 RUN ldd /usr/lib/x86_64-linux-gnu/libopenslide.so.0 \
   | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp -v '{}' /openslide_deps
+
+RUN curl https://www.cairographics.org/releases/pixman-0.40.0.tar.gz | tar -xz
+RUN cd pixman-0.40.0 && ./configure && make && make install
 
 RUN pip3 install poetry
 
@@ -35,6 +38,9 @@ COPY --from=build_1 /usr/local/lib/python3.8/site-packages/ /usr/local/lib/pytho
 
 COPY --from=build_0 /wsi_service/requirements_dev.txt /usr/local/lib/python3.8/site-packages/wsi_service/requirements_dev.txt
 WORKDIR /usr/local/lib/python3.8/site-packages/wsi_service/
+
+COPY --from=build_0 /usr/local/lib/libpixman-1.so.0.40.0 /usr/local/lib/libpixman-1.so.0.40.0
+ENV LD_PRELOAD=/usr/local/lib/libpixman-1.so.0.40.0
 
 RUN mkdir /data
 
