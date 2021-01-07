@@ -98,6 +98,8 @@ poetry install
 poetry shell
 ```
 
+Make sure that libpixman is on version 0.40.0 or later to prevent broken MRXS files. (such as by defining (and installing)  `LD_PRELOAD=/usr/local/lib/libpixman-1.so.0.40.0` on older os versions).
+
 Start via
 ```
 python3 -m wsi_service [OPTIONS] data_dir
