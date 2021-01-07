@@ -23,6 +23,7 @@ run_test:
         - mevis-ubuntu-vm
     variables:
         GIT_SUBMODULE_STRATEGY: recursive
+        LD_PRELOAD: /usr/local/lib/libpixman-1.so.0.40.0
     before_script:
         - poetry install
     script:
