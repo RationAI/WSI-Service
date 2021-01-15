@@ -2,6 +2,7 @@ import math
 
 import openslide
 import PIL
+from fastapi import HTTPException
 
 from wsi_service.models.slide import Extent, Level, PixelSizeNm, SlideInfo
 
@@ -104,15 +105,28 @@ def get_tile_extent(openslide_slide):
 
 
 def get_slide_info(openslide_slide, slide_id):
-    levels = get_levels(openslide_slide)
-    return SlideInfo(
-        id=slide_id,
-        extent=Extent(x=openslide_slide.dimensions[0], y=openslide_slide.dimensions[1], z=1),
-        pixel_size_nm=get_pixel_size(openslide_slide),
-        tile_extent=get_tile_extent(openslide_slide),
-        num_levels=len(levels),
-        levels=get_levels(openslide_slide),
-    )
+    try:
+        levels = get_levels(openslide_slide)
+    except Exception as e:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Failed to retireve slide level data. [{e}]",
+        )
+    try:
+        slide_info = SlideInfo(
+            id=slide_id,
+            extent=Extent(x=openslide_slide.dimensions[0], y=openslide_slide.dimensions[1], z=1),
+            pixel_size_nm=get_pixel_size(openslide_slide),
+            tile_extent=get_tile_extent(openslide_slide),
+            num_levels=len(levels),
+            levels=levels,
+        )
+        return slide_info
+    except Exception as e:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Failed to gather slide infos. [{e}]",
+        )
 
 
 def rgba_to_rgb_with_background_color(image_rgba, background_color=(255, 255, 255)):

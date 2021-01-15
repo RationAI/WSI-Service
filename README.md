@@ -182,7 +182,7 @@ docker run \
 
 ### Run tests 
 ```
-poetry pytest --pyargs wsi_service
+poetry run pytest --pyargs wsi_service
 ```
 or using docker with
 ```

@@ -19,7 +19,13 @@ class LocalMapper:
     def _initialize_with_path(self, data_dir):
         self.case_map = {}
         self.slide_map = {}
-        self._collect_all_folders_as_cases(data_dir)
+        try:
+            self._collect_all_folders_as_cases(data_dir)
+        except FileNotFoundError:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No such directory: {data_dir}",
+            )
         for case_id, case in self.case_map.items():
             case_dir = os.path.join(data_dir, case.local_case_id)
             self._collect_all_files_as_slides(data_dir, case_id, case_dir)

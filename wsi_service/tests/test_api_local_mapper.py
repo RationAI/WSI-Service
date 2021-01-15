@@ -1,6 +1,10 @@
 import os
 
-from wsi_service.tests.test_api_helpers import client, client_no_data
+from wsi_service.tests.test_api_helpers import (
+    client,
+    client_invalid_data_dir,
+    client_no_data,
+)
 
 
 def test_get_cases_valid(client):
@@ -88,3 +92,9 @@ def test_get_slide_invalid_slide_id(client):
     response = client.get("/slides/invalid_id")
     assert response.status_code == 400
     assert response.json()["detail"] == "Slide with slide_id invalid_id does not exist"
+
+
+def test_get_case_invalid_dir(client_invalid_data_dir):
+    response = client_invalid_data_dir.get("/cases/")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "No such directory: /data/non_existing_dir"
