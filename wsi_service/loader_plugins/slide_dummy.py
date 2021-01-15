@@ -1,7 +1,6 @@
 import math
 
 import PIL
-from fastapi import HTTPException
 
 import wsi_service.slide_utils
 from wsi_service.models.slide import SlideInfo

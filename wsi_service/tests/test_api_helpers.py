@@ -28,6 +28,13 @@ def get_client():
 
 
 @pytest.fixture()
+def client_invalid_data_dir():
+    setup_environment_variables()
+    os.environ["data_dir"] = "/data/non_existing_dir"
+    yield get_client()
+
+
+@pytest.fixture()
 def client():
     setup_environment_variables()
     if not os.path.exists(os.environ["data_dir"]):

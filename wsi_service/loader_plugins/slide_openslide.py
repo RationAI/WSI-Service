@@ -15,7 +15,13 @@ class OpenSlideSlide(Slide):
     loader_name = "OpenSlide"
 
     def __init__(self, filepath, slide_id):
-        self.openslide_slide = openslide.OpenSlide(filepath)
+        try:
+            self.openslide_slide = openslide.OpenSlide(filepath)
+        except openslide.OpenSlideError as e:
+            raise HTTPException(
+                status_code=422,
+                detail=f"OpenSlideError: {e}",
+            )
         self.slide_info = get_slide_info(self.openslide_slide, slide_id)
 
     def close(self):
@@ -30,12 +36,16 @@ class OpenSlideSlide(Slide):
             downsample_factor = int(self.slide_info.levels[level].downsample_factor)
         except IndexError:
             raise HTTPException(
-                422,
-                detail="The requested pyramid level is not available. The coarsest available level is {}.".format(
-                    len(self.slide_info.levels) - 1
-                ),
+                status_code=422,
+                detail=f"""The requested pyramid level is not available. 
+                    The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
         base_level = self.openslide_slide.get_best_level_for_downsample(downsample_factor)
+        if base_level >= len(self.openslide_slide.level_downsamples):
+            raise HTTPException(
+                status_code=422,
+                detail=f"Downsample layer for requested base level {base_level} not available.",
+            )
         remaining_downsample_factor = downsample_factor / self.openslide_slide.level_downsamples[base_level]
         base_size = (
             round(size_x * remaining_downsample_factor),
@@ -44,10 +54,9 @@ class OpenSlideSlide(Slide):
         level_0_location = (start_x * downsample_factor, start_y * downsample_factor)
         if base_size[0] * base_size[1] > settings.max_returned_region_size:
             raise HTTPException(
-                403,
-                "Requested image region is too large. Maximum number of pixels is set to {}, your request is for {} pixels.".format(
-                    settings.max_returned_region_size, base_size[0] * base_size[1]
-                ),
+                status_code=403,
+                detail=f"""Requested image region is too large. Maximum number of pixels is set to 
+                    {settings.max_returned_region_size}, your request is for {base_size[0] * base_size[1]} pixels.""",
             )
         try:
             base_img = self.openslide_slide.read_region(level_0_location, base_level, base_size)
@@ -55,8 +64,8 @@ class OpenSlideSlide(Slide):
             rgb_img = rgba_to_rgb_with_background_color(rgba_img)
         except openslide.OpenSlideError as e:
             raise HTTPException(
-                422,
-                "OpenSlideError: {}".format(e),
+                status_code=422,
+                detail=f"OpenSlideError: {e}",
             )
 
         return rgb_img
@@ -66,7 +75,10 @@ class OpenSlideSlide(Slide):
 
     def _get_associated_image(self, associated_image_name):
         if associated_image_name not in self.openslide_slide.associated_images:
-            raise HTTPException(status_code=404)
+            raise HTTPException(
+                status_code=404,
+                detail=f"Associated image {associated_image_name} does not exist.",
+            )
         associated_image_rgba = self.openslide_slide.associated_images[associated_image_name]
         return associated_image_rgba.convert("RGB")
 
