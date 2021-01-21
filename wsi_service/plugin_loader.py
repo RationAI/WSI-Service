@@ -1,13 +1,16 @@
 import pathlib
 
 from wsi_service.loader_plugins.slide_dummy import DummySlide
+from wsi_service.loader_plugins.slide_ometif import OmeTiffSlide
 from wsi_service.loader_plugins.slide_openslide import OpenSlideSlide
 
 plugin_directory = {
-    ".tiff": OpenSlideSlide,
+    ".tiff": OpenSlideSlide, #OmeTiffSlide
     ".mrxs": OpenSlideSlide,
     ".svs": OpenSlideSlide,
     ".ndpi": OpenSlideSlide,
+    ".tif": OmeTiffSlide,
+    ".ome.tif": OmeTiffSlide,
 }
 
 

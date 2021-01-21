@@ -40,7 +40,7 @@ class LocalMapper:
     def _collect_all_files_as_slides(self, data_dir, case_id, case_dir):
         for f in os.listdir(case_dir):
             absfile = os.path.join(case_dir, f)
-            if OpenSlide.detect_format(absfile):
+            if self._is_supported_format(absfile):
                 raw_slide_id = f
                 slide_id = uuid5(NAMESPACE_URL, f).hex
                 if slide_id not in self.slide_map:
@@ -63,6 +63,14 @@ class LocalMapper:
                         ),
                     )
 
+    def _is_supported_format(self, filepath):
+        if OpenSlide.detect_format(filepath):
+            return True
+        elif filepath.endswith('.tiff') or filepath.endswith('.tif'):
+            return True
+        else:
+            return False
+    
     def get_cases(self):
         return list(self.case_map.values())
 
