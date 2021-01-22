@@ -66,11 +66,11 @@ class LocalMapper:
     def _is_supported_format(self, filepath):
         if OpenSlide.detect_format(filepath):
             return True
-        elif filepath.endswith('.tiff') or filepath.endswith('.tif'):
+        elif filepath.endswith(".tiff") or filepath.endswith(".tif"):
             return True
         else:
             return False
-    
+
     def get_cases(self):
         return list(self.case_map.values())
 

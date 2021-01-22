@@ -7,7 +7,10 @@ from fastapi import HTTPException
 from wsi_service.models.slide import Extent, SlideInfo
 from wsi_service.settings import Settings
 from wsi_service.slide import Slide
-from wsi_service.slide_utils import get_slide_info, rgba_to_rgb_with_background_color
+from wsi_service.slide_utils import (
+    get_slide_info_openslide,
+    rgba_to_rgb_with_background_color,
+)
 
 
 class OpenSlideSlide(Slide):
@@ -22,7 +25,7 @@ class OpenSlideSlide(Slide):
                 status_code=422,
                 detail=f"OpenSlideError: {e}",
             )
-        self.slide_info = get_slide_info(self.openslide_slide, slide_id)
+        self.slide_info = get_slide_info_openslide(self.openslide_slide, slide_id)
 
     def close(self):
         self.openslide_slide.close()

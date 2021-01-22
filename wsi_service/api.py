@@ -6,7 +6,11 @@ from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
 
-from wsi_service.api_utils import make_image_response, validate_image_request
+from wsi_service.api_utils import (
+    make_image_response,
+    make_tif_response,
+    validate_image_request,
+)
 from wsi_service.local_mapper import LocalMapper
 from wsi_service.local_mapper_models import (
     CaseLocalMapper,
@@ -159,8 +163,12 @@ def get_slide_region(
             detail=f"Requested region must contain at least 1 pixel.",
         )
     slide = slide_source.get_slide(slide_id)
-    img = slide.get_region(level, start_x, start_y, size_x, size_y)
-    return make_image_response(img, image_format, image_quality)
+    if image_format == "ome.tif":
+        narray, metadata = slide.get_region(level, start_x, start_y, size_x, size_y)
+        return make_tif_response(narray, metadata, image_format, image_quality)
+    else:
+        img = slide.get_region(level, start_x, start_y, size_x, size_y)
+        return make_image_response(img, image_format, image_quality)
 
 
 @api.get(

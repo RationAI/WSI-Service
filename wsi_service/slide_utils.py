@@ -7,34 +7,34 @@ from fastapi import HTTPException
 from wsi_service.models.slide import Extent, Level, PixelSizeNm, SlideInfo
 
 
-def calc_num_levels(openslide_slide):
-    min_extent = min(openslide_slide.dimensions)
+def calc_num_levels(dimensions):
+    min_extent = min(dimensions)
     return int(math.log2(min_extent) + 1)
 
 
-def get_original_levels(openslide_slide):
+def get_original_levels(level_count, level_dimensions, level_downsamples):
     levels = []
-    for level in range(openslide_slide.level_count):
+    for level in range(level_count):
         levels.append(
             Level(
                 extent=Extent(
-                    x=openslide_slide.level_dimensions[level][0],
-                    y=openslide_slide.level_dimensions[level][1],
+                    x=level_dimensions[level][0],
+                    y=level_dimensions[level][1],
                     z=1,
                 ),
-                downsample_factor=openslide_slide.level_downsamples[level],
+                downsample_factor=level_downsamples[level],
                 generated=False,
-            )
+            ),
         )
     return levels
 
 
-def get_generated_levels(openslide_slide, coarsest_native_level):
+def get_generated_levels(level_dimensions, coarsest_native_level):
     levels = []
-    for level in range(calc_num_levels(openslide_slide)):
+    for level in range(calc_num_levels(level_dimensions)):
         extent = Extent(
-            x=openslide_slide.dimensions[0] / (2 ** level),
-            y=openslide_slide.dimensions[1] / (2 ** level),
+            x=level_dimensions[0] / (2 ** level),
+            y=level_dimensions[1] / (2 ** level),
             z=1,
         )
         downsample_factor = 2 ** level
@@ -63,9 +63,11 @@ def check_generated_levels_for_originals(original_levels, generated_levels):
     return generated_level
 
 
-def get_levels(openslide_slide):
-    original_levels = get_original_levels(openslide_slide)
-    generated_levels = get_generated_levels(openslide_slide, original_levels[-1])
+def get_levels_openslide(openslide_slide):
+    original_levels = get_original_levels(
+        openslide_slide.level_count, openslide_slide.level_dimensions, openslide_slide.level_downsamples
+    )
+    generated_levels = get_generated_levels(openslide_slide.dimensions, original_levels[-1])
     check_generated_levels_for_originals(original_levels, generated_levels)
     return generated_levels
 
@@ -104,20 +106,64 @@ def get_tile_extent(openslide_slide):
     return Extent(x=tile_width, y=tile_height, z=1)
 
 
-def get_slide_info(openslide_slide, slide_id):
+def get_slide_info_openslide(openslide_slide, slide_id):
     try:
-        levels = get_levels(openslide_slide)
+        levels = get_levels_openslide(openslide_slide)
     except Exception as e:
         raise HTTPException(
             status_code=404,
-            detail=f"Failed to retireve slide level data. [{e}]",
+            detail=f"Failed to retrieve slide level data. [{e}]",
         )
     try:
         slide_info = SlideInfo(
             id=slide_id,
+            channel_count=4,  # rgba
+            channel_depth=8,  # 8bit each channel
             extent=Extent(x=openslide_slide.dimensions[0], y=openslide_slide.dimensions[1], z=1),
             pixel_size_nm=get_pixel_size(openslide_slide),
             tile_extent=get_tile_extent(openslide_slide),
+            num_levels=len(levels),
+            levels=levels,
+        )
+        return slide_info
+    except Exception as e:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Failed to gather slide infos. [{e}]",
+        )
+
+
+def get_levels_ome_tif(tif_slide):
+    levels = tif_slide.series[0].levels
+    level_count = len(levels)
+    level_dimensions = []
+    level_downsamples = []
+
+    for i, item in enumerate(levels):
+        level_dimensions.append([item.keyframe.imagewidth, item.keyframe.imagelength])
+        if i > 0:
+            level_downsamples.append(level_dimensions[i - 1][0] / item.keyframe.imagewidth)
+        else:
+            level_downsamples.append(1)
+
+    original_levels = get_original_levels(level_count, level_dimensions, level_downsamples)
+    generated_levels = get_generated_levels(level_dimensions[0], original_levels[-1])
+    check_generated_levels_for_originals(original_levels, generated_levels)
+    return generated_levels
+
+
+def get_slide_info_ome_tif(tif_slide, slide_id, pixel_size):
+    serie = tif_slide.series[0]
+    levels = get_levels_ome_tif(tif_slide)
+
+    try:
+        slide_info = SlideInfo(
+            id=slide_id,
+            channel_count=len(serie.levels[0].pages),
+            channel_depth=serie.keyframe.bitspersample,
+            extent=Extent(x=serie.keyframe.imagewidth, y=serie.keyframe.imagedepth, z=serie.keyframe.imagedepth),
+            pixel_size_nm=pixel_size,
+            tile_extent=Extent(x=serie.keyframe.tilewidth, y=serie.keyframe.tilelength, z=serie.keyframe.tiledepth),
             num_levels=len(levels),
             levels=levels,
         )

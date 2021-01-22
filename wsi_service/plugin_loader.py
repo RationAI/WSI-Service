@@ -5,7 +5,7 @@ from wsi_service.loader_plugins.slide_ometif import OmeTiffSlide
 from wsi_service.loader_plugins.slide_openslide import OpenSlideSlide
 
 plugin_directory = {
-    ".tiff": OpenSlideSlide, #OmeTiffSlide
+    ".tiff": OpenSlideSlide,  # OmeTiffSlide
     ".mrxs": OpenSlideSlide,
     ".svs": OpenSlideSlide,
     ".ndpi": OpenSlideSlide,
