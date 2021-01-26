@@ -142,7 +142,7 @@ def get_levels_ome_tif(tif_slide):
     for i, item in enumerate(levels):
         level_dimensions.append([item.keyframe.imagewidth, item.keyframe.imagelength])
         if i > 0:
-            level_downsamples.append(level_dimensions[i - 1][0] / item.keyframe.imagewidth)
+            level_downsamples.append(level_dimensions[0][0] / item.keyframe.imagewidth)
         else:
             level_downsamples.append(1)
 
@@ -161,7 +161,7 @@ def get_slide_info_ome_tif(tif_slide, slide_id, pixel_size):
             id=slide_id,
             channel_count=len(serie.levels[0].pages),
             channel_depth=serie.keyframe.bitspersample,
-            extent=Extent(x=serie.keyframe.imagewidth, y=serie.keyframe.imagedepth, z=serie.keyframe.imagedepth),
+            extent=Extent(x=serie.keyframe.imagewidth, y=serie.keyframe.imagelength, z=serie.keyframe.imagedepth),
             pixel_size_nm=pixel_size,
             tile_extent=Extent(x=serie.keyframe.tilewidth, y=serie.keyframe.tilelength, z=serie.keyframe.tiledepth),
             num_levels=len(levels),

@@ -1,5 +1,6 @@
 import json
 import os.path as os
+import re
 import xml.etree.ElementTree as xml
 
 import numpy as np
@@ -33,9 +34,28 @@ class OmeTiffSlide(Slide):
             )
         # read pixel sizes from xml image description
         self.ome_metadata = self.tif_slide.ome_metadata
-        parsed_metadata = xml.fromstring(self.ome_metadata)
-        pixel_size = self.get_pixel_size(parsed_metadata[0][0])
+        self.parsed_metadata = xml.fromstring(self.ome_metadata)  # omexmlClass.OMEXML(self.ome_metadata)
+        pixel_size = self.get_pixel_size(self.parsed_metadata[0][0])
         self.slide_info = get_slide_info_ome_tif(self.tif_slide, slide_id, pixel_size)
+
+    def get_xml_namespace(self, element):
+        m = re.match(r"\{.*\}", element.tag)
+        return m.group(0) if m else ""
+
+    def manipulate_metadata(self, dimOrder, p_size_x, p_size_y, size_x, size_y):
+        namespace = self.get_xml_namespace(self.parsed_metadata)
+        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("DimensionOrder", dimOrder)
+        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("SizeX", str(size_x))
+        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("SizeY", str(size_y))
+        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set(
+            "PhysicalSizeX", str(p_size_x)
+        )
+        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set(
+            "PhysicalSizeY", str(p_size_y)
+        )
+        metadata = xml.tostring(self.parsed_metadata).decode("utf-8")
+        # add xml decoding
+        self.ome_metadata = f'<?xml version="1.0" encoding="UTF-8"?>\n{metadata}'
 
     def get_pixel_size(self, xml_imagedata):
         # z-direction?
@@ -70,40 +90,81 @@ class OmeTiffSlide(Slide):
     def get_info(self):
         return self.slide_info
 
-    def get_best_level_for_downsample(self, downsample_factor):
-        if downsample_factor < self.slide_info.levels[0].downsample_factor:
-            return 0
-        for i, level in enumerate(self.slide_info.levels):
-            if downsample_factor < level.downsample_factor:
-                return i - 1
-        return len(self.slide_info.levels) - 1
+    def get_best_original_level(self, level):
+        for i in range(level - 1, 0, -1):
+            if not self.slide_info.levels[i].generated:
+                return self.slide_info.levels[i]
+        return None
+
+    def get_tif_level_for_slide_level(self, slide_level):
+        for level in self.tif_slide.series[0].levels:
+            if level.shape[1] == slide_level.extent.y:
+                return level
 
     def get_region(self, level, start_x, start_y, size_x, size_y):
         settings = Settings()
         try:
-            downsample_factor = int(self.slide_info.levels[level].downsample_factor)
+            level_slide = self.slide_info.levels[level]
         except IndexError:
             raise HTTPException(
                 status_code=422,
                 detail=f"""The requested pyramid level is not available. 
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
-        base_level = self.get_best_level_for_downsample(downsample_factor)
-        # todo get level for downsample factor
-        level = self.tif_slide.series[0].levels[base_level]
-        result_array = []
-        for page in level.pages:
-            temp_channel = self.read_region_of_page(page, start_x, start_y, size_x, size_y)
-            # todo: calculate resize factor
-            # resized = util.img_as_uint(transform.resize(temp_channel, (1, 512, 512, 1)))
-            resized = temp_channel
-            result_array.append(resized)
-        result = np.concatenate(result_array, axis=0)
 
-        metadata = json.dumps(self.ome_metadata)
-        temp_dir = os.expanduser("~")
-        tifffile.imwrite(temp_dir + "/Documents/test.ome.tif", result, photometric="minisblack", description=metadata)
-        return result, metadata
+        result_array = []
+        if level_slide.generated:
+            base_level = self.get_best_original_level(level)
+            if base_level == None:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"No appropriate base level for generagted level {level} found",
+                )
+            base_size = (
+                round(size_x * (level_slide.downsample_factor / base_level.downsample_factor)),
+                round(size_y * (level_slide.downsample_factor / base_level.downsample_factor)),
+            )
+            if base_size[0] * base_size[1] > settings.max_returned_region_size:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"""Requested image region is too large. Maximum number of pixels is set to 
+                        {settings.max_returned_region_size}, your request is for {base_size[0] * base_size[1]} pixels.""",
+                )
+            level_0_location = (
+                (int)(start_x * base_level.downsample_factor),
+                (int)(start_y * base_level.downsample_factor),
+            )
+            tif_level = self.get_tif_level_for_slide_level(base_level)
+            for page in tif_level.pages:
+                temp_channel = self.read_region_of_page(
+                    page, level_0_location[0], level_0_location[1], base_size[0], base_size[1]
+                )
+                resized = util.img_as_uint(
+                    transform.resize(temp_channel, (temp_channel.shape[0], size_x, size_y, temp_channel.shape[3]))
+                )
+                result_array.append(resized)
+        else:
+            tif_level = self.get_tif_level_for_slide_level(level_slide)
+            for page in tif_level.pages:
+                temp_channel = self.read_region_of_page(page, start_x, start_y, size_x, size_y)
+                result_array.append(temp_channel)
+
+        result = np.concatenate(result_array, axis=0)[:, :, :, 0]
+
+        # todo: manipulate metadata
+        # self.manipulate_metadata("CYZ", "0.325", "0.325", result.shape[1], result.shape[2])
+
+        # debug
+        """temp_dir = os.expanduser("~")
+        tifffile.imwrite(
+            temp_dir + "/Documents/test.ome.tif",
+            result,
+            photometric="minisblack",
+            planarconfig="separate",
+            description=self.ome_metadata,
+        )"""
+
+        return result, None  # self.ome_metadata
 
     def read_region_of_page(self, page, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
@@ -127,16 +188,16 @@ class OmeTiffSlide(Slide):
             )
         tile_width, tile_height = page_frame.tilewidth, page_frame.tilelength
         end_x, end_y = start_x + size_x, start_y + size_y
-        # switch height and width?
-        tile_i0, tile_j0 = start_x // tile_width, start_y // tile_height
-        tile_i1, tile_j1 = np.ceil([end_x / tile_width, end_y / tile_height]).astype(int)
+
+        start_tile_x0, start_tile_y0 = start_x // tile_width, start_y // tile_height
+        end_tile_xn, end_tile_yn = np.ceil([end_x / tile_width, end_y / tile_height]).astype(int)
 
         tile_per_line = int(np.ceil(image_width / tile_width))
         out = np.empty(
             (
                 page_frame.imagedepth,
-                (tile_i1 - tile_i0) * tile_height,
-                (tile_j1 - tile_j0) * tile_width,
+                (end_tile_xn - start_tile_x0) * tile_height,
+                (end_tile_yn - start_tile_y0) * tile_width,
                 page_frame.samplesperpixel,
             ),
             dtype=page_frame.dtype,
@@ -148,8 +209,8 @@ class OmeTiffSlide(Slide):
         if jpegtables is not None:
             jpegtables = jpegtables.value
 
-        for i in range(tile_i0, tile_i1):
-            for j in range(tile_j0, tile_j1):
+        for i in range(start_tile_x0, end_tile_xn):
+            for j in range(start_tile_y0, end_tile_yn):
                 index = int(i * tile_per_line + j)
 
                 offset = page.dataoffsets[index]
@@ -159,14 +220,16 @@ class OmeTiffSlide(Slide):
                 data = fh.read(bytecount)
                 tile, indices, shape = page.decode(data, index, jpegtables)
 
-                im_i = (i - tile_i0) * tile_height
-                im_j = (j - tile_j0) * tile_width
-                out[:, im_i : im_i + tile_height, im_j : im_j + tile_width, :] = tile
+                tile_position_i = (i - start_tile_x0) * tile_height
+                tile_position_j = (j - start_tile_y0) * tile_width
+                out[
+                    :, tile_position_i : tile_position_i + tile_height, tile_position_j : tile_position_j + tile_width :
+                ] = tile
 
-        im_i0 = start_x - tile_i0 * tile_height
-        im_j0 = start_y - tile_j0 * tile_width
+        im_i0 = start_x - start_tile_x0 * tile_height
+        im_j0 = start_y - start_tile_y0 * tile_width
 
-        result = out[:, im_i0 : im_i0 + size_x, im_j0 : im_j0 + size_y, :]
+        result = out[:, im_i0 : im_i0 + size_x, im_j0 : im_j0 + size_y :]
         return result
 
     def get_thumbnail(self, max_x, max_y):

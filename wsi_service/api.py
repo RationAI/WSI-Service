@@ -163,7 +163,7 @@ def get_slide_region(
             detail=f"Requested region must contain at least 1 pixel.",
         )
     slide = slide_source.get_slide(slide_id)
-    if image_format == "ome.tif":
+    if slide.loader_name == "OmeTiffSlide":
         narray, metadata = slide.get_region(level, start_x, start_y, size_x, size_y)
         return make_tif_response(narray, metadata, image_format, image_quality)
     else:
