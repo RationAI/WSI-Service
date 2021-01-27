@@ -4,10 +4,13 @@ import openslide
 import PIL
 from fastapi import HTTPException
 
-from wsi_service.models.slide import Extent, SlideInfo
+from wsi_service.models.slide import Extent, Level, PixelSizeNm, SlideInfo
 from wsi_service.settings import Settings
 from wsi_service.slide import Slide
-from wsi_service.slide_utils import get_slide_info, rgba_to_rgb_with_background_color
+from wsi_service.slide_utils import (
+    check_generated_levels_for_originals,
+    rgba_to_rgb_with_background_color,
+)
 
 
 class OpenSlideSlide(Slide):
@@ -22,7 +25,7 @@ class OpenSlideSlide(Slide):
                 status_code=422,
                 detail=f"OpenSlideError: {e}",
             )
-        self.slide_info = get_slide_info(self.openslide_slide, slide_id)
+        self.slide_info = self.get_slide_info(self.openslide_slide, slide_id)
 
     def close(self):
         self.openslide_slide.close()
@@ -96,3 +99,114 @@ class OpenSlideSlide(Slide):
             self.slide_info.tile_extent.x,
             self.slide_info.tile_extent.y,
         )
+
+    @staticmethod
+    def calc_num_levels(openslide_slide):
+        min_extent = min(openslide_slide.dimensions)
+        return int(math.log2(min_extent) + 1)
+
+    @staticmethod
+    def get_original_levels(openslide_slide):
+        levels = []
+        for level in range(openslide_slide.level_count):
+            levels.append(
+                Level(
+                    extent=Extent(
+                        x=openslide_slide.level_dimensions[level][0],
+                        y=openslide_slide.level_dimensions[level][1],
+                        z=1,
+                    ),
+                    downsample_factor=openslide_slide.level_downsamples[level],
+                    generated=False,
+                )
+            )
+        return levels
+
+    @staticmethod
+    def get_generated_levels(openslide_slide, coarsest_native_level):
+        levels = []
+        for level in range(OpenSlideSlide.calc_num_levels(openslide_slide)):
+            extent = Extent(
+                x=openslide_slide.dimensions[0] / (2 ** level),
+                y=openslide_slide.dimensions[1] / (2 ** level),
+                z=1,
+            )
+            downsample_factor = 2 ** level
+            if (
+                downsample_factor > 4 * coarsest_native_level.downsample_factor
+            ):  # only include levels up to two levels below coarsest native level
+                continue
+            levels.append(
+                Level(
+                    extent=extent,
+                    downsample_factor=downsample_factor,
+                    generated=True,
+                )
+            )
+        return levels
+
+    @staticmethod
+    def get_levels(openslide_slide):
+        original_levels = OpenSlideSlide.get_original_levels(openslide_slide)
+        generated_levels = OpenSlideSlide.get_generated_levels(openslide_slide, original_levels[-1])
+        check_generated_levels_for_originals(original_levels, generated_levels)
+        return generated_levels
+
+    @staticmethod
+    def get_pixel_size(openslide_slide):
+        if openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "generic-tiff":
+            if openslide_slide.properties["tiff.ResolutionUnit"] == "centimeter":
+                pixel_per_cm_x = float(openslide_slide.properties["tiff.XResolution"])
+                pixel_per_cm_y = float(openslide_slide.properties["tiff.YResolution"])
+                pixel_size_nm_x = 1e7 / pixel_per_cm_x
+                pixel_size_nm_y = 1e7 / pixel_per_cm_y
+            else:
+                raise ("Unable to extract pixel size from metadata.")
+        elif (
+            openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "aperio"
+            or openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "mirax"
+            or openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "hamamatsu"
+        ):
+            pixel_size_nm_x = 1000.0 * float(openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X])
+            pixel_size_nm_y = 1000.0 * float(openslide_slide.properties[openslide.PROPERTY_NAME_MPP_Y])
+        else:
+            raise ("Unable to extract pixel size from metadata.")
+        return PixelSizeNm(x=pixel_size_nm_x, y=pixel_size_nm_y)
+
+    @staticmethod
+    def get_tile_extent(openslide_slide):
+        if (
+            "openslide.level[0].tile-height" in openslide_slide.properties
+            and "openslide.level[0].tile-width" in openslide_slide.properties
+        ):
+            tile_height = openslide_slide.properties["openslide.level[0].tile-height"]
+            tile_width = openslide_slide.properties["openslide.level[0].tile-width"]
+        else:
+            tile_height = 256
+            tile_width = 256
+        return Extent(x=tile_width, y=tile_height, z=1)
+
+    @staticmethod
+    def get_slide_info(openslide_slide, slide_id):
+        try:
+            levels = OpenSlideSlide.get_levels(openslide_slide)
+        except Exception as e:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Failed to retireve slide level data. [{e}]",
+            )
+        try:
+            slide_info = SlideInfo(
+                id=slide_id,
+                extent=Extent(x=openslide_slide.dimensions[0], y=openslide_slide.dimensions[1], z=1),
+                pixel_size_nm=OpenSlideSlide.get_pixel_size(openslide_slide),
+                tile_extent=OpenSlideSlide.get_tile_extent(openslide_slide),
+                num_levels=len(levels),
+                levels=levels,
+            )
+            return slide_info
+        except Exception as e:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Failed to gather slide infos. [{e}]",
+            )
