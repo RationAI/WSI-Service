@@ -9,7 +9,6 @@ from wsi_service.slide_utils import (
     Extent,
     Level,
     PixelSizeNm,
-    get_slide_info,
     rgba_to_rgb_with_background_color,
 )
 
