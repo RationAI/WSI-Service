@@ -10,7 +10,7 @@ from wsi_service.tests.test_api_helpers import client, get_image, setup_mock
 @pytest.mark.parametrize(
     "slide_id, num_levels, pixel_size_nm, tile_size, x, y",
     [
-        ("4b0ec5e0ec5e5e05ae9e500857314f20", 12, 499, (128, 128), 46000, 32914),  # tiff
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", 12, 50, (128, 128), 46000, 32914),  # tiff
         ("f863c2ef155654b1af0387acc7ebdb60", 7, 499, (256, 256), 46000, 32914),  # svs
         (
             "c801ce3d1de45f2996e6a07b2d449bca",
