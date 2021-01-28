@@ -5,6 +5,7 @@ from importlib import reload
 
 import PIL.Image as Image
 import pytest
+import tifffile
 from fastapi.testclient import TestClient
 
 from wsi_service.__main__ import load_example_data
@@ -135,3 +136,7 @@ def setup_mock(kwargs):
 
 def get_image(response):
     return Image.open(io.BytesIO(response.raw.data))
+
+
+def get_tiff_image(response):
+    return tifffile.TiffFile(io.BytesIO(response.raw.data))

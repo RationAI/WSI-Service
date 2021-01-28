@@ -3,7 +3,12 @@ import requests_mock
 
 from wsi_service.models.slide import SlideInfo
 from wsi_service.settings import Settings
-from wsi_service.tests.test_api_helpers import client, get_image, setup_mock
+from wsi_service.tests.test_api_helpers import (
+    client,
+    get_image,
+    get_tiff_image,
+    setup_mock,
+)
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
@@ -222,12 +227,18 @@ def test_get_slide_region_valid(
     )
     assert response.status_code == 200
     assert response.headers["content-type"] == f"image/{image_format}"
-    image = get_image(response)
-    x, y = image.size
-    assert (x == size_x) or (y == size_y)
-    if image_format in ["png", "bmp", "tiff"]:
-        image.thumbnail((1, 1))
-        assert image.getpixel((0, 0)) == testpixel
+    if response.headers["content-type"] == "image/tiff":
+        image = get_tiff_image(response)
+        x, y = image.pages.keyframe.imagewidth, image.pages.keyframe.imagelength
+        assert (x == size_x) or (y == size_y)
+        # todo: add pixel assert here
+    else:
+        image = get_image(response)
+        x, y = image.size
+        assert (x == size_x) or (y == size_y)
+        if image_format in ["png", "bmp"]:
+            image.thumbnail((1, 1))
+            assert image.getpixel((0, 0)) == testpixel
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")

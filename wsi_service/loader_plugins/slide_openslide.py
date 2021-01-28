@@ -4,12 +4,14 @@ import openslide
 import PIL
 from fastapi import HTTPException
 
-from wsi_service.models.slide import Extent, SlideInfo
+from wsi_service.image_utils import rgba_to_rgb_with_background_color
+from wsi_service.models.slide import Channel, Extent, Level, PixelSizeNm, SlideInfo
 from wsi_service.settings import Settings
 from wsi_service.slide import Slide
 from wsi_service.slide_utils import (
-    get_slide_info_openslide,
-    rgba_to_rgb_with_background_color,
+    check_generated_levels_for_originals,
+    get_generated_levels,
+    get_original_levels,
 )
 
 
@@ -25,7 +27,7 @@ class OpenSlideSlide(Slide):
                 status_code=422,
                 detail=f"OpenSlideError: {e}",
             )
-        self.slide_info = get_slide_info_openslide(self.openslide_slide, slide_id)
+        self.slide_info = self.__get_slide_info_openslide(slide_id)
 
     def close(self):
         self.openslide_slide.close()
@@ -99,3 +101,80 @@ class OpenSlideSlide(Slide):
             self.slide_info.tile_extent.x,
             self.slide_info.tile_extent.y,
         )
+
+    # private members
+
+    def __get_levels_openslide(self):
+        original_levels = get_original_levels(
+            self.openslide_slide.level_count,
+            self.openslide_slide.level_dimensions,
+            self.openslide_slide.level_downsamples,
+        )
+        generated_levels = get_generated_levels(self.openslide_slide.dimensions, original_levels[-1])
+        check_generated_levels_for_originals(original_levels, generated_levels)
+        return generated_levels
+
+    def __get_pixel_size(self):
+        if self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "generic-tiff":
+            if self.openslide_slide.properties["tiff.ResolutionUnit"] == "centimeter":
+                pixel_per_cm_x = float(self.openslide_slide.properties["tiff.XResolution"])
+                pixel_per_cm_y = float(self.openslide_slide.properties["tiff.YResolution"])
+                pixel_size_nm_x = 1e8 / pixel_per_cm_x
+                pixel_size_nm_y = 1e8 / pixel_per_cm_y
+            else:
+                raise ("Unable to extract pixel size from metadata.")
+        elif (
+            self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "aperio"
+            or self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "mirax"
+            or self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "hamamatsu"
+        ):
+            pixel_size_nm_x = 1000.0 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X])
+            pixel_size_nm_y = 1000.0 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_Y])
+        else:
+            raise ("Unable to extract pixel size from metadata.")
+        return PixelSizeNm(x=pixel_size_nm_x, y=pixel_size_nm_y)
+
+    def __get_tile_extent(self):
+        if (
+            "openslide.level[0].tile-height" in self.openslide_slide.properties
+            and "openslide.level[0].tile-width" in self.openslide_slide.properties
+        ):
+            tile_height = self.openslide_slide.properties["openslide.level[0].tile-height"]
+            tile_width = self.openslide_slide.properties["openslide.level[0].tile-width"]
+        else:
+            tile_height = 256
+            tile_width = 256
+        return Extent(x=tile_width, y=tile_height, z=1)
+
+    def __get_rgb_channel_list(self):
+        channels = []
+        channels.append(Channel(id=0, name="Red", color_int=16711680))
+        channels.append(Channel(id=1, name="Green", color_int=65280))
+        channels.append(Channel(id=2, name="Blue", color_int=255))
+        return channels
+
+    def __get_slide_info_openslide(self, slide_id):
+        try:
+            levels = self.__get_levels_openslide()
+        except Exception as e:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Failed to retrieve slide level data. [{e}]",
+            )
+        try:
+            slide_info = SlideInfo(
+                id=slide_id,
+                channels=self.__get_rgb_channel_list(),  # rgb channels
+                channel_depth=8,  # 8bit each channel
+                extent=Extent(x=self.openslide_slide.dimensions[0], y=self.openslide_slide.dimensions[1], z=1),
+                pixel_size_nm=self.__get_pixel_size(),
+                tile_extent=self.__get_tile_extent(),
+                num_levels=len(levels),
+                levels=levels,
+            )
+            return slide_info
+        except Exception as e:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Failed to gather slide infos. [{e}]",
+            )

@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from wsi_service.api_utils import (
+    get_image_region,
+    get_image_region_raw,
     make_image_response,
     make_tif_response,
     validate_image_request,
@@ -18,7 +20,12 @@ from wsi_service.local_mapper_models import (
     SlideStorage,
 )
 from wsi_service.models.slide import SlideInfo
-from wsi_service.queries import ImageFormatsQuery, ImageQualityQuery, ZStackQuery
+from wsi_service.queries import (
+    ImageChannelQuery,
+    ImageFormatsQuery,
+    ImageQualityQuery,
+    ZStackQuery,
+)
 from wsi_service.responses import ImageRegionResponse, ImageResponses
 from wsi_service.settings import Settings
 from wsi_service.slide_source import SlideSource
@@ -144,6 +151,7 @@ def get_slide_region(
     size_y: int = Path(None, example=1024, description="Height of requested region"),
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery,
+    image_channels: List[int] = ImageChannelQuery,
     z: int = ZStackQuery,
 ):
     """
@@ -162,12 +170,15 @@ def get_slide_region(
             status_code=422,
             detail=f"Requested region must contain at least 1 pixel.",
         )
+
     slide = slide_source.get_slide(slide_id)
-    if slide.loader_name == "OmeTiffSlide":
-        narray, metadata = slide.get_region(level, start_x, start_y, size_x, size_y)
-        return make_tif_response(narray, metadata, image_format, image_quality)
+    if image_format == "tiff":
+        # return raw image file as tiff
+        narray = get_image_region_raw(slide, level, image_channels, start_x, start_y, size_x, size_y)
+        return make_tif_response(narray, image_format, image_quality)
     else:
-        img = slide.get_region(level, start_x, start_y, size_x, size_y)
+        # return image as
+        img = get_image_region(slide, level, image_channels, start_x, start_y, size_x, size_y)
         return make_image_response(img, image_format, image_quality)
 
 
