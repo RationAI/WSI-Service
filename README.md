@@ -14,7 +14,7 @@ Regions of the WSI can be requested on any of the available levels. There is als
 
 There are several endpoints made available by this service:
 
-* `GET /slides/{slide_id}/info` - Get slide info, e.g.
+* `GET /v1/slides/{slide_id}/info` - Get slide info, e.g.
 ```json
 {
     "id": "f863c2ef155654b1af0387acc7ebdb60",
@@ -68,11 +68,11 @@ There are several endpoints made available by this service:
   ]
 }
 ```
-* `GET /slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format=jpeg&image_quality=90&z=0` - Get slide region: Get region of the slide. Level 0 is highest (original) resolution. Each level has half the resolution and half the extent of the previous level. Coordinates are given with respect to the requested level.
-* `GET /slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}?image_format=jpeg&image_quality=90&z=0` - Get slide tile: Get tile of the slide. Extent of the tile is given in slide metadata. Level 0 is highest (original) resolution. Each level has half the resolution and half the extent of the previous level. Coordinates are given with respect to tiles, i.e. tile coordinate n is the n-th tile in the respective dimension.
-* `GET /slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}?image_format=jpeg&image_quality=90` - Get slide thumbnail image
-* `GET /slides/{slide_id}/label?image_format=jpeg&image_quality=90` - Get slide label image
-* `GET /slides/{slide_id}/macro?image_format=jpeg&image_quality=90` - Get slide macro image
+* `GET /v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format=jpeg&image_quality=90&z=0` - Get slide region: Get region of the slide. Level 0 is highest (original) resolution. Each level has half the resolution and half the extent of the previous level. Coordinates are given with respect to the requested level.
+* `GET /v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}?image_format=jpeg&image_quality=90&z=0` - Get slide tile: Get tile of the slide. Extent of the tile is given in slide metadata. Level 0 is highest (original) resolution. Each level has half the resolution and half the extent of the previous level. Coordinates are given with respect to tiles, i.e. tile coordinate n is the n-th tile in the respective dimension.
+* `GET /v1/slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}?image_format=jpeg&image_quality=90` - Get slide thumbnail image
+* `GET /v1/slides/{slide_id}/label?image_format=jpeg&image_quality=90` - Get slide label image
+* `GET /v1/slides/{slide_id}/macro?image_format=jpeg&image_quality=90` - Get slide macro image
 
 The last five endpoints all return image data. The image format and its quality (e.g. for jpeg) can be selected. Formats include jpeg, png, tiff, bmp, gif. The region and the tile endpoint also offer the selection of a layer with the index z in a Z-Stack.
 
@@ -80,10 +80,10 @@ The last five endpoints all return image data. The image format and its quality 
 
 The WSI Service relies on the [Storage Mapper Service](https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/storage-mapper-service) to get storage information for a certain slide_id. If the mapper-address is not provived (see *How to run*), the WSI Service will be run in standalone mode using a local mapper. This local mapper fulfills the function of the storage mapper service, the id mapper service and part of the clinical data service by creating case ids for folders found in the data folder and slide ids for images within these case folders. In the standalone mode there are few additional endpoints, which can be accessed:
 
-* `GET /cases/` - Get cases
-* `GET /cases/{case_id}/slides/` - Get available slides
-* `GET /slides/{slide_id}` - Get slide
-* `GET /slides/{slide_id}/storage` - Get slide storage information
+* `GET /v1/cases/` - Get cases
+* `GET /v1/cases/{case_id}/slides/` - Get available slides
+* `GET /v1/slides/{slide_id}` - Get slide
+* `GET /v1/slides/{slide_id}/storage` - Get slide storage information
 
 There is also a simple viewer, which can be used by accessing: http://localhost:8080/slides/{slide_id}/viewer
 

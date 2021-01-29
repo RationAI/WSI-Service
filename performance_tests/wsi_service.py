@@ -9,17 +9,17 @@ class WSIService:
         self.host = host
 
     def get_cases(self):
-        r = requests.get(self.host + f"/cases")
+        r = requests.get(self.host + f"/v1/cases")
         assert r.status_code == 200
         return r.json()
 
     def get_slide(self, slide_id):
-        r = requests.get(self.host + f"/slides/{slide_id}")
+        r = requests.get(self.host + f"/v1/slides/{slide_id}")
         assert r.status_code == 200
         return r.json()
 
     def get_info(self, slide_id):
-        r = requests.get(self.host + f"/slides/{slide_id}/info")
+        r = requests.get(self.host + f"/v1/slides/{slide_id}/info")
         assert r.status_code == 200
         return r.json()
 
@@ -34,7 +34,7 @@ class WSIService:
         params={"image_format": "jpg", "image_quality": 90, "z": 0},
     ):
         r = requests.get(
-            self.host + f"/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}",
+            self.host + f"/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}",
             stream=True,
             params=params,
         )
@@ -46,7 +46,7 @@ class WSIService:
 
     def get_tile(self, slide_id, level, tile_x, tile_y, params={"image_format": "jpg", "image_quality": 90, "z": 0}):
         r = requests.get(
-            self.host + f"/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}", stream=True, params=params
+            self.host + f"/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}", stream=True, params=params
         )
         assert r.status_code == 200
         image_bytes = io.BytesIO(r.content)

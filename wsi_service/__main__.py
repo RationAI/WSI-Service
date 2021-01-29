@@ -24,7 +24,7 @@ def load_example_data(download_folder="/data"):
 
 def main():
     default_port = 8080
-    default_mapper_address = f"http://localhost:{default_port}/slides/" + "{slide_id}/storage"
+    default_mapper_address = f"http://localhost:{default_port}/v1/slides/" + "{slide_id}/storage"
     parser = argparse.ArgumentParser(description="Webservice that serves histological whole-slide-images")
     parser.add_argument("data_dir", help="Base path to histo data")
     parser.add_argument("--port", default=default_port, help="Port the WSI-Service listens to")
