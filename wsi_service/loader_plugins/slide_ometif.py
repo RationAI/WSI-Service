@@ -128,13 +128,16 @@ class OmeTiffSlide(Slide):
         raise (NotImplementedError)
 
     def _get_associated_image(self, associated_image_name):
-        raise (NotImplementedError)
+        raise HTTPException(
+            status_code=404,
+            detail=f"Associated image {associated_image_name} does not exist.",
+        )
 
     def get_label(self):
-        raise (NotImplementedError)
+        self._get_associated_image("label")
 
     def get_macro(self):
-        raise (NotImplementedError)
+        self._get_associated_image("macro")
 
     def get_tile(self, level, tile_x, tile_y):
         # todo: implement extracting of tile without de/encoding of tile data

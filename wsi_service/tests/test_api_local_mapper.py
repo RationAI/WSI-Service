@@ -11,7 +11,7 @@ def test_get_cases_valid(client):
     response = client.get("/cases/")
     assert response.status_code == 200
     cases = response.json()
-    assert len(cases) == 9
+    assert len(cases) == 10
     assert len(cases[0].keys()) == 3
     case = list(filter(lambda case: case["local_case_id"] == "Olympus", cases))[0]
     assert case["case_id"] == "7a32e2c36ca756d9b7df0b627ace4c12"

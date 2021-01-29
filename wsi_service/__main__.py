@@ -13,11 +13,13 @@ def set_env_from_args(data_dir, mapper_address, local_mode):
 
 
 def load_example_data(download_folder="/data"):
-    if not os.path.exists(os.path.join(download_folder, "Aperio")):
+    zip_file = os.path.join(download_folder, "..", "testdata.zip")
+    if not os.path.exists(zip_file):
         print("Beginning file download (13 GB)...")
         url = "https://nextcloud.empaia.org/s/4fpdFEn69gqgrgK/download"
-        urlretrieve(url, os.path.join(download_folder, "..", "testdata.zip"))
-        with zipfile.ZipFile(os.path.join(download_folder, "..", "testdata.zip"), "r") as zip_ref:
+        urlretrieve(url, zip_file)
+    if not os.path.exists(os.path.join(download_folder, "Aperio")):
+        with zipfile.ZipFile(zip_file, "r") as zip_ref:
             zip_ref.extractall(os.path.join(download_folder, ".."))
         print("Done")
 

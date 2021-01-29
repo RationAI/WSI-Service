@@ -131,6 +131,21 @@ def setup_mock(kwargs):
             ],
         },
     )
+    mock.get(
+        "http://testserver/slides/46061cfc30a65acab7a1ed644771a340",
+        json={
+            "slide_id": "46061cfc30a65acab7a1ed644771a340",
+            "storage_type": "fs",
+            "storage_addresses": [
+                {
+                    "address": "Fluorescence OME-Tif/2019_10_15__0014_GOOD.ome.tif",
+                    "main_address": True,
+                    "storage_address_id": "46061cfc30a65acab7a1ed644771a340",
+                    "slide_id": "46061cfc30a65acab7a1ed644771a340",
+                }
+            ],
+        },
+    )
     return mock
 
 
