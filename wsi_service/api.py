@@ -2,7 +2,7 @@ import os
 import pathlib
 from typing import List
 
-from fastapi import APIRouter, FastAPI, HTTPException, Path
+from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
 
