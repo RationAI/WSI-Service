@@ -31,7 +31,6 @@ def get_image_region(slide, level, image_channels, start_x, start_y, size_x, siz
     elif isinstance(image_tile, (np.ndarray, np.generic)):
         # numpy array
         if image_channels == None:
-            # todo: color spaces of channel!
             rgb_image = convert_narray_to_pil_image(image_tile)
             return rgb_image
         else:
@@ -55,7 +54,12 @@ def get_image_region_raw(slide, level, image_channels, start_x, start_y, size_x,
         if image_channels == None:
             return image_tile
         else:
-            return None
+            separate_channels = np.vsplit(image_tile, image_tile.shape[0])
+            temp_array = []
+            for i in image_channels:
+                temp_array.append(separate_channels[i])
+            result = np.concatenate(temp_array, axis=0)
+            return result
     else:
         raise HTTPException(status_code=404, detail="Failed to read region in an apropriate internal representation.")
 
@@ -80,11 +84,12 @@ def make_tif_response(narray, image_format, image_quality):
 
     mem = BytesIO()
     if image_quality == 100:
-        compression_level = "NONE"
+        compression = "NONE"
     else:
-        # zlib compression ranges from 0-9
-        compression_level = ("DEFLATE", (int)((image_quality / 100) * (-9) + 9))
-    tifffile.imwrite(mem, narray, photometric="minisblack", planarconfig="separate", compression=compression_level)
+        # if tiff is requested with compression, we use deflate
+        # todo: check if this is working?
+        compression = "DEFLATE"
+    tifffile.imwrite(mem, narray, photometric="minisblack", planarconfig="separate", compression=compression)
     mem.seek(0)
 
     return StreamingResponse(mem, media_type=supported_image_formats[image_format])

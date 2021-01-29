@@ -119,8 +119,8 @@ class OpenSlideSlide(Slide):
             if self.openslide_slide.properties["tiff.ResolutionUnit"] == "centimeter":
                 pixel_per_cm_x = float(self.openslide_slide.properties["tiff.XResolution"])
                 pixel_per_cm_y = float(self.openslide_slide.properties["tiff.YResolution"])
-                pixel_size_nm_x = 1e8 / pixel_per_cm_x
-                pixel_size_nm_y = 1e8 / pixel_per_cm_y
+                pixel_size_nm_x = 1e7 / pixel_per_cm_x
+                pixel_size_nm_y = 1e7 / pixel_per_cm_y
             else:
                 raise ("Unable to extract pixel size from metadata.")
         elif (

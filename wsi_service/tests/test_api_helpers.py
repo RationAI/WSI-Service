@@ -140,3 +140,11 @@ def get_image(response):
 
 def get_tiff_image(response):
     return tifffile.TiffFile(io.BytesIO(response.raw.data))
+
+
+def tiff_pixels_equal(tiff_image, pixel_location, testpixel):
+    narray = tiff_image.asarray()
+    pixel = narray[pixel_location[0]][pixel_location[1]][pixel_location[2]]
+    if pixel != testpixel[pixel_location[0]]:
+        return False
+    return True

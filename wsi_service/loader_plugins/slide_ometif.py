@@ -6,6 +6,7 @@ import xml.etree.ElementTree as xml
 import numpy as np
 import tifffile
 from fastapi import HTTPException
+from PIL import Image
 from skimage import transform, util
 
 from wsi_service.models.slide import Channel, Extent, Level, PixelSizeNm, SlideInfo
@@ -110,20 +111,18 @@ class OmeTiffSlide(Slide):
 
         result = np.concatenate(result_array, axis=0)[:, :, :, 0]
 
-        # todo: manipulate metadata
-        # self.manipulate_metadata("CYZ", "0.325", "0.325", result.shape[1], result.shape[2])
-
         # debug
         """temp_dir = os.expanduser("~")
         tifffile.imwrite(
-            temp_dir + "/Documents/test.ome.tif",
+            temp_dir + "/Documents/test.tif",
             result,
             photometric="minisblack",
             planarconfig="separate",
-            description=self.ome_metadata,
-        )"""
+            #description=self.ome_metadata,
+        )
+        temp_file = tifffile.TiffFile(temp_dir + "/Documents/test.tif")"""
 
-        return result, None  # self.ome_metadata
+        return result
 
     def get_thumbnail(self, max_x, max_y):
         raise (NotImplementedError)

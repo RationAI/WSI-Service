@@ -1,5 +1,6 @@
 import pytest
 import requests_mock
+import tifffile
 
 from wsi_service.models.slide import SlideInfo
 from wsi_service.settings import Settings
@@ -8,17 +9,20 @@ from wsi_service.tests.test_api_helpers import (
     get_image,
     get_tiff_image,
     setup_mock,
+    tiff_pixels_equal,
 )
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
-    "slide_id, num_levels, pixel_size_nm, tile_size, x, y",
+    "slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y",
     [
-        ("4b0ec5e0ec5e5e05ae9e500857314f20", 12, 499, (128, 128), 46000, 32914),  # tiff
-        ("f863c2ef155654b1af0387acc7ebdb60", 7, 499, (256, 256), 46000, 32914),  # svs
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", 3, 8, 12, 50, (128, 128), 46000, 32914),  # tiff
+        ("f863c2ef155654b1af0387acc7ebdb60", 3, 8, 7, 499, (256, 256), 46000, 32914),  # svs
         (
             "c801ce3d1de45f2996e6a07b2d449bca",
+            3,
+            8,
             15,
             227,
             (4096, 8),
@@ -27,15 +31,20 @@ from wsi_service.tests.test_api_helpers import (
         ),  # ndpi
         (
             "7304006194f8530b9e19df1310a3670f",
+            3,
+            8,
             12,
             234,
             (256, 256),
             101832,
             219976,
         ),  # mrxs
+        # add fluorescence
     ],
 )
-def test_get_slide_info_valid(client, slide_id, num_levels, pixel_size_nm, tile_size, x, y, **kwargs):
+def test_get_slide_info_valid(
+    client, slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y, **kwargs
+):
     setup_mock(kwargs)
     response = client.get(f"/slides/{slide_id}/info")
     assert response.status_code == 200
@@ -47,6 +56,8 @@ def test_get_slide_info_valid(client, slide_id, num_levels, pixel_size_nm, tile_
     assert slide_info.extent.y == y
     assert slide_info.tile_extent.x == tile_size[0]
     assert slide_info.tile_extent.y == tile_size[1]
+    assert len(slide_info.channels) == channels
+    assert slide_info.channel_depth == channel_depth
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
@@ -188,29 +199,29 @@ def test_get_slide_macro_valid(
 @pytest.mark.parametrize(
     "image_format, image_quality",
     [
-        ("jpeg", 90),
-        ("jpeg", 95),
-        ("png", 0),
-        ("png", 1),
-        ("bmp", 0),
-        ("gif", 0),
-        ("tiff", 0),
+        ("jpeg", 100),
+        ("png", 100),
+        ("png", 100),
+        ("bmp", 100),
+        ("gif", 100),
+        ("tiff", 100),
     ],
 )
 @pytest.mark.parametrize(
-    "slide_id,  testpixel, start_x, start_y, size",
+    "slide_id,  pixel_location, testpixel, start_x, start_y, size",
     [
-        ("4b0ec5e0ec5e5e05ae9e500857314f20", (223, 217, 222), 15000, 15000, 345),
-        ("f863c2ef155654b1af0387acc7ebdb60", (223, 217, 222), 15000, 15000, 345),
-        ("c801ce3d1de45f2996e6a07b2d449bca", (218, 217, 225), 15000, 15000, 345),
-        ("7304006194f8530b9e19df1310a3670f", (221, 170, 219), 50000, 90000, 345),
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", (0, 0), (255, 236, 253), 15000, 15000, 345),
+        ("f863c2ef155654b1af0387acc7ebdb60", (0, 0), (255, 235, 255), 15000, 15000, 345),
+        ("c801ce3d1de45f2996e6a07b2d449bca", (0, 0), (220, 219, 227), 15000, 15000, 345),
+        ("7304006194f8530b9e19df1310a3670f", (0, 0), (231, 182, 212), 50000, 90000, 345),
     ],
 )
-def test_get_slide_region_valid(
+def test_get_slide_region_valid_brightfield(
     client,
     image_format,
     image_quality,
     slide_id,
+    pixel_location,
     testpixel,
     start_x,
     start_y,
@@ -231,14 +242,37 @@ def test_get_slide_region_valid(
         image = get_tiff_image(response)
         x, y = image.pages.keyframe.imagewidth, image.pages.keyframe.imagelength
         assert (x == size_x) or (y == size_y)
-        # todo: add pixel assert here
+        narray = image.asarray()
+        r = narray[0][pixel_location[0]][pixel_location[1]]
+        g = narray[1][pixel_location[0]][pixel_location[1]]
+        b = narray[2][pixel_location[0]][pixel_location[1]]
+        assert (r, g, b) == testpixel
     else:
         image = get_image(response)
         x, y = image.size
         assert (x == size_x) or (y == size_y)
         if image_format in ["png", "bmp"]:
-            image.thumbnail((1, 1))
-            assert image.getpixel((0, 0)) == testpixel
+            assert image.getpixel((pixel_location[0], pixel_location[1])) == testpixel
+
+
+@requests_mock.Mocker(real_http=True, kw="requests_mock")
+@pytest.mark.parametrize(
+    "slide_id,  channels, image_width, image_length, channel_testpixel",
+    [
+        ("f863c2ef155654b1af0387acc7ebdb60", 3, 1024, 1024, (4129, 2938, 291)),  # dummy
+    ],
+)
+def test_get_slide_region_valid_fluorescence(
+    client,
+    slide_id,
+    channels,
+    image_width,
+    image_length,
+    channel_testpixel,
+    **kwargs,
+):
+    # Todo
+    assert True
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
