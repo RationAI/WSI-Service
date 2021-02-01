@@ -153,13 +153,8 @@ class OmeTiffSlide(Slide):
 
     def __read_region_of_page(self, page, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
-        if not page_frame.is_tiled:
-            raise HTTPException(
-                status_code=422,
-                detail="Tiff page is not tiled",
-            )
-
         image_width, image_height = page_frame.imagewidth, page_frame.imagelength
+
         if (
             size_x < 1
             or size_y < 1
@@ -172,6 +167,22 @@ class OmeTiffSlide(Slide):
                 status_code=422,
                 detail=f"Requested image region exceeds bounds of base level (w={image_width}, h={image_height})",
             )
+
+        if not page_frame.is_tiled:
+            return self.__read_region_of_page_untiled(page, start_x, start_y, size_x, size_y)
+        else:
+            return self.__read_region_of_page_tiled(page, start_x, start_y, size_x, size_y)
+
+    def __read_region_of_page_untiled(self, page, start_x, start_y, size_x, size_y):
+        page_frame = page.keyframe
+        page_array = page.asarray()
+        out = page_array[start_x : start_x + size_x, start_y : start_y + size_y]
+        out.dtype = page_frame.dtype
+        return np.expand_dims(np.expand_dims(out, axis=0), axis=3)
+
+    def __read_region_of_page_tiled(self, page, start_x, start_y, size_x, size_y):
+        page_frame = page.keyframe
+        image_width = page_frame.imagewidth
 
         tile_width, tile_height = page_frame.tilewidth, page_frame.tilelength
         end_x, end_y = start_x + size_x, start_y + size_y

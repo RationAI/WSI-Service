@@ -8,6 +8,7 @@ from starlette.responses import StreamingResponse
 
 from wsi_service.image_utils import (
     convert_narray_to_pil_image,
+    convert_narray_to_rgb_8bit,
     convert_rgb_image_for_channels,
     save_rgb_image,
 )
@@ -26,8 +27,7 @@ alternative_spellings = {
 }
 
 
-def get_image_region(slide, level, image_channels, start_x, start_y, size_x, size_y):
-    image_tile = slide.get_region(level, start_x, start_y, size_x, size_y)
+def process_image_region(slide, image_tile, level, image_channels):
     if isinstance(image_tile, Image.Image):
         # pillow image
         if image_channels == None:
@@ -40,16 +40,15 @@ def get_image_region(slide, level, image_channels, start_x, start_y, size_x, siz
             rgb_image = convert_narray_to_pil_image(image_tile)
             return rgb_image
         else:
-            # for i in image_channels:
-            #    image_tile[i::0] = 0
-            rgb_image = convert_narray_to_pil_image(image_tile)
+            validate_image_channels(image_tile, image_channels)
+            result = convert_narray_to_rgb_8bit(image_tile, image_channels)
+            rgb_image = convert_narray_to_pil_image(result)
             return rgb_image
     else:
         raise HTTPException(status_code=400, detail="Failed to read region in an apropriate internal representation.")
 
 
-def get_image_region_raw(slide, level, image_channels, start_x, start_y, size_x, size_y):
-    image_tile = slide.get_region(level, start_x, start_y, size_x, size_y)
+def process_image_region_raw(slide, image_tile, level, image_channels):
     if isinstance(image_tile, Image.Image):
         # pillow image
         narray = np.asarray(image_tile)
@@ -60,11 +59,8 @@ def get_image_region_raw(slide, level, image_channels, start_x, start_y, size_x,
         if image_channels == None:
             return image_tile
         else:
-            separate_channels = np.vsplit(image_tile, image_tile.shape[0])
-            temp_array = []
-            for i in image_channels:
-                temp_array.append(separate_channels[i])
-            result = np.concatenate(temp_array, axis=0)
+            validate_image_channels(image_tile, image_channels)
+            result = convert_narray_to_rgb_8bit(image_tile, image_channels)
             return result
     else:
         raise HTTPException(status_code=400, detail="Failed to read region in an apropriate internal representation.")
@@ -106,3 +102,14 @@ def validate_image_request(image_format, image_quality):
         raise HTTPException(status_code=400, detail="Provided image format parameter not supported")
     if image_quality < 0 or image_quality > 100:
         raise HTTPException(status_code=400, detail="Provided image quality parameter not supported")
+
+
+def validate_image_channels(image_tile, image_channels):
+    for i in image_channels:
+        if i >= image_tile.shape[0]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Selected image channel excceds channel bounds (selected: {i} max: {image_tile.shape[0]-1})",
+            )
+    if len(image_channels) != len(set(image_channels)):
+        raise HTTPException(status_code=400, detail="No duplicates allowed in channels")

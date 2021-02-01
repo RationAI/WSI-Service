@@ -146,6 +146,21 @@ def setup_mock(kwargs):
             ],
         },
     )
+    mock.get(
+        "http://testserver/slides/56ed11a2a9e95f87a1e466cf720ceffa",
+        json={
+            "slide_id": "56ed11a2a9e95f87a1e466cf720ceffa",
+            "storage_type": "fs",
+            "storage_addresses": [
+                {
+                    "address": "Fluorescence OME-Tif/LuCa-7color_Scan1.ome.tiff",
+                    "main_address": True,
+                    "storage_address_id": "56ed11a2a9e95f87a1e466cf720ceffa",
+                    "slide_id": "56ed11a2a9e95f87a1e466cf720ceffa",
+                }
+            ],
+        },
+    )
     return mock
 
 

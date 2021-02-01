@@ -279,8 +279,8 @@ def test_get_slide_region_valid_brightfield(
 @pytest.mark.parametrize(
     "slide_id, channels, start_point, size, pixel_location, testpixel_fluorescence, testpixel_rgb",
     [
-        ("46061cfc30a65acab7a1ed644771a340", 3, (0, 0), (1024, 1024), (0, 0), (0, 0, 0), (1, 1, 1)),
-        ("46061cfc30a65acab7a1ed644771a340", 3, (0, 0), (1024, 1024), (512, 512), (5089, 3413, 288), (21, 15, 2)),
+        ("46061cfc30a65acab7a1ed644771a340", 3, (0, 0), (1024, 1024), (0, 0), (0, 0, 0), (0, 0, 0)),
+        ("46061cfc30a65acab7a1ed644771a340", 3, (0, 0), (1024, 1024), (512, 512), (5089, 3413, 288), (19, 13, 1)),
     ],
 )
 def test_get_slide_region_valid_fluorescence(
@@ -361,6 +361,7 @@ import timeit
         ("f863c2ef155654b1af0387acc7ebdb60", 1, 1, 6),
         ("c801ce3d1de45f2996e6a07b2d449bca", 1, 1, 12),
         ("7304006194f8530b9e19df1310a3670f", 1, 1, 11),
+        ("46061cfc30a65acab7a1ed644771a340", 1, 1, 4),
     ],
 )
 def test_get_slide_tile_timing(
@@ -377,6 +378,7 @@ def test_get_slide_tile_timing(
         f"/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}",
         stream=True,
     )
+    print(response)
     assert response.status_code == 200
     get_image(response)
     toc = timeit.default_timer()
@@ -400,8 +402,8 @@ def test_get_slide_tile_timing(
     "slide_id,  testpixel, tile_x, tile_y, tile_size",
     [
         ("4b0ec5e0ec5e5e05ae9e500857314f20", (243, 243, 243), 21, 22, (128, 128)),
-        ("f863c2ef155654b1af0387acc7ebdb60", (246, 246, 246), 21, 22, (256, 256)),
-        ("c801ce3d1de45f2996e6a07b2d449bca", (137, 143, 140), 21, 22, (4096, 8)),
+        ("f863c2ef155654b1af0387acc7ebdb60", (246, 246, 243), 21, 22, (256, 256)),
+        ("c801ce3d1de45f2996e6a07b2d449bca", (121, 127, 123), 21, 22, (4096, 8)),
         ("7304006194f8530b9e19df1310a3670f", (255, 255, 255), 60, 60, (256, 256)),
     ],
 )
@@ -424,12 +426,20 @@ def test_get_slide_tile_valid(
     )
     assert response.status_code == 200
     assert response.headers["content-type"] == f"image/{image_format}"
-    image = get_image(response)
-    x, y = image.size
-    assert (x == tile_size[0]) or (y == tile_size[1])
-    if image_format in ["png", "bmp", "tiff"]:
-        image.thumbnail((1, 1))
-        assert image.getpixel((0, 0)) == testpixel
+    if response.headers["content-type"] == "image/tiff":
+        image = get_tiff_image(response)
+        x, y = image.pages.keyframe.imagewidth, image.pages.keyframe.imagelength
+        assert (x == tile_size[0]) or (y == tile_size[1])
+        narray = image.asarray()
+        for i, value in enumerate(testpixel):
+            c = narray[i][0][0]
+            assert c == value
+    else:
+        image = get_image(response)
+        x, y = image.size
+        assert (x == tile_size[0]) or (y == tile_size[1])
+        if image_format in ["png", "bmp"]:
+            assert image.getpixel((0, 0)) == testpixel
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")

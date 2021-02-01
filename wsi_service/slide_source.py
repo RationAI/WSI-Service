@@ -34,12 +34,14 @@ class SlideSource:
         with self.lock:
             if slide_id not in self.opened_slides:
                 self._map_slide(slide_id)
+                filepath = os.path.join(
+                    self.data_dir,
+                    self.slide_map[slide_id]["address"],
+                )
+                slide = load_slide(filepath, slide_id)
+                if slide == None:
+                    raise HTTPException(status_code=404, detail="No appropriate file format reader")
                 try:
-                    filepath = os.path.join(
-                        self.data_dir,
-                        self.slide_map[slide_id]["address"],
-                    )
-                    slide = load_slide(filepath, slide_id)
                     self.opened_slides[slide_id] = ExpiringSlide(slide, None)
                 except KeyError:
                     raise HTTPException(status_code=404)

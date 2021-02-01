@@ -7,10 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from wsi_service.api_utils import (
-    get_image_region,
-    get_image_region_raw,
     make_image_response,
     make_tif_response,
+    process_image_region,
+    process_image_region_raw,
     validate_image_request,
 )
 from wsi_service.local_mapper import LocalMapper
@@ -172,13 +172,14 @@ def get_slide_region(
         )
 
     slide = slide_source.get_slide(slide_id)
+    image_region = slide.get_region(level, start_x, start_y, size_x, size_y)
     if image_format == "tiff":
-        # return raw image file as tiff
-        narray = get_image_region_raw(slide, level, image_channels, start_x, start_y, size_x, size_y)
+        # return raw image region as tiff
+        narray = process_image_region_raw(slide, image_region, level, image_channels)
         return make_tif_response(narray, image_format, image_quality)
     else:
-        # return image as
-        img = get_image_region(slide, level, image_channels, start_x, start_y, size_x, size_y)
+        # return image region
+        img = process_image_region(slide, image_region, level, image_channels)
         return make_image_response(img, image_format, image_quality)
 
 
@@ -195,6 +196,7 @@ def get_slide_tile(
     tile_y: int = Path(None, example=0, description="Request the tile_y-th tile in y dimension"),
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery,
+    image_channels: List[int] = ImageChannelQuery,
     z: int = ZStackQuery,
 ):
     """
@@ -205,8 +207,15 @@ def get_slide_tile(
     """
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
-    img = slide.get_tile(level, tile_x, tile_y)
-    return make_image_response(img, image_format, image_quality)
+    image_tile = slide.get_tile(level, tile_x, tile_y)
+    if image_format == "tiff":
+        # return raw image tile as tiff
+        narray = process_image_region_raw(slide, image_tile, level, image_channels)
+        return make_tif_response(narray, image_format, image_quality)
+    else:
+        # return image tile
+        img = process_image_region(slide, image_tile, level, image_channels)
+        return make_image_response(img, image_format, image_quality)
 
 
 if settings.local_mode:
