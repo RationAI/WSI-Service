@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     title: str = "WSI Service"
     description: str = "EMPAIA WSI Service to stream whole slide images"
     version: str = __version__
+    disable_openapi: bool = False
 
     cors_allow_origins: Set[str] = None
     data_dir: str
