@@ -55,7 +55,7 @@ def test_get_slide_info_valid(
     client, slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y, **kwargs
 ):
     setup_mock(kwargs)
-    response = client.get(f"/slides/{slide_id}/info")
+    response = client.get(f"/v1/slides/{slide_id}/info")
     assert response.status_code == 200
     slide_info = SlideInfo.parse_obj(response.json())
     assert slide_info.num_levels == num_levels
@@ -104,7 +104,7 @@ def test_get_slide_thumbnail_valid(
     max_size_x = 21
     max_size_y = 22
     response = client.get(
-        f"/slides/{slide_id}/thumbnail/max_size/{max_size_x}/{max_size_y}?image_format={image_format}&image_quality={image_quality}",
+        f"/v1/slides/{slide_id}/thumbnail/max_size/{max_size_x}/{max_size_y}?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
     assert response.status_code == return_value
@@ -142,7 +142,7 @@ def test_get_slide_thumbnail_valid(
 def test_get_slide_label_valid(client, image_format, image_quality, slide_id, has_label, **kwargs):
     setup_mock(kwargs)
     response = client.get(
-        f"/slides/{slide_id}/label?image_format={image_format}&image_quality={image_quality}",
+        f"/v1/slides/{slide_id}/label?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
     if has_label:
@@ -194,7 +194,7 @@ def test_get_slide_macro_valid(
 ):
     setup_mock(kwargs)
     response = client.get(
-        f"/slides/{slide_id}/macro?image_format={image_format}&image_quality={image_quality}",
+        f"/v1/slides/{slide_id}/macro?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
     assert response.status_code == return_value
@@ -244,7 +244,7 @@ def test_get_slide_region_valid_brightfield(
     size_x = size
     size_y = size + 198
     response = client.get(
-        f"/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format={image_format}&image_quality={image_quality}",
+        f"/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
     assert response.status_code == 200
@@ -299,7 +299,7 @@ def test_get_slide_region_valid_fluorescence(
     setup_mock(kwargs)
     level = 3
     response = client.get(
-        f"/slides/{slide_id}/region/level/{level}/start/{start_point[0]}/{start_point[1]}/size/{size[0]}/{size[1]}?image_format={image_format}&image_quality={image_quality}",
+        f"/v1/slides/{slide_id}/region/level/{level}/start/{start_point[0]}/{start_point[1]}/size/{size[0]}/{size[1]}?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
     assert response.status_code == 200
@@ -344,7 +344,7 @@ def test_get_slide_region_invalid(
     size_x = size
     size_y = size + 198
     response = client.get(
-        f"/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}",
+        f"/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}",
         stream=True,
     )
     assert response.status_code == 403
@@ -375,7 +375,7 @@ def test_get_slide_tile_timing(
     setup_mock(kwargs)
     tic = timeit.default_timer()
     response = client.get(
-        f"/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}",
+        f"/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}",
         stream=True,
     )
     print(response)
@@ -421,7 +421,7 @@ def test_get_slide_tile_valid(
     setup_mock(kwargs)
     level = 0
     response = client.get(
-        f"/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}?image_format={image_format}&image_quality={image_quality}",
+        f"/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
     assert response.status_code == 200
@@ -469,7 +469,7 @@ def test_get_slide_tile_invalid(
 ):
     setup_mock(kwargs)
     response = client.get(
-        f"/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_x}",
+        f"/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_x}",
         stream=True,
     )
     assert response.status_code == expected_response
@@ -492,7 +492,7 @@ def test_get_region_maximum_extent(
     start_y = 23
     slide_id = "7304006194f8530b9e19df1310a3670f"
     response = client.get(
-        f"/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{tile_size}/{tile_size}",
+        f"/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{tile_size}/{tile_size}",
         stream=True,
     )
     if tile_size * tile_size > wsi_settings.max_returned_region_size:

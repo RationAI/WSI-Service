@@ -38,6 +38,7 @@ api = FastAPI(
     version=settings.version,
     docs_url="/",
     redoc_url=None,
+    openapi_url="/openapi.json" if not settings.disable_openapi else "",
     root_path=settings.root_path,
 )
 
@@ -57,7 +58,7 @@ slide_source = SlideSource(
 )
 
 
-@api.get("/slides/{slide_id}/info", response_model=SlideInfo, tags=["Main Routes"])
+@api.get("/v1/slides/{slide_id}/info", response_model=SlideInfo, tags=["Main Routes"])
 def get_slide_info(slide_id: str):
     """
     Metadata for slide with given id
@@ -67,7 +68,7 @@ def get_slide_info(slide_id: str):
 
 
 @api.get(
-    "/slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}",
+    "/v1/slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}",
     responses=ImageResponses,
     response_class=StreamingResponse,
     tags=["Main Routes"],
@@ -89,7 +90,7 @@ def get_slide_thumbnail(
 
 
 @api.get(
-    "/slides/{slide_id}/label",
+    "/v1/slides/{slide_id}/label",
     responses=ImageResponses,
     response_class=StreamingResponse,
     tags=["Main Routes"],
@@ -109,7 +110,7 @@ def get_slide_label(
 
 
 @api.get(
-    "/slides/{slide_id}/macro",
+    "/v1/slides/{slide_id}/macro",
     responses=ImageResponses,
     response_class=StreamingResponse,
     tags=["Main Routes"],
@@ -129,7 +130,7 @@ def get_slide_macro(
 
 
 @api.get(
-    "/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}",
+    "/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}",
     responses=ImageRegionResponse,
     response_class=StreamingResponse,
     tags=["Main Routes"],
@@ -184,7 +185,7 @@ def get_slide_region(
 
 
 @api.get(
-    "/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}",
+    "/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}",
     responses=ImageResponses,
     response_class=StreamingResponse,
     tags=["Main Routes"],
@@ -221,7 +222,7 @@ def get_slide_tile(
 if settings.local_mode:
 
     @api.get(
-        "/cases/",
+        "/v1/cases/",
         response_model=List[CaseLocalMapper],
         tags=["Additional Routes (Standalone WSI Service)"],
     )
@@ -234,7 +235,7 @@ if settings.local_mode:
         return cases
 
     @api.get(
-        "/cases/{case_id}/slides/",
+        "/v1/cases/{case_id}/slides/",
         response_model=List[SlideLocalMapper],
         tags=["Additional Routes (Standalone WSI Service)"],
     )
@@ -247,7 +248,7 @@ if settings.local_mode:
         return slides
 
     @api.get(
-        "/slides/{slide_id}",
+        "/v1/slides/{slide_id}",
         response_model=SlideLocalMapper,
         tags=["Additional Routes (Standalone WSI Service)"],
     )
@@ -260,7 +261,7 @@ if settings.local_mode:
         return slide
 
     @api.get(
-        "/slides/{slide_id}/storage",
+        "/v1/slides/{slide_id}/storage",
         response_model=SlideStorage,
         tags=["Additional Routes (Standalone WSI Service)"],
     )
@@ -273,7 +274,7 @@ if settings.local_mode:
         return slide.slide_storage
 
     @api.get(
-        "/slides/{slide_id}/viewer",
+        "/v1/slides/{slide_id}/viewer",
         response_class=HTMLResponse,
         include_in_schema=False,
         tags=["Additional Routes (Standalone WSI Service)"],

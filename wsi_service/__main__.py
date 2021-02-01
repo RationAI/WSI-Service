@@ -15,7 +15,7 @@ def set_env_from_args(data_dir, mapper_address, local_mode):
 def load_example_data(download_folder="/data"):
     zip_file = os.path.join(download_folder, "..", "testdata.zip")
     # check if zip_file has the expected size of ~16gb (workaround for now)
-    if not os.path.exists(zip_file) and os.path.getsize(zip_file) != 16182556021:
+    if not os.path.exists(zip_file) or os.path.getsize(zip_file) != 16182556021:
         print("Beginning file download (16 GB)...")
         url = "https://nextcloud.empaia.org/s/4fpdFEn69gqgrgK/download"
         urlretrieve(url, zip_file)
@@ -30,7 +30,7 @@ def load_example_data(download_folder="/data"):
 
 def main():
     default_port = 8080
-    default_mapper_address = f"http://localhost:{default_port}/slides/" + "{slide_id}/storage"
+    default_mapper_address = f"http://localhost:{default_port}/v1/slides/" + "{slide_id}/storage"
     parser = argparse.ArgumentParser(description="Webservice that serves histological whole-slide-images")
     parser.add_argument("data_dir", help="Base path to histo data")
     parser.add_argument("--port", default=default_port, help="Port the WSI-Service listens to")
