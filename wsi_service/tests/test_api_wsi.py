@@ -109,11 +109,6 @@ def test_get_slide_thumbnail_valid(
     )
     assert response.status_code == return_value
     assert response.headers["content-type"] == f"image/{image_format}"
-    """image = get_image(response)
-    x, y = image.size
-    assert (x == max_size_x) or (y == max_size_y)
-    if image_format in ["png", "bmp", "tiff"]:
-        assert image.getpixel((5, 5)) == testpixel"""
     if response.headers["content-type"] == "image/tiff":
         image = get_tiff_image(response)
         x, y = image.pages.keyframe.imagewidth, image.pages.keyframe.imagelength
@@ -341,12 +336,6 @@ def test_get_slide_region_valid_fluorescence(
     assert response.headers["content-type"] == f"image/{image_format}"
     if response.headers["content-type"] == "image/tiff":
         image = get_tiff_image(response)
-        tifffile.imwrite(
-            f"/home/mfranz/Documents/data/{slide_id}.{image_format}",
-            image.asarray(),
-            photometric="minisblack",
-            planarconfig="separate",
-        )
         assert image.pages.keyframe.shape[0] == channels
         x, y = image.pages.keyframe.imagewidth, image.pages.keyframe.imagelength
         assert (x == size[0]) or (y == size[1])
