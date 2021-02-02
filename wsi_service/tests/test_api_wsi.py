@@ -79,7 +79,7 @@ def test_get_slide_info_valid(
         ("png", 1),
         ("bmp", 0),
         ("gif", 0),
-        ("tiff", 0),
+        ("tiff", 100),
     ],
 )
 @pytest.mark.parametrize(
@@ -109,11 +109,24 @@ def test_get_slide_thumbnail_valid(
     )
     assert response.status_code == return_value
     assert response.headers["content-type"] == f"image/{image_format}"
-    image = get_image(response)
+    """image = get_image(response)
     x, y = image.size
     assert (x == max_size_x) or (y == max_size_y)
     if image_format in ["png", "bmp", "tiff"]:
-        assert image.getpixel((5, 5)) == testpixel
+        assert image.getpixel((5, 5)) == testpixel"""
+    if response.headers["content-type"] == "image/tiff":
+        image = get_tiff_image(response)
+        x, y = image.pages.keyframe.imagewidth, image.pages.keyframe.imagelength
+        assert (x == max_size_x) or (y == max_size_y)
+        narray = image.asarray()
+        c = narray[0][5][5]
+        assert c == testpixel[0]
+    else:
+        image = get_image(response)
+        x, y = image.size
+        assert (x == max_size_x) or (y == max_size_y)
+        if image_format in ["png", "bmp"]:
+            assert image.getpixel((5, 5)) == testpixel
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
@@ -126,20 +139,25 @@ def test_get_slide_thumbnail_valid(
         ("png", 1),
         ("bmp", 0),
         ("gif", 0),
-        ("tiff", 0),
+        ("tiff", 100),
     ],
 )
 @pytest.mark.parametrize(
-    "slide_id, has_label",
+    "slide_id, has_label, pixel_location, testpixel",
     [
-        ("4b0ec5e0ec5e5e05ae9e500857314f20", False),
-        ("f863c2ef155654b1af0387acc7ebdb60", True),
-        ("c801ce3d1de45f2996e6a07b2d449bca", False),
-        ("7304006194f8530b9e19df1310a3670f", True),
-        ("46061cfc30a65acab7a1ed644771a340", False),
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", False, (), ()),
+        ("f863c2ef155654b1af0387acc7ebdb60", True, (0, 0), (0, 0, 0)),
+        ("f863c2ef155654b1af0387acc7ebdb60", True, (104, 233), (216, 142, 66)),
+        ("c801ce3d1de45f2996e6a07b2d449bca", False, (), ()),
+        ("7304006194f8530b9e19df1310a3670f", True, (0, 0), (19, 19, 19)),
+        ("7304006194f8530b9e19df1310a3670f", True, (200, 221), (222, 222, 222)),
+        ("46061cfc30a65acab7a1ed644771a340", False, (), ()),
+        ("56ed11a2a9e95f87a1e466cf720ceffa", False, (), ()),
     ],
 )
-def test_get_slide_label_valid(client, image_format, image_quality, slide_id, has_label, **kwargs):
+def test_get_slide_label_valid(
+    client, image_format, image_quality, slide_id, has_label, pixel_location, testpixel, **kwargs
+):
     setup_mock(kwargs)
     response = client.get(
         f"/v1/slides/{slide_id}/label?image_format={image_format}&image_quality={image_quality}",
@@ -148,14 +166,20 @@ def test_get_slide_label_valid(client, image_format, image_quality, slide_id, ha
     if has_label:
         assert response.status_code == 200
         assert response.headers["content-type"] == f"image/{image_format}"
-        image = get_image(response)
-        if image_format in ["png", "bmp", "tiff"] and slide_id in [
-            "4b0ec5e0ec5e5e05ae9e500857314f20",
-            "f863c2ef155654b1af0387acc7ebdb60",
-            "c801ce3d1de45f2996e6a07b2d449bca",
-        ]:
-            image.thumbnail((1, 1))
-            assert image.getpixel((0, 0)) == (126, 91, 50)
+        if response.headers["content-type"] == "image/tiff":
+            image = get_tiff_image(response)
+            narray = image.asarray()
+            for i, value in enumerate(testpixel):
+                c = narray[i][pixel_location[1]][pixel_location[0]]
+                assert c == value
+        else:
+            image = get_image(response)
+            if image_format in ["png", "bmp"] and slide_id in [
+                "4b0ec5e0ec5e5e05ae9e500857314f20",
+                "f863c2ef155654b1af0387acc7ebdb60",
+                "c801ce3d1de45f2996e6a07b2d449bca",
+            ]:
+                assert image.getpixel((pixel_location[0], pixel_location[1])) == testpixel
     else:
         assert response.status_code == 404
 
@@ -170,17 +194,20 @@ def test_get_slide_label_valid(client, image_format, image_quality, slide_id, ha
         ("png", 1),
         ("bmp", 0),
         ("gif", 0),
-        ("tiff", 0),
+        ("tiff", 100),
     ],
 )
 @pytest.mark.parametrize(
-    "slide_id, return_value, testpixel",
+    "slide_id, return_value, pixel_location, testpixel",
     [
-        ("4b0ec5e0ec5e5e05ae9e500857314f20", 404, ()),
-        ("f863c2ef155654b1af0387acc7ebdb60", 200, (178, 181, 179)),
-        ("c801ce3d1de45f2996e6a07b2d449bca", 200, (200, 196, 198)),
-        ("7304006194f8530b9e19df1310a3670f", 200, (211, 211, 211)),
-        ("46061cfc30a65acab7a1ed644771a340", 404, ()),
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", 404, (), ()),
+        ("f863c2ef155654b1af0387acc7ebdb60", 200, (0, 0), (0, 0, 0)),
+        ("f863c2ef155654b1af0387acc7ebdb60", 200, (457, 223), (179, 149, 174)),
+        ("c801ce3d1de45f2996e6a07b2d449bca", 200, (0, 0), (67, 67, 67)),
+        ("c801ce3d1de45f2996e6a07b2d449bca", 200, (800, 65), (182, 155, 172)),
+        ("7304006194f8530b9e19df1310a3670f", 200, (0, 0), (219, 219, 219)),
+        ("7304006194f8530b9e19df1310a3670f", 200, (213, 438), (129, 129, 129)),
+        ("46061cfc30a65acab7a1ed644771a340", 404, (), ()),
     ],
 )
 def test_get_slide_macro_valid(
@@ -189,6 +216,7 @@ def test_get_slide_macro_valid(
     image_quality,
     slide_id,
     return_value,
+    pixel_location,
     testpixel,
     **kwargs,
 ):
@@ -199,11 +227,16 @@ def test_get_slide_macro_valid(
     )
     assert response.status_code == return_value
     if return_value == 200:
-        assert response.headers["content-type"] == f"image/{image_format}"
-        image = get_image(response)
-        if image_format in ["png", "bmp", "tiff"]:
-            image.thumbnail((1, 1))
-            assert image.getpixel((0, 0)) == testpixel
+        if response.headers["content-type"] == "image/tiff":
+            image = get_tiff_image(response)
+            narray = image.asarray()
+            for i, value in enumerate(testpixel):
+                c = narray[i][pixel_location[1]][pixel_location[0]]
+                assert c == value
+        else:
+            image = get_image(response)
+            if image_format in ["png", "bmp"]:
+                assert image.getpixel((pixel_location[0], pixel_location[1])) == testpixel
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
@@ -281,6 +314,8 @@ def test_get_slide_region_valid_brightfield(
     [
         ("46061cfc30a65acab7a1ed644771a340", 3, (0, 0), (1024, 1024), (0, 0), (0, 0, 0), (0, 0, 0)),
         ("46061cfc30a65acab7a1ed644771a340", 3, (0, 0), (1024, 1024), (512, 512), (5089, 3413, 288), (19, 13, 1)),
+        ("56ed11a2a9e95f87a1e466cf720ceffa", 5, (0, 0), (1024, 1024), (0, 0), (0, 0, 0), (0, 0, 0)),
+        ("56ed11a2a9e95f87a1e466cf720ceffa", 5, (0, 0), (1024, 1024), (512, 512), (54, 16, 10), (54, 16, 10)),
     ],
 )
 def test_get_slide_region_valid_fluorescence(
@@ -306,6 +341,13 @@ def test_get_slide_region_valid_fluorescence(
     assert response.headers["content-type"] == f"image/{image_format}"
     if response.headers["content-type"] == "image/tiff":
         image = get_tiff_image(response)
+        tifffile.imwrite(
+            f"/home/mfranz/Documents/data/{slide_id}.{image_format}",
+            image.asarray(),
+            photometric="minisblack",
+            planarconfig="separate",
+        )
+        assert image.pages.keyframe.shape[0] == channels
         x, y = image.pages.keyframe.imagewidth, image.pages.keyframe.imagelength
         assert (x == size[0]) or (y == size[1])
         narray = image.asarray()
@@ -378,7 +420,6 @@ def test_get_slide_tile_timing(
         f"/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}",
         stream=True,
     )
-    print(response)
     assert response.status_code == 200
     get_image(response)
     toc = timeit.default_timer()
@@ -395,7 +436,7 @@ def test_get_slide_tile_timing(
         ("png", 1),
         ("bmp", 0),
         ("gif", 0),
-        ("tiff", 0),
+        ("tiff", 100),
     ],
 )
 @pytest.mark.parametrize(
@@ -405,6 +446,7 @@ def test_get_slide_tile_timing(
         ("f863c2ef155654b1af0387acc7ebdb60", (246, 246, 243), 21, 22, (256, 256)),
         ("c801ce3d1de45f2996e6a07b2d449bca", (121, 127, 123), 21, 22, (4096, 8)),
         ("7304006194f8530b9e19df1310a3670f", (255, 255, 255), 60, 60, (256, 256)),
+        ("56ed11a2a9e95f87a1e466cf720ceffa", (27, 12, 9), 21, 22, (512, 512)),
     ],
 )
 def test_get_slide_tile_valid(

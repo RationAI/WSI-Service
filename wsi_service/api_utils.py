@@ -8,8 +8,9 @@ from starlette.responses import StreamingResponse
 
 from wsi_service.image_utils import (
     convert_narray_to_pil_image,
-    convert_narray_to_rgb_8bit,
     convert_rgb_image_for_channels,
+    get_requested_channels_as_array,
+    get_requested_channels_as_rgb_array,
     save_rgb_image,
 )
 
@@ -27,7 +28,7 @@ alternative_spellings = {
 }
 
 
-def process_image_region(slide, image_tile, level, image_channels):
+def process_image_region(slide, image_tile, image_channels):
     if isinstance(image_tile, Image.Image):
         # pillow image
         if image_channels == None:
@@ -37,18 +38,20 @@ def process_image_region(slide, image_tile, level, image_channels):
     elif isinstance(image_tile, (np.ndarray, np.generic)):
         # numpy array
         if image_channels == None:
-            rgb_image = convert_narray_to_pil_image(image_tile)
+            # workaround for now: we return first three channels as rgb
+            result = get_requested_channels_as_rgb_array(image_tile, None, slide)
+            rgb_image = convert_narray_to_pil_image(result)
             return rgb_image
         else:
             validate_image_channels(image_tile, image_channels)
-            result = convert_narray_to_rgb_8bit(image_tile, image_channels)
+            result = get_requested_channels_as_rgb_array(image_tile, image_channels, slide)
             rgb_image = convert_narray_to_pil_image(result)
             return rgb_image
     else:
         raise HTTPException(status_code=400, detail="Failed to read region in an apropriate internal representation.")
 
 
-def process_image_region_raw(slide, image_tile, level, image_channels):
+def process_image_region_raw(slide, image_tile, image_channels):
     if isinstance(image_tile, Image.Image):
         # pillow image
         narray = np.asarray(image_tile)
@@ -60,10 +63,21 @@ def process_image_region_raw(slide, image_tile, level, image_channels):
             return image_tile
         else:
             validate_image_channels(image_tile, image_channels)
-            result = convert_narray_to_rgb_8bit(image_tile, image_channels)
+            result = get_requested_channels_as_array(image_tile, image_channels)
             return result
     else:
         raise HTTPException(status_code=400, detail="Failed to read region in an apropriate internal representation.")
+
+
+def make_response(slide, image_region, image_format, image_quality, image_channels=None):
+    if image_format == "tiff":
+        # return raw image region as tiff
+        narray = process_image_region_raw(slide, image_region, image_channels)
+        return make_tif_response(narray, image_format, image_quality)
+    else:
+        # return image region
+        img = process_image_region(slide, image_region, image_channels)
+        return make_image_response(img, image_format, image_quality)
 
 
 def make_image_response(pil_image, image_format, image_quality):
@@ -85,11 +99,11 @@ def make_tif_response(narray, image_format, image_quality):
         raise HTTPException(status_code=400, detail="Provided image format parameter not supported for OME tiff")
 
     mem = BytesIO()
-    if image_quality == 100:
-        compression = "NONE"
+    if image_quality == 0:
+        # lossy comprssion with jpeg
+        compression = "JPEG"
     else:
-        # if tiff is requested with compression, we use deflate
-        # todo: check if this is working?
+        # by default we use deflate
         compression = "DEFLATE"
     tifffile.imwrite(mem, narray, photometric="minisblack", planarconfig="separate", compression=compression)
     mem.seek(0)

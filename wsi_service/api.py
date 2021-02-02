@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 
 from wsi_service.api_utils import (
     make_image_response,
-    make_tif_response,
+    make_response,
     process_image_region,
     process_image_region_raw,
     validate_image_request,
@@ -86,7 +86,7 @@ def get_slide_thumbnail(
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
     thumbnail = slide.get_thumbnail(max_x, max_y)
-    return make_image_response(thumbnail, image_format, image_quality)
+    return make_response(slide, thumbnail, image_format, image_quality)
 
 
 @api.get(
@@ -106,7 +106,7 @@ def get_slide_label(
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
     label = slide.get_label()
-    return make_image_response(label, image_format, image_quality)
+    return make_response(slide, label, image_format, image_quality)
 
 
 @api.get(
@@ -126,7 +126,7 @@ def get_slide_macro(
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
     macro = slide.get_macro()
-    return make_image_response(macro, image_format, image_quality)
+    return make_response(slide, macro, image_format, image_quality)
 
 
 @api.get(
@@ -174,14 +174,7 @@ def get_slide_region(
 
     slide = slide_source.get_slide(slide_id)
     image_region = slide.get_region(level, start_x, start_y, size_x, size_y)
-    if image_format == "tiff":
-        # return raw image region as tiff
-        narray = process_image_region_raw(slide, image_region, level, image_channels)
-        return make_tif_response(narray, image_format, image_quality)
-    else:
-        # return image region
-        img = process_image_region(slide, image_region, level, image_channels)
-        return make_image_response(img, image_format, image_quality)
+    return make_response(slide, image_region, image_format, image_quality, image_channels)
 
 
 @api.get(
@@ -209,14 +202,7 @@ def get_slide_tile(
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
     image_tile = slide.get_tile(level, tile_x, tile_y)
-    if image_format == "tiff":
-        # return raw image tile as tiff
-        narray = process_image_region_raw(slide, image_tile, level, image_channels)
-        return make_tif_response(narray, image_format, image_quality)
-    else:
-        # return image tile
-        img = process_image_region(slide, image_tile, level, image_channels)
-        return make_image_response(img, image_format, image_quality)
+    return make_response(slide, image_tile, image_format, image_quality, image_channels)
 
 
 if settings.local_mode:

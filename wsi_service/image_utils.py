@@ -78,19 +78,61 @@ def save_rgb_image(pil_image, image_format, image_quality):
     return mem
 
 
-def convert_narray_to_rgb_8bit(narray, image_channels):
+# todo: we need a meaningful mapping of the multi channel values to rgb values
+def get_requested_channels_as_rgb_array(narray, image_channels, slide):
     separate_channels = np.vsplit(narray, narray.shape[0])
 
-    if len(image_channels) > 3:
-        # handle case when more than 3 channels
-        result = separate_channels
-    else:
+    if image_channels == None:
+        # image_channels is None
+        temp_array = get_multi_channel_as_rgb(separate_channels)
+    elif len(image_channels) == 1:
+        # return a single channel image
+        try:
+            color = slide.slide_info.channels[image_channels[0]].color_int
+        except IndexError:
+            # if there is no color defined we set channel to red by default
+            color = [255, 0, 0, 0]
+        temp_array = get_single_channel(separate_channels, image_channels[0], color)
+    elif len(image_channels) == 2:
         temp_array = []
-        for i in range(3):
-            if i in image_channels:
-                temp_array.append(separate_channels[i])
-            else:
-                temp_array.append(np.zeros(separate_channels[0].shape))
+        temp_array.append(separate_channels[image_channels[0]])
+        temp_array.append(separate_channels[image_channels[1]])
+        temp_array.append(np.zeros(separate_channels[image_channels[0]].shape))
+    else:
+        # three or more channels given
+        # in this case we simply return the first 3 channels for now
+        temp_array = get_multi_channel_as_rgb(separate_channels)
 
+    result = np.concatenate(temp_array, axis=0)
+    return result
+
+
+def get_multi_channel_as_rgb(separate_channels):
+    # todo: mapping of existing channels to rgb channels
+    temp_array = []
+    for channel in separate_channels:
+        if len(temp_array) == 3:
+            break
+        temp_array.append(channel)
+    return temp_array
+
+
+def get_single_channel(separate_channels, channel, color):
+    rgb = covert_int_to_rgba_array(color)
+    temp_array = []
+    for i in range(3):
+        temp_channel = separate_channels[channel] * (rgb[i] / 255)
+        temp_array.append(temp_channel)
+    return temp_array
+
+
+def get_requested_channels_as_array(narray, image_channels):
+    if narray.shape[0] == len(image_channels):
+        return narray
+
+    separate_channels = np.vsplit(narray, narray.shape[0])
+    temp_array = []
+    for i in image_channels:
+        temp_array.append(separate_channels[i])
     result = np.concatenate(temp_array, axis=0)
     return result

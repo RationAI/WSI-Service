@@ -49,17 +49,6 @@ class OmeTiffSlide(Slide):
     def get_info(self):
         return self.slide_info
 
-    def get_best_original_level(self, level):
-        for i in range(level - 1, 0, -1):
-            if not self.slide_info.levels[i].generated:
-                return self.slide_info.levels[i]
-        return None
-
-    def get_tif_level_for_slide_level(self, slide_level):
-        for level in self.tif_slide.series[0].levels:
-            if level.shape[1] == slide_level.extent.y:
-                return level
-
     def get_region(self, level, start_x, start_y, size_x, size_y):
         settings = Settings()
         try:
@@ -73,7 +62,7 @@ class OmeTiffSlide(Slide):
 
         result_array = []
         if level_slide.generated:
-            base_level = self.get_best_original_level(level)
+            base_level = self.__get_best_original_level(level)
             if base_level == None:
                 raise HTTPException(
                     status_code=422,
@@ -93,7 +82,7 @@ class OmeTiffSlide(Slide):
                 (int)(start_x * base_level.downsample_factor),
                 (int)(start_y * base_level.downsample_factor),
             )
-            tif_level = self.get_tif_level_for_slide_level(base_level)
+            tif_level = self.__get_tif_level_for_slide_level(base_level)
             for page in tif_level.pages:
                 temp_channel = self.__read_region_of_page(
                     page, level_0_location[0], level_0_location[1], base_size[0], base_size[1]
@@ -104,7 +93,7 @@ class OmeTiffSlide(Slide):
                 )
                 result_array.append(resized)
         else:
-            tif_level = self.get_tif_level_for_slide_level(level_slide)
+            tif_level = self.__get_tif_level_for_slide_level(level_slide)
             for page in tif_level.pages:
                 temp_channel = self.__read_region_of_page(page, start_x, start_y, size_x, size_y)
                 result_array.append(temp_channel)
@@ -125,7 +114,18 @@ class OmeTiffSlide(Slide):
         return result
 
     def get_thumbnail(self, max_x, max_y):
-        raise (NotImplementedError)
+        thumb_level = len(self.slide_info.levels) - 1
+        for i, level in enumerate(self.slide_info.levels):
+            if level.extent.x < max_x or level.extent.y < max_y:
+                thumb_level = i
+                break
+        return self.get_region(
+            thumb_level - 1,
+            0,
+            0,
+            self.slide_info.levels[thumb_level - 1].extent.x,
+            self.slide_info.levels[thumb_level - 1].extent.y,
+        )
 
     def _get_associated_image(self, associated_image_name):
         raise HTTPException(
@@ -150,6 +150,17 @@ class OmeTiffSlide(Slide):
         )
 
     ## private members
+
+    def __get_best_original_level(self, level):
+        for i in range(level - 1, 0, -1):
+            if not self.slide_info.levels[i].generated:
+                return self.slide_info.levels[i]
+        return None
+
+    def __get_tif_level_for_slide_level(self, slide_level):
+        for level in self.tif_slide.series[0].levels:
+            if level.shape[1] == slide_level.extent.y:
+                return level
 
     def __read_region_of_page(self, page, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
@@ -176,7 +187,7 @@ class OmeTiffSlide(Slide):
     def __read_region_of_page_untiled(self, page, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
         page_array = page.asarray()
-        out = page_array[start_x : start_x + size_x, start_y : start_y + size_y]
+        out = page_array[start_y : start_y + size_y, start_x : start_x + size_x]
         out.dtype = page_frame.dtype
         return np.expand_dims(np.expand_dims(out, axis=0), axis=3)
 
