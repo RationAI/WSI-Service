@@ -34,10 +34,7 @@ class SlideSource:
         with self.lock:
             if slide_id not in self.opened_slides:
                 self._map_slide(slide_id)
-                filepath = os.path.join(
-                    self.data_dir,
-                    self.slide_map[slide_id]["address"],
-                )
+                filepath = os.path.join(self.data_dir, self.slide_map[slide_id]["address"])
                 slide = load_slide(filepath, slide_id)
                 if slide == None:
                     raise HTTPException(status_code=404, detail="No appropriate file format reader")
@@ -64,10 +61,7 @@ class SlideSource:
         r = requests.get(self.mapper_address.format(slide_id=slide_id))
         slide = r.json()
         if "storage_addresses" not in slide:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Could not find storage addresses ({slide}).",
-            )
+            raise HTTPException(status_code=400, detail=f"Could not find storage addresses ({slide}).")
         for storage_address in slide["storage_addresses"]:
             if storage_address["main_address"]:
                 return storage_address

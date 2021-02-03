@@ -29,17 +29,16 @@ class OmeTiffSlide(Slide):
             self.tif_slide = tifffile.TiffFile(filepath)
             if self.tif_slide.series[0].kind not in self.format_kinds:
                 raise HTTPException(
-                    status_code=422,
-                    detail=f"Unsupported file format ({self.tif_slide.series[0].kind})",
+                    status_code=422, detail=f"Unsupported file format ({self.tif_slide.series[0].kind})"
                 )
         except Exception as e:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Failed to load tiff file. [{e}]",
-            )
+            raise HTTPException(status_code=404, detail=f"Failed to load tiff file. [{e}]")
         # read pixel sizes from xml image description
-        self.ome_metadata = self.tif_slide.ome_metadata
-        self.parsed_metadata = xml.fromstring(self.ome_metadata)
+        try:
+            self.ome_metadata = self.tif_slide.ome_metadata
+            self.parsed_metadata = xml.fromstring(self.ome_metadata)
+        except Exception as ex:
+            raise HTTPException(status_code=422, detail=f"Could not obtain ome metadata ({ex})")
         # pixel_size = self.get_pixel_size(self.parsed_metadata[0][0])
         self.slide_info = self.__get_slide_info_ome_tif(slide_id, self.parsed_metadata)
 
@@ -65,8 +64,7 @@ class OmeTiffSlide(Slide):
             base_level = self.__get_best_original_level(level)
             if base_level == None:
                 raise HTTPException(
-                    status_code=422,
-                    detail=f"No appropriate base level for generagted level {level} found",
+                    status_code=422, detail=f"No appropriate base level for generagted level {level} found"
                 )
             base_size = (
                 round(size_x * (level_slide.downsample_factor / base_level.downsample_factor)),
@@ -99,18 +97,6 @@ class OmeTiffSlide(Slide):
                 result_array.append(temp_channel)
 
         result = np.concatenate(result_array, axis=0)[:, :, :, 0]
-
-        # debug
-        """temp_dir = os.expanduser("~")
-        tifffile.imwrite(
-            temp_dir + "/Documents/test.tif",
-            result,
-            photometric="minisblack",
-            planarconfig="separate",
-            #description=self.ome_metadata,
-        )
-        temp_file = tifffile.TiffFile(temp_dir + "/Documents/test.tif")"""
-
         return result
 
     def get_thumbnail(self, max_x, max_y):
@@ -119,19 +105,20 @@ class OmeTiffSlide(Slide):
             if level.extent.x < max_x or level.extent.y < max_y:
                 thumb_level = i
                 break
-        return self.get_region(
-            thumb_level - 1,
-            0,
-            0,
-            self.slide_info.levels[thumb_level - 1].extent.x,
-            self.slide_info.levels[thumb_level - 1].extent.y,
-        )
+        level_extent_x = self.slide_info.levels[thumb_level].extent.x
+        level_extent_y = self.slide_info.levels[thumb_level].extent.y
+
+        if max_x > max_y:
+            max_y = max_y * (level_extent_y / level_extent_x)
+        else:
+            max_x = max_x * (level_extent_x / level_extent_y)
+
+        thumbnail_org = self.get_region(thumb_level, 0, 0, level_extent_y, level_extent_x)
+        thumbnail_resized = util.img_as_uint(transform.resize(thumbnail_org, (thumbnail_org.shape[0], max_y, max_x)))
+        return thumbnail_resized
 
     def _get_associated_image(self, associated_image_name):
-        raise HTTPException(
-            status_code=404,
-            detail=f"Associated image {associated_image_name} does not exist.",
-        )
+        raise HTTPException(status_code=404, detail=f"Associated image {associated_image_name} does not exist.")
 
     def get_label(self):
         self._get_associated_image("label")
@@ -171,8 +158,8 @@ class OmeTiffSlide(Slide):
             or size_y < 1
             or start_x < 0
             or start_y < 0
-            or (start_x + size_x > image_width)
-            or (start_y + size_y > image_height)
+            or (start_x + size_x > image_height)
+            or (start_y + size_y > image_width)
         ):
             raise HTTPException(
                 status_code=422,
@@ -187,7 +174,7 @@ class OmeTiffSlide(Slide):
     def __read_region_of_page_untiled(self, page, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
         page_array = page.asarray()
-        out = page_array[start_y : start_y + size_y, start_x : start_x + size_x]
+        out = page_array[start_x : start_x + size_x, start_y : start_y + size_y]
         out.dtype = page_frame.dtype
         return np.expand_dims(np.expand_dims(out, axis=0), axis=3)
 
@@ -234,10 +221,7 @@ class OmeTiffSlide(Slide):
                 # search to tile offset and read image tile
                 fh.seek(offset)
                 if fh.tell() != offset:
-                    raise HTTPException(
-                        status_code=422,
-                        detail="Failed reading to tile offset",
-                    )
+                    raise HTTPException(status_code=422, detail="Failed reading to tile offset")
                 data = fh.read(bytecount)
                 tile, _, _ = page.decode(data, index, jpegtables)
 
@@ -301,8 +285,7 @@ class OmeTiffSlide(Slide):
         )
         if pixel_unit_x != pixel_unit_y:
             raise HTTPException(
-                status_code=422,
-                detail="Different pixel size unit in x- and y-direction not supported.",
+                status_code=422, detail="Different pixel size unit in x- and y-direction not supported."
             )
         pixel_size_x = (
             self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").get("PhysicalSizeX")
@@ -321,10 +304,7 @@ class OmeTiffSlide(Slide):
             y = float(pixel_size_y) * 1e6
             return PixelSizeNm(x=x, y=y)
         else:
-            raise HTTPException(
-                status_code=422,
-                detail=f"Invalid pixel size unit ({pixel_unit_x})",
-            )
+            raise HTTPException(status_code=422, detail=f"Invalid pixel size unit ({pixel_unit_x})")
 
     def __get_slide_info_ome_tif(self, slide_id, parsed_metadata):
         serie = self.tif_slide.series[0]
@@ -344,14 +324,12 @@ class OmeTiffSlide(Slide):
             )
             return slide_info
         except Exception as e:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Failed to gather slide infos. [{e}]",
-            )
+            raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
 
-    def __manipulate_metadata(self, dimOrder, p_size_x, p_size_y, size_x, size_y):
+    # currently unused
+    def __manipulate_metadata(self, dim_order, p_size_x, p_size_y, size_x, size_y):
         namespace = self.__get_xml_namespace()
-        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("DimensionOrder", dimOrder)
+        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("DimensionOrder", dim_order)
         self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("SizeX", str(size_x))
         self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("SizeY", str(size_y))
         self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set(
@@ -363,3 +341,6 @@ class OmeTiffSlide(Slide):
         metadata = xml.tostring(self.parsed_metadata).decode("utf-8")
         # add xml decoding
         self.ome_metadata = f'<?xml version="1.0" encoding="UTF-8"?>\n{metadata}'
+
+
+256

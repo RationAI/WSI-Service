@@ -22,10 +22,7 @@ def test_get_available_slides_valid(client):
     assert response.status_code == 200
     slides = response.json()
     slide = list(
-        filter(
-            lambda slide: slide["slide_storage"]["storage_addresses"][0]["address"].endswith("CMU-1.svs"),
-            slides,
-        )
+        filter(lambda slide: slide["slide_storage"]["storage_addresses"][0]["address"].endswith("CMU-1.svs"), slides)
     )[0]
     assert len(slides) == 1
     assert len(slides[0].keys()) == 3

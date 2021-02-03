@@ -22,10 +22,7 @@ class LocalMapper:
         try:
             self._collect_all_folders_as_cases(data_dir)
         except FileNotFoundError:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No such directory: {data_dir}",
-            )
+            raise HTTPException(status_code=404, detail=f"No such directory: {data_dir}")
         for case_id, case in self.case_map.items():
             case_dir = os.path.join(data_dir, case.local_case_id)
             self._collect_all_files_as_slides(data_dir, case_id, case_dir)
@@ -76,10 +73,7 @@ class LocalMapper:
 
     def get_slides(self, case_id):
         if case_id not in self.case_map:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Case with case_id {case_id} does not exist",
-            )
+            raise HTTPException(status_code=400, detail=f"Case with case_id {case_id} does not exist")
         slide_data = []
         for slide_id in sorted(self.case_map[case_id].slides):
             slide_data.append(self.slide_map[slide_id])
@@ -87,8 +81,5 @@ class LocalMapper:
 
     def get_slide(self, slide_id):
         if slide_id not in self.slide_map:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Slide with slide_id {slide_id} does not exist",
-            )
+            raise HTTPException(status_code=400, detail=f"Slide with slide_id {slide_id} does not exist")
         return self.slide_map[slide_id]

@@ -23,10 +23,7 @@ class OpenSlideSlide(Slide):
         try:
             self.openslide_slide = openslide.OpenSlide(filepath)
         except openslide.OpenSlideError as e:
-            raise HTTPException(
-                status_code=422,
-                detail=f"OpenSlideError: {e}",
-            )
+            raise HTTPException(status_code=422, detail=f"OpenSlideError: {e}")
         self.slide_info = self.__get_slide_info_openslide(slide_id)
 
     def close(self):
@@ -48,14 +45,10 @@ class OpenSlideSlide(Slide):
         base_level = self.openslide_slide.get_best_level_for_downsample(downsample_factor)
         if base_level >= len(self.openslide_slide.level_downsamples):
             raise HTTPException(
-                status_code=422,
-                detail=f"Downsample layer for requested base level {base_level} not available.",
+                status_code=422, detail=f"Downsample layer for requested base level {base_level} not available."
             )
         remaining_downsample_factor = downsample_factor / self.openslide_slide.level_downsamples[base_level]
-        base_size = (
-            round(size_x * remaining_downsample_factor),
-            round(size_y * remaining_downsample_factor),
-        )
+        base_size = (round(size_x * remaining_downsample_factor), round(size_y * remaining_downsample_factor))
         level_0_location = (start_x * downsample_factor, start_y * downsample_factor)
         if base_size[0] * base_size[1] > settings.max_returned_region_size:
             raise HTTPException(
@@ -68,10 +61,7 @@ class OpenSlideSlide(Slide):
             rgba_img = base_img.resize((size_x, size_y), resample=PIL.Image.BILINEAR, reducing_gap=1.0)
             rgb_img = rgba_to_rgb_with_background_color(rgba_img)
         except openslide.OpenSlideError as e:
-            raise HTTPException(
-                status_code=422,
-                detail=f"OpenSlideError: {e}",
-            )
+            raise HTTPException(status_code=422, detail=f"OpenSlideError: {e}")
 
         return rgb_img
 
@@ -80,10 +70,7 @@ class OpenSlideSlide(Slide):
 
     def _get_associated_image(self, associated_image_name):
         if associated_image_name not in self.openslide_slide.associated_images:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Associated image {associated_image_name} does not exist.",
-            )
+            raise HTTPException(status_code=404, detail=f"Associated image {associated_image_name} does not exist.")
         associated_image_rgba = self.openslide_slide.associated_images[associated_image_name]
         return associated_image_rgba.convert("RGB")
 
@@ -157,10 +144,7 @@ class OpenSlideSlide(Slide):
         try:
             levels = self.__get_levels_openslide()
         except Exception as e:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Failed to retrieve slide level data. [{e}]",
-            )
+            raise HTTPException(status_code=404, detail=f"Failed to retrieve slide level data. [{e}]")
         try:
             slide_info = SlideInfo(
                 id=slide_id,
@@ -174,7 +158,4 @@ class OpenSlideSlide(Slide):
             )
             return slide_info
         except Exception as e:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Failed to gather slide infos. [{e}]",
-            )
+            raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")

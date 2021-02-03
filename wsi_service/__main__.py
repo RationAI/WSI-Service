@@ -59,21 +59,13 @@ def main():
         action="store_true",
         help="This will download an example image into the data folder before starting the server",
     )
-    parser.add_argument(
-        "--mapper-address",
-        default=default_mapper_address,
-        help="Mapper-Service Address",
-    )
+    parser.add_argument("--mapper-address", default=default_mapper_address, help="Mapper-Service Address")
     args = parser.parse_args()
 
     if args.load_example_data:
         load_example_data()
 
-    set_env_from_args(
-        args.data_dir,
-        args.mapper_address,
-        args.mapper_address == default_mapper_address,
-    )
+    set_env_from_args(args.data_dir, args.mapper_address, args.mapper_address == default_mapper_address)
     uvicorn.run("wsi_service.api:api", host="0.0.0.0", port=int(args.port), reload=args.debug)
 
 

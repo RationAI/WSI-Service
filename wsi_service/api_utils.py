@@ -22,10 +22,7 @@ supported_image_formats = {
     "tiff": "image/tiff",
 }
 
-alternative_spellings = {
-    "jpg": "jpeg",
-    "tif": "tiff",
-}
+alternative_spellings = {"jpg": "jpeg", "tif": "tiff"}
 
 
 def process_image_region(slide, image_tile, image_channels):
@@ -43,7 +40,6 @@ def process_image_region(slide, image_tile, image_channels):
             rgb_image = convert_narray_to_pil_image(result)
             return rgb_image
         else:
-            validate_image_channels(image_tile, image_channels)
             result = get_requested_channels_as_rgb_array(image_tile, image_channels, slide)
             rgb_image = convert_narray_to_pil_image(result)
             return rgb_image
@@ -62,7 +58,6 @@ def process_image_region_raw(slide, image_tile, image_channels):
         if image_channels == None:
             return image_tile
         else:
-            validate_image_channels(image_tile, image_channels)
             result = get_requested_channels_as_array(image_tile, image_channels)
             return result
     else:
@@ -118,12 +113,14 @@ def validate_image_request(image_format, image_quality):
         raise HTTPException(status_code=400, detail="Provided image quality parameter not supported")
 
 
-def validate_image_channels(image_tile, image_channels):
+def validate_image_channels(slide, image_channels):
+    if image_channels is None:
+        return
     for i in image_channels:
-        if i >= image_tile.shape[0]:
+        if i >= len(slide.slide_info.channels):
             raise HTTPException(
                 status_code=400,
-                detail=f"Selected image channel excceds channel bounds (selected: {i} max: {image_tile.shape[0]-1})",
+                detail=f"Selected image channel excceds channel bounds (selected: {i} max: {len(slide.slide_info.channels)-1})",
             )
     if len(image_channels) != len(set(image_channels)):
         raise HTTPException(status_code=400, detail="No duplicates allowed in channels")
