@@ -92,7 +92,6 @@ def test_get_slide_thumbnail_valid(
             assert c == pixel
     else:
         image = get_image(response)
-        image.save(f"/home/mfranz/Documents/data/{slide_id}.{image_format}")
         x, y = image.size
         assert (x == max_size_x) or (y == max_size_y)
         if image_format in ["png", "bmp"]:

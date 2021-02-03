@@ -52,7 +52,11 @@ if settings.cors_allow_origins:
         allow_headers=["*"],
     )
 
-slide_source = SlideSource(settings.mapper_address, settings.data_dir, settings.inactive_histo_image_timeout_seconds)
+slide_source = SlideSource(
+    settings.mapper_address, 
+    settings.data_dir, 
+    settings.inactive_histo_image_timeout_seconds
+)
 
 
 @api.get("/v1/slides/{slide_id}/info", response_model=SlideInfo, tags=["Main Routes"])
@@ -87,9 +91,16 @@ def get_slide_thumbnail(
 
 
 @api.get(
-    "/v1/slides/{slide_id}/label", responses=ImageResponses, response_class=StreamingResponse, tags=["Main Routes"]
+    "/v1/slides/{slide_id}/label", 
+    responses=ImageResponses, 
+    response_class=StreamingResponse, 
+    tags=["Main Routes"]
 )
-def get_slide_label(slide_id: str, image_format: str = ImageFormatsQuery, image_quality: int = ImageQualityQuery):
+def get_slide_label(
+    slide_id: str, 
+    image_format: str = ImageFormatsQuery, 
+    image_quality: int = ImageQualityQuery
+):
     """
     Label image of the slide
     """
@@ -100,9 +111,16 @@ def get_slide_label(slide_id: str, image_format: str = ImageFormatsQuery, image_
 
 
 @api.get(
-    "/v1/slides/{slide_id}/macro", responses=ImageResponses, response_class=StreamingResponse, tags=["Main Routes"]
+    "/v1/slides/{slide_id}/macro", 
+    responses=ImageResponses, 
+    response_class=StreamingResponse, 
+    tags=["Main Routes"]
 )
-def get_slide_macro(slide_id: str, image_format: str = ImageFormatsQuery, image_quality: int = ImageQualityQuery):
+def get_slide_macro(
+    slide_id: str, 
+    image_format: str = ImageFormatsQuery, 
+    image_quality: int = ImageQualityQuery
+):
     """
     Macro image of the slide
     """
@@ -121,8 +139,16 @@ def get_slide_macro(slide_id: str, image_format: str = ImageFormatsQuery, image_
 def get_slide_region(
     slide_id: str,
     level: int = Path(None, ge=0, example=0, description="Pyramid level of region"),
-    start_x: int = Path(None, example=0, description="x component of start coordinate of requested region"),
-    start_y: int = Path(None, example=0, description="y component of start coordinate of requested region"),
+    start_x: int = Path(
+        None, 
+        example=0, 
+        description="x component of start coordinate of requested region"
+    ),
+    start_y: int = Path(
+        None, 
+        example=0, 
+        description="y component of start coordinate of requested region"
+    ),
     size_x: int = Path(None, example=1024, description="Width of requested region"),
     size_y: int = Path(None, example=1024, description="Height of requested region"),
     image_format: str = ImageFormatsQuery,
@@ -181,7 +207,11 @@ def get_slide_tile(
 
 if settings.local_mode:
 
-    @api.get("/v1/cases/", response_model=List[CaseLocalMapper], tags=["Additional Routes (Standalone WSI Service)"])
+    @api.get(
+        "/v1/cases/", 
+        response_model=List[CaseLocalMapper], 
+        tags=["Additional Routes (Standalone WSI Service)"]
+    )
     def get_cases():
         """
         (Only in standalone mode) Browse the local directory and return case ids for each available directory.
