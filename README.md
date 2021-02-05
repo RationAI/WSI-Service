@@ -17,24 +17,42 @@ There are several endpoints made available by this service:
 * `GET /v1/slides/{slide_id}/info` - Get slide info, e.g.
 ```json
 {
-    "id": "f863c2ef155654b1af0387acc7ebdb60",
-    "extent": {
-        "x": 46000,
-        "y": 32914,
-        "z": 1
+  "id": "f863c2ef155654b1af0387acc7ebdb60",
+  "channels": [
+    {
+      "id": 0,
+      "name": "Red",
+      "color_int": 16711680
     },
-    "num_levels": 16,
-    "pixel_size_nm": {
-        "x": 499.0,
-        "y": 499.0,
-        "z": None
+    {
+      "id": 1,
+      "name": "Green",
+      "color_int": 65280
     },
-    "tile_extent": {
-        "x": 256,
-        "y": 256,
-        "z": 1
-    },
-    "levels": [
+    {
+      "id": 2,
+      "name": "Blue",
+      "color_int": 255
+    }
+  ],
+  "channel_depth": 8,
+  "extent": {
+    "x": 46000,
+    "y": 32914,
+    "z": 1
+  },
+  "num_levels": 7,
+  "pixel_size_nm": {
+    "x": 499,
+    "y": 499,
+    "z": null
+  },
+  "tile_extent": {
+    "x": 256,
+    "y": 256,
+    "z": 1
+  },
+  "levels": [
     {
       "extent": {
         "x": 46000,
@@ -68,13 +86,15 @@ There are several endpoints made available by this service:
   ]
 }
 ```
-* `GET /v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format=jpeg&image_quality=90&z=0` - Get slide region: Get region of the slide. Level 0 is highest (original) resolution. Each level has half the resolution and half the extent of the previous level. Coordinates are given with respect to the requested level.
+* `GET /v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format=jpeg&image_quality=90&image_channels=0&z=0` - Get slide region: Get region of the slide. Level 0 is highest (original) resolution. Each level has half the resolution and half the extent of the previous level. Coordinates are given with respect to the requested level.
 * `GET /v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}?image_format=jpeg&image_quality=90&z=0` - Get slide tile: Get tile of the slide. Extent of the tile is given in slide metadata. Level 0 is highest (original) resolution. Each level has half the resolution and half the extent of the previous level. Coordinates are given with respect to tiles, i.e. tile coordinate n is the n-th tile in the respective dimension.
 * `GET /v1/slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}?image_format=jpeg&image_quality=90` - Get slide thumbnail image
 * `GET /v1/slides/{slide_id}/label?image_format=jpeg&image_quality=90` - Get slide label image
 * `GET /v1/slides/{slide_id}/macro?image_format=jpeg&image_quality=90` - Get slide macro image
 
-The last five endpoints all return image data. The image format and its quality (e.g. for jpeg) can be selected. Formats include jpeg, png, tiff, bmp, gif. The region and the tile endpoint also offer the selection of a layer with the index z in a Z-Stack.
+The last five endpoints all return image data. The image format and its quality (e.g. for jpeg) can be selected. Formats include jpeg, png, tiff, bmp, gif. When tiff is specified as output format the raw data of the image is returned. This is paricularly important for images with abitrary image channels and channels with a higher color depth than 8bit (e.g. fluorescence images). The channel composition of the image can be obtained through the slide info endpoint, where the dedicated channels are listed along with its color, name and bitness. Multi-channel images can also be represented as RGB-images (mostly for displaying reasons in the viewer). Note that the mapping of all color channels to RGB values is currently restricted to the first three channels. Single channels (or multiple channels) can be retrieved through the optional parameter `image_channels` as an integer array referencing the channel IDs.
+ 
+The region and the tile endpoint also offer the selection of a layer with the index z in a Z-Stack.
 
 ### Standalone version
 

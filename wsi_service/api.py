@@ -6,7 +6,14 @@ from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
 
-from wsi_service.api_utils import make_image_response, validate_image_request
+from wsi_service.api_utils import (
+    make_image_response,
+    make_response,
+    process_image_region,
+    process_image_region_raw,
+    validate_image_channels,
+    validate_image_request,
+)
 from wsi_service.local_mapper import LocalMapper
 from wsi_service.local_mapper_models import (
     CaseLocalMapper,
@@ -14,7 +21,12 @@ from wsi_service.local_mapper_models import (
     SlideStorage,
 )
 from wsi_service.models.slide import SlideInfo
-from wsi_service.queries import ImageFormatsQuery, ImageQualityQuery, ZStackQuery
+from wsi_service.queries import (
+    ImageChannelQuery,
+    ImageFormatsQuery,
+    ImageQualityQuery,
+    ZStackQuery,
+)
 from wsi_service.responses import ImageRegionResponse, ImageResponses
 from wsi_service.settings import Settings
 from wsi_service.slide_source import SlideSource
@@ -40,11 +52,7 @@ if settings.cors_allow_origins:
         allow_headers=["*"],
     )
 
-slide_source = SlideSource(
-    settings.mapper_address,
-    settings.data_dir,
-    settings.inactive_histo_image_timeout_seconds,
-)
+slide_source = SlideSource(settings.mapper_address, settings.data_dir, settings.inactive_histo_image_timeout_seconds)
 
 
 @api.get("/v1/slides/{slide_id}/info", response_model=SlideInfo, tags=["Main Routes"])
@@ -75,47 +83,33 @@ def get_slide_thumbnail(
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
     thumbnail = slide.get_thumbnail(max_x, max_y)
-    return make_image_response(thumbnail, image_format, image_quality)
+    return make_response(slide, thumbnail, image_format, image_quality)
 
 
 @api.get(
-    "/v1/slides/{slide_id}/label",
-    responses=ImageResponses,
-    response_class=StreamingResponse,
-    tags=["Main Routes"],
+    "/v1/slides/{slide_id}/label", responses=ImageResponses, response_class=StreamingResponse, tags=["Main Routes"]
 )
-def get_slide_label(
-    slide_id: str,
-    image_format: str = ImageFormatsQuery,
-    image_quality: int = ImageQualityQuery,
-):
+def get_slide_label(slide_id: str, image_format: str = ImageFormatsQuery, image_quality: int = ImageQualityQuery):
     """
     Label image of the slide
     """
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
     label = slide.get_label()
-    return make_image_response(label, image_format, image_quality)
+    return make_response(slide, label, image_format, image_quality)
 
 
 @api.get(
-    "/v1/slides/{slide_id}/macro",
-    responses=ImageResponses,
-    response_class=StreamingResponse,
-    tags=["Main Routes"],
+    "/v1/slides/{slide_id}/macro", responses=ImageResponses, response_class=StreamingResponse, tags=["Main Routes"]
 )
-def get_slide_macro(
-    slide_id: str,
-    image_format: str = ImageFormatsQuery,
-    image_quality: int = ImageQualityQuery,
-):
+def get_slide_macro(slide_id: str, image_format: str = ImageFormatsQuery, image_quality: int = ImageQualityQuery):
     """
     Macro image of the slide
     """
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
     macro = slide.get_macro()
-    return make_image_response(macro, image_format, image_quality)
+    return make_response(slide, macro, image_format, image_quality)
 
 
 @api.get(
@@ -127,20 +121,13 @@ def get_slide_macro(
 def get_slide_region(
     slide_id: str,
     level: int = Path(None, ge=0, example=0, description="Pyramid level of region"),
-    start_x: int = Path(
-        None,
-        example=0,
-        description="x component of start coordinate of requested region",
-    ),
-    start_y: int = Path(
-        None,
-        example=0,
-        description="y component of start coordinate of requested region",
-    ),
+    start_x: int = Path(None, example=0, description="x component of start coordinate of requested region"),
+    start_y: int = Path(None, example=0, description="y component of start coordinate of requested region"),
     size_x: int = Path(None, example=1024, description="Width of requested region"),
     size_y: int = Path(None, example=1024, description="Height of requested region"),
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery,
+    image_channels: List[int] = ImageChannelQuery,
     z: int = ZStackQuery,
 ):
     """
@@ -155,13 +142,12 @@ def get_slide_region(
             detail=f"Requested region may not contain more than {settings.max_returned_region_size} pixels.",
         )
     if size_x * size_y == 0:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Requested region must contain at least 1 pixel.",
-        )
+        raise HTTPException(status_code=422, detail=f"Requested region must contain at least 1 pixel.")
+
     slide = slide_source.get_slide(slide_id)
-    img = slide.get_region(level, start_x, start_y, size_x, size_y)
-    return make_image_response(img, image_format, image_quality)
+    image_region = slide.get_region(level, start_x, start_y, size_x, size_y)
+    validate_image_channels(slide, image_channels)
+    return make_response(slide, image_region, image_format, image_quality, image_channels)
 
 
 @api.get(
@@ -177,6 +163,7 @@ def get_slide_tile(
     tile_y: int = Path(None, example=0, description="Request the tile_y-th tile in y dimension"),
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery,
+    image_channels: List[int] = ImageChannelQuery,
     z: int = ZStackQuery,
 ):
     """
@@ -187,17 +174,14 @@ def get_slide_tile(
     """
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
-    img = slide.get_tile(level, tile_x, tile_y)
-    return make_image_response(img, image_format, image_quality)
+    image_tile = slide.get_tile(level, tile_x, tile_y)
+    validate_image_channels(slide, image_channels)
+    return make_response(slide, image_tile, image_format, image_quality, image_channels)
 
 
 if settings.local_mode:
 
-    @api.get(
-        "/v1/cases/",
-        response_model=List[CaseLocalMapper],
-        tags=["Additional Routes (Standalone WSI Service)"],
-    )
+    @api.get("/v1/cases/", response_model=List[CaseLocalMapper], tags=["Additional Routes (Standalone WSI Service)"])
     def get_cases():
         """
         (Only in standalone mode) Browse the local directory and return case ids for each available directory.
@@ -220,9 +204,7 @@ if settings.local_mode:
         return slides
 
     @api.get(
-        "/v1/slides/{slide_id}",
-        response_model=SlideLocalMapper,
-        tags=["Additional Routes (Standalone WSI Service)"],
+        "/v1/slides/{slide_id}", response_model=SlideLocalMapper, tags=["Additional Routes (Standalone WSI Service)"]
     )
     def get_slide(slide_id: str):
         """
@@ -253,9 +235,7 @@ if settings.local_mode:
     )
     def view_slide(slide_id: str):
         viewer_html = open(
-            os.path.join(pathlib.Path(__file__).parent.absolute(), "viewer.html"),
-            "r",
-            encoding="utf-8",
+            os.path.join(pathlib.Path(__file__).parent.absolute(), "viewer.html"), "r", encoding="utf-8"
         ).read()
         viewer_html = viewer_html.replace("REPLACE_SLIDE_ID", slide_id)
         return viewer_html

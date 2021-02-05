@@ -5,6 +5,7 @@ from importlib import reload
 
 import PIL.Image as Image
 import pytest
+import tifffile
 from fastapi.testclient import TestClient
 
 from wsi_service.__main__ import load_example_data
@@ -130,8 +131,50 @@ def setup_mock(kwargs):
             ],
         },
     )
+    mock.get(
+        "http://testserver/slides/46061cfc30a65acab7a1ed644771a340",
+        json={
+            "slide_id": "46061cfc30a65acab7a1ed644771a340",
+            "storage_type": "fs",
+            "storage_addresses": [
+                {
+                    "address": "Fluorescence OME-Tif/2019_10_15__0014_GOOD.ome.tif",
+                    "main_address": True,
+                    "storage_address_id": "46061cfc30a65acab7a1ed644771a340",
+                    "slide_id": "46061cfc30a65acab7a1ed644771a340",
+                }
+            ],
+        },
+    )
+    mock.get(
+        "http://testserver/slides/56ed11a2a9e95f87a1e466cf720ceffa",
+        json={
+            "slide_id": "56ed11a2a9e95f87a1e466cf720ceffa",
+            "storage_type": "fs",
+            "storage_addresses": [
+                {
+                    "address": "Fluorescence OME-Tif/LuCa-7color_Scan1.ome.tiff",
+                    "main_address": True,
+                    "storage_address_id": "56ed11a2a9e95f87a1e466cf720ceffa",
+                    "slide_id": "56ed11a2a9e95f87a1e466cf720ceffa",
+                }
+            ],
+        },
+    )
     return mock
 
 
 def get_image(response):
     return Image.open(io.BytesIO(response.raw.data))
+
+
+def get_tiff_image(response):
+    return tifffile.TiffFile(io.BytesIO(response.raw.data))
+
+
+def tiff_pixels_equal(tiff_image, pixel_location, testpixel):
+    narray = tiff_image.asarray()
+    pixel = narray[pixel_location[0]][pixel_location[1]][pixel_location[2]]
+    if pixel != testpixel[pixel_location[0]]:
+        return False
+    return True

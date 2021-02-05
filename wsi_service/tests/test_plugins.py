@@ -4,11 +4,14 @@ import pathlib
 import pytest
 
 from wsi_service.loader_plugins.slide_dummy import DummySlide
+from wsi_service.loader_plugins.slide_ometif import OmeTiffSlide
 from wsi_service.loader_plugins.slide_openslide import OpenSlideSlide
 from wsi_service.plugin_loader import load_slide, plugin_directory
 from wsi_service.tests.test_api_helpers import setup_environment_variables
 
 plugin_directory = {
+    ".ome.tif": OmeTiffSlide,
+    ".ome.tiff": OmeTiffSlide,
     ".tiff": DummySlide,
     ".mrxs": DummySlide,
     ".svs": OpenSlideSlide,
@@ -42,3 +45,17 @@ def test_check_plugins_loaded_openslide(filepath, slide_id):
     filepath = os.path.join(os.environ["data_dir"], filepath)
     slide = load_slide(filepath, slide_id, plugin_directory=plugin_directory)
     assert slide.loader_name == "OpenSlide"
+
+
+@pytest.mark.parametrize(
+    "filepath, slide_id,",
+    [
+        ("Fluorescence OME-Tif/2019_10_15__0014_GOOD.ome.tif", "46061cfc30a65acab7a1ed644771a340"),  # svs
+        ("Fluorescence OME-Tif/LuCa-7color_Scan1.ome.tiff", "56ed11a2a9e95f87a1e466cf720ceffa"),  # ndpi
+    ],
+)
+def test_check_plugins_loaded_ometiff(filepath, slide_id):
+    setup_environment_variables()
+    filepath = os.path.join(os.environ["data_dir"], filepath)
+    slide = load_slide(filepath, slide_id, plugin_directory=plugin_directory)
+    assert slide.loader_name == "OmeTiffSlide"

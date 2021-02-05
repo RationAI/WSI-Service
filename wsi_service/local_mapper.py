@@ -22,10 +22,7 @@ class LocalMapper:
         try:
             self._collect_all_folders_as_cases(data_dir)
         except FileNotFoundError:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No such directory: {data_dir}",
-            )
+            raise HTTPException(status_code=404, detail=f"No such directory: {data_dir}")
         for case_id, case in self.case_map.items():
             case_dir = os.path.join(data_dir, case.local_case_id)
             self._collect_all_files_as_slides(data_dir, case_id, case_dir)
@@ -40,7 +37,7 @@ class LocalMapper:
     def _collect_all_files_as_slides(self, data_dir, case_id, case_dir):
         for f in os.listdir(case_dir):
             absfile = os.path.join(case_dir, f)
-            if OpenSlide.detect_format(absfile):
+            if self._is_supported_format(absfile):
                 raw_slide_id = f
                 slide_id = uuid5(NAMESPACE_URL, f).hex
                 if slide_id not in self.slide_map:
@@ -63,15 +60,20 @@ class LocalMapper:
                         ),
                     )
 
+    def _is_supported_format(self, filepath):
+        if OpenSlide.detect_format(filepath):
+            return True
+        elif filepath.endswith(".tiff") or filepath.endswith(".tif"):
+            return True
+        else:
+            return False
+
     def get_cases(self):
         return list(self.case_map.values())
 
     def get_slides(self, case_id):
         if case_id not in self.case_map:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Case with case_id {case_id} does not exist",
-            )
+            raise HTTPException(status_code=400, detail=f"Case with case_id {case_id} does not exist")
         slide_data = []
         for slide_id in sorted(self.case_map[case_id].slides):
             slide_data.append(self.slide_map[slide_id])
@@ -79,8 +81,5 @@ class LocalMapper:
 
     def get_slide(self, slide_id):
         if slide_id not in self.slide_map:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Slide with slide_id {slide_id} does not exist",
-            )
+            raise HTTPException(status_code=400, detail=f"Slide with slide_id {slide_id} does not exist")
         return self.slide_map[slide_id]

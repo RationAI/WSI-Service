@@ -11,7 +11,7 @@ def test_get_cases_valid(client):
     response = client.get("/v1/cases/")
     assert response.status_code == 200
     cases = response.json()
-    assert len(cases) == 9
+    assert len(cases) == 10
     assert len(cases[0].keys()) == 3
     case = list(filter(lambda case: case["local_case_id"] == "Olympus", cases))[0]
     assert case["case_id"] == "7a32e2c36ca756d9b7df0b627ace4c12"
@@ -22,10 +22,7 @@ def test_get_available_slides_valid(client):
     assert response.status_code == 200
     slides = response.json()
     slide = list(
-        filter(
-            lambda slide: slide["slide_storage"]["storage_addresses"][0]["address"].endswith("CMU-1.svs"),
-            slides,
-        )
+        filter(lambda slide: slide["slide_storage"]["storage_addresses"][0]["address"].endswith("CMU-1.svs"), slides)
     )[0]
     assert len(slides) == 1
     assert len(slides[0].keys()) == 3

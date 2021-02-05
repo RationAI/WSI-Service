@@ -3,14 +3,10 @@ import math
 import PIL
 
 import wsi_service.slide_utils
+from wsi_service.image_utils import rgba_to_rgb_with_background_color
 from wsi_service.models.slide import SlideInfo
 from wsi_service.slide import Slide
-from wsi_service.slide_utils import (
-    Extent,
-    Level,
-    PixelSizeNm,
-    rgba_to_rgb_with_background_color,
-)
+from wsi_service.slide_utils import Extent, Level, PixelSizeNm
 
 
 class DummySlide(Slide):
@@ -19,13 +15,13 @@ class DummySlide(Slide):
     def __init__(self, filepath, slide_id):
         self.slide_info = SlideInfo(
             id="id",
+            channels=[],
+            channel_depth=8,
             extent=Extent(x=0, y=0, z=0),
             num_levels=0,
             pixel_size_nm=PixelSizeNm(x=0, y=0),
             tile_extent=Extent(x=0, y=0, z=0),
-            levels=[
-                Level(extent=Extent(x=0, y=0, z=0), downsample_factor=0, generated=True),
-            ],
+            levels=[Level(extent=Extent(x=0, y=0, z=0), downsample_factor=0, generated=True)],
         )
 
     def close(self):

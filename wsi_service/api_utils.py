@@ -1,7 +1,18 @@
 from io import BytesIO
 
+import numpy as np
+import tifffile
 from fastapi import HTTPException
+from PIL import Image
 from starlette.responses import StreamingResponse
+
+from wsi_service.image_utils import (
+    convert_narray_to_pil_image,
+    convert_rgb_image_for_channels,
+    get_requested_channels_as_array,
+    get_requested_channels_as_rgb_array,
+    save_rgb_image,
+)
 
 supported_image_formats = {
     "bmp": "image/bmp",
@@ -14,18 +25,84 @@ supported_image_formats = {
 alternative_spellings = {"jpg": "jpeg", "tif": "tiff"}
 
 
+def process_image_region(slide, image_tile, image_channels):
+    if isinstance(image_tile, Image.Image):
+        # pillow image
+        if image_channels == None:
+            return image_tile
+        else:
+            return convert_rgb_image_for_channels(image_tile, image_channels)
+    elif isinstance(image_tile, (np.ndarray, np.generic)):
+        # numpy array
+        if image_channels == None:
+            # workaround for now: we return first three channels as rgb
+            result = get_requested_channels_as_rgb_array(image_tile, None, slide)
+            rgb_image = convert_narray_to_pil_image(result)
+            return rgb_image
+        else:
+            result = get_requested_channels_as_rgb_array(image_tile, image_channels, slide)
+            rgb_image = convert_narray_to_pil_image(result)
+            return rgb_image
+    else:
+        raise HTTPException(status_code=400, detail="Failed to read region in an apropriate internal representation.")
+
+
+def process_image_region_raw(slide, image_tile, image_channels):
+    if isinstance(image_tile, Image.Image):
+        # pillow image
+        narray = np.asarray(image_tile)
+        narray = np.ascontiguousarray(narray.transpose(2, 0, 1))
+        return narray
+    elif isinstance(image_tile, (np.ndarray, np.generic)):
+        # numpy array
+        if image_channels == None:
+            return image_tile
+        else:
+            result = get_requested_channels_as_array(image_tile, image_channels)
+            return result
+    else:
+        raise HTTPException(status_code=400, detail="Failed to read region in an apropriate internal representation.")
+
+
+def make_response(slide, image_region, image_format, image_quality, image_channels=None):
+    if image_format == "tiff":
+        # return raw image region as tiff
+        narray = process_image_region_raw(slide, image_region, image_channels)
+        return make_tif_response(narray, image_format, image_quality)
+    else:
+        # return image region
+        img = process_image_region(slide, image_region, image_channels)
+        return make_image_response(img, image_format, image_quality)
+
+
 def make_image_response(pil_image, image_format, image_quality):
     if image_format in alternative_spellings:
         image_format = alternative_spellings[image_format]
 
     if image_format not in supported_image_formats:
         raise HTTPException(status_code=400, detail="Provided image format parameter not supported")
+
+    mem = save_rgb_image(pil_image, image_format, image_quality)
+    return StreamingResponse(mem, media_type=supported_image_formats[image_format])
+
+
+def make_tif_response(narray, image_format, image_quality):
+    if image_format in alternative_spellings:
+        image_format = alternative_spellings[image_format]
+
+    if image_format not in supported_image_formats:
+        raise HTTPException(status_code=400, detail="Provided image format parameter not supported for OME tiff")
+
     mem = BytesIO()
-    if image_format == "png":
-        pil_image.save(mem, format=image_format, optimize=(image_quality > 0))
+    if image_quality == 0:
+        # lossy comprssion with jpeg
+        compression = "JPEG"
     else:
-        pil_image.save(mem, format=image_format, quality=image_quality)
+        # by default we use deflate
+        compression = "DEFLATE"
+    tifffile.imwrite(mem, narray, photometric="minisblack", planarconfig="separate", compression=compression)
     mem.seek(0)
+
     return StreamingResponse(mem, media_type=supported_image_formats[image_format])
 
 
@@ -34,3 +111,16 @@ def validate_image_request(image_format, image_quality):
         raise HTTPException(status_code=400, detail="Provided image format parameter not supported")
     if image_quality < 0 or image_quality > 100:
         raise HTTPException(status_code=400, detail="Provided image quality parameter not supported")
+
+
+def validate_image_channels(slide, image_channels):
+    if image_channels is None:
+        return
+    for i in image_channels:
+        if i >= len(slide.slide_info.channels):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Selected image channel excceds channel bounds (selected: {i} max: {len(slide.slide_info.channels)-1})",
+            )
+    if len(image_channels) != len(set(image_channels)):
+        raise HTTPException(status_code=400, detail="No duplicates allowed in channels")
