@@ -233,10 +233,10 @@ def test_get_slide_region_valid_brightfield(
 @pytest.mark.parametrize(
     "slide_id, channels, start_point, size, pixel_location, testpixel_multichannel, testpixel_rgb",
     [
-        ("46061cfc30a65acab7a1ed644771a340", 3, (0, 0), (1024, 1024), (0, 0), (0, 0, 0), (0, 0, 0)),
-        ("46061cfc30a65acab7a1ed644771a340", 3, (0, 0), (1024, 1024), (512, 512), (5089, 3413, 288), (19, 13, 1)),
-        ("56ed11a2a9e95f87a1e466cf720ceffa", 5, (0, 0), (1024, 1024), (0, 0), (0, 0, 0), (0, 0, 0)),
-        ("56ed11a2a9e95f87a1e466cf720ceffa", 5, (0, 0), (1024, 1024), (512, 512), (54, 16, 10), (54, 16, 10)),
+        ("46061cfc30a65acab7a1ed644771a340", 3, (0, 0), (256, 256), (0, 0), (0, 0, 0), (0, 0, 0)),
+        ("46061cfc30a65acab7a1ed644771a340", 3, (512, 512), (256, 256), (200, 200), (659, 431, 116), (26, 17, 4)),
+        ("56ed11a2a9e95f87a1e466cf720ceffa", 5, (0, 0), (256, 256), (0, 0), (0, 0, 0), (0, 0, 0)),
+        ("56ed11a2a9e95f87a1e466cf720ceffa", 5, (512, 512), (256, 256), (200, 200), (4, 0, 0), (4, 0, 0)),
     ],
 )
 def test_get_slide_region_valid_fluorescence(
@@ -253,7 +253,7 @@ def test_get_slide_region_valid_fluorescence(
     **kwargs,
 ):
     setup_mock(kwargs)
-    level = 3
+    level = 2
     response = client.get(
         f"/v1/slides/{slide_id}/region/level/{level}/start/{start_point[0]}/{start_point[1]}/size/{size[0]}/{size[1]}?image_format={image_format}&image_quality={image_quality}",
         stream=True,
