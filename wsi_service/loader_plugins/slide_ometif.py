@@ -55,18 +55,19 @@ class OmeTiffSlide(Slide):
         try:
             level_slide = self.slide_info.levels[level]
         except IndexError:
-            print("Pyramid")
             raise HTTPException(
                 status_code=422,
                 detail=f"""The requested pyramid level is not available. 
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
+        
+        if size_x < 1 or size_y < 1 or start_x < 0 or start_y < 0:
+            raise HTTPException(status_code=422, detail="Requested image region invalid.")
 
         result_array = []
         if level_slide.generated:
             base_level = self.__get_best_original_level(level)
             if base_level == None:
-                print("No appr")
                 raise HTTPException(
                     status_code=422, detail=f"No appropriate base level for generagted level {level} found"
                 )
@@ -76,7 +77,6 @@ class OmeTiffSlide(Slide):
                 round(size_x * downsample_scaling),
             )
             if base_size[0] * base_size[1] > settings.max_returned_region_size:
-                print("Requested")
                 raise HTTPException(
                     status_code=403,
                     detail=f"""Requested image region is too large. Maximum number of pixels is set to 
@@ -186,8 +186,8 @@ class OmeTiffSlide(Slide):
         out = np.empty(
             (
                 page_frame.imagedepth,
-                (end_tile_xn - start_tile_x0) * tile_height,
-                (end_tile_yn - start_tile_y0) * tile_width,
+                (end_tile_xn - start_tile_x0) * tile_height, 
+                (end_tile_yn - start_tile_y0) * tile_width, 
                 page_frame.samplesperpixel,
             ),
             dtype=page_frame.dtype,
