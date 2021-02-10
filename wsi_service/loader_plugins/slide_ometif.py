@@ -165,9 +165,23 @@ class OmeTiffSlide(Slide):
 
     def __read_region_of_page_untiled(self, page, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
+        page_width, page_height = page_frame.imagewidth, page_frame.imagelength
         page_array = page.asarray()
-        out = page_array[start_x : start_x + size_x, start_y : start_y + size_y]
-        out.dtype = page_frame.dtype
+
+        new_height = page_height - start_x if (start_x + size_x > page_height) else size_x
+        new_width = page_width - start_y if (start_y + size_y > page_width) else size_y
+
+        out = np.full(
+            (
+                size_x,
+                size_y,
+            ),
+            0,  # blackground is set to black
+            dtype=page_frame.dtype,
+        )
+
+        out[0:new_height, 0:new_width] = page_array[start_x : start_x + new_height, start_y : start_y + new_width]
+        # out.dtype = page_frame.dtype
         return np.expand_dims(np.expand_dims(out, axis=0), axis=3)
 
     def __read_region_of_page_tiled(self, page, start_x, start_y, size_x, size_y):
