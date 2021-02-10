@@ -18,9 +18,15 @@ def convert_narray_uintX_to_uint8(array, exp=16, lower=None, upper=None):
     if upper is not None and not (0 <= upper < 2 ** exp):
         raise ValueError(f"upper bound must be between 0 and 2**{exp}")
     if lower is None:
-        lower = np.min(array)
+        lower = 0
     if upper is None:
-        upper = np.max(array)
+        # default color mapping
+        if exp == 8:
+            upper = 255
+        elif exp == 16:
+            upper = (2 ** exp) / 4
+        else:
+            upper = (2 ** exp) / (exp / 2)
 
     temp_array = array / upper
     temp_array = temp_array * 255
@@ -50,15 +56,15 @@ def convert_rgb_image_by_color(image_tile, rgba):
     return converted_image
 
 
-def convert_narray_to_pil_image(narray):
+def convert_narray_to_pil_image(narray, lower=None, upper=None):
     if narray.dtype == np.uint8:
         narray_uint8 = narray
     elif narray.dtype == np.uint16:
-        narray_uint8 = convert_narray_uintX_to_uint8(narray, 16)
+        narray_uint8 = convert_narray_uintX_to_uint8(narray, 16, lower, upper)
     elif narray.dtype in [np.uint32, np.float32]:
-        narray_uint8 = convert_narray_uintX_to_uint8(narray, 32)
+        narray_uint8 = convert_narray_uintX_to_uint8(narray, 32, lower, upper)
     elif narray.dtype in [np.uint64, np.float64]:
-        narray_uint8 = convert_narray_uintX_to_uint8(narray, 64)
+        narray_uint8 = convert_narray_uintX_to_uint8(narray, 64, lower, upper)
     else:
         raise NotImplementedError("Array conversion not supported")
 
@@ -78,7 +84,6 @@ def save_rgb_image(pil_image, image_format, image_quality):
     return mem
 
 
-# todo: we need a meaningful mapping of the multi channel values to rgb values
 def get_requested_channels_as_rgb_array(narray, image_channels, slide):
     separate_channels = np.vsplit(narray, narray.shape[0])
 
@@ -108,7 +113,7 @@ def get_requested_channels_as_rgb_array(narray, image_channels, slide):
 
 
 def get_multi_channel_as_rgb(separate_channels):
-    # todo: mapping of existing channels to rgb channels
+    # todo: right now only three channels are considered
     temp_array = []
     for channel in separate_channels:
         if len(temp_array) == 3:

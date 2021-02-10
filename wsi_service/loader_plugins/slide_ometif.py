@@ -60,7 +60,7 @@ class OmeTiffSlide(Slide):
                 detail=f"""The requested pyramid level is not available. 
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
-        
+
         if size_x < 1 or size_y < 1 or start_x < 0 or start_y < 0:
             raise HTTPException(status_code=422, detail="Requested image region invalid.")
 
@@ -145,7 +145,7 @@ class OmeTiffSlide(Slide):
     ## private members
 
     def __get_best_original_level(self, level):
-        for i in range(level-1, -1, -1):
+        for i in range(level - 1, -1, -1):
             if not self.slide_info.levels[i].generated:
                 return self.slide_info.levels[i]
         return None
@@ -183,13 +183,14 @@ class OmeTiffSlide(Slide):
         tile_per_line = int(np.ceil(image_width / tile_width))
 
         # initialize array with size of all relevant tiles
-        out = np.empty(
+        out = np.full(
             (
                 page_frame.imagedepth,
-                (end_tile_xn - start_tile_x0) * tile_height, 
-                (end_tile_yn - start_tile_y0) * tile_width, 
+                (end_tile_xn - start_tile_x0) * tile_height,
+                (end_tile_yn - start_tile_y0) * tile_width,
                 page_frame.samplesperpixel,
             ),
+            0,  # blackground is set to black
             dtype=page_frame.dtype,
         )
 
@@ -216,7 +217,7 @@ class OmeTiffSlide(Slide):
 
                     # search to tile offset and read image tile
                     fh.seek(offset)
-                    if fh.tell() != offset:             
+                    if fh.tell() != offset:
                         raise HTTPException(status_code=422, detail="Failed reading to tile offset")
                     data = fh.read(bytecount)
                     tile, _, _ = page.decode(data, index, jpegtables)
@@ -225,7 +226,9 @@ class OmeTiffSlide(Slide):
                     tile_position_i = (i - start_tile_x0) * tile_height
                     tile_position_j = (j - start_tile_y0) * tile_width
                     out[
-                        :, tile_position_i : tile_position_i + tile_height, tile_position_j : tile_position_j + tile_width :
+                        :,
+                        tile_position_i : tile_position_i + tile_height,
+                        tile_position_j : tile_position_j + tile_width :,
                     ] = tile
 
         # determine the new start positions of our region
