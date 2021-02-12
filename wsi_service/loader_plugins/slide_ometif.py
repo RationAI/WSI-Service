@@ -2,6 +2,7 @@ import json
 import os.path as os
 import re
 import xml.etree.ElementTree as xml
+from threading import Lock
 
 import numpy as np
 import tifffile
@@ -24,7 +25,10 @@ class OmeTiffSlide(Slide):
     format_kinds = ["OME"]  # what else is supported?
     loader_name = "OmeTiffSlide"
 
+    background_value = 0  # blackground is set to black
+
     def __init__(self, filepath, slide_id):
+        self.locker = Lock()
         try:
             self.tif_slide = tifffile.TiffFile(filepath)
             if self.tif_slide.series[0].kind not in self.format_kinds:
@@ -59,6 +63,9 @@ class OmeTiffSlide(Slide):
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
 
+        if size_x < 1 or size_y < 1 or start_x < 0 or start_y < 0:
+            raise HTTPException(status_code=422, detail="Requested image region invalid.")
+
         result_array = []
         if level_slide.generated:
             base_level = self.__get_best_original_level(level)
@@ -66,9 +73,10 @@ class OmeTiffSlide(Slide):
                 raise HTTPException(
                     status_code=422, detail=f"No appropriate base level for generagted level {level} found"
                 )
+            downsample_scaling = level_slide.downsample_factor / base_level.downsample_factor
             base_size = (
-                round(size_x * (level_slide.downsample_factor / base_level.downsample_factor)),
-                round(size_y * (level_slide.downsample_factor / base_level.downsample_factor)),
+                round(size_y * downsample_scaling),
+                round(size_x * downsample_scaling),
             )
             if base_size[0] * base_size[1] > settings.max_returned_region_size:
                 raise HTTPException(
@@ -76,24 +84,24 @@ class OmeTiffSlide(Slide):
                     detail=f"""Requested image region is too large. Maximum number of pixels is set to 
                         {settings.max_returned_region_size}, your request is for {base_size[0] * base_size[1]} pixels.""",
                 )
-            level_0_location = (
-                (int)(start_x * base_level.downsample_factor),
-                (int)(start_y * base_level.downsample_factor),
+            base_level_location = (
+                (int)(start_y * downsample_scaling),
+                (int)(start_x * downsample_scaling),
             )
             tif_level = self.__get_tif_level_for_slide_level(base_level)
             for page in tif_level.pages:
                 temp_channel = self.__read_region_of_page(
-                    page, level_0_location[0], level_0_location[1], base_size[0], base_size[1]
+                    page, base_level_location[0], base_level_location[1], base_size[0], base_size[1]
                 )
                 # resize for requested image level
                 resized = util.img_as_uint(
-                    transform.resize(temp_channel, (temp_channel.shape[0], size_x, size_y, temp_channel.shape[3]))
+                    transform.resize(temp_channel, (temp_channel.shape[0], size_y, size_x, temp_channel.shape[3]))
                 )
                 result_array.append(resized)
         else:
             tif_level = self.__get_tif_level_for_slide_level(level_slide)
             for page in tif_level.pages:
-                temp_channel = self.__read_region_of_page(page, start_x, start_y, size_x, size_y)
+                temp_channel = self.__read_region_of_page(page, start_y, start_x, size_y, size_x)
                 result_array.append(temp_channel)
 
         result = np.concatenate(result_array, axis=0)[:, :, :, 0]
@@ -113,7 +121,7 @@ class OmeTiffSlide(Slide):
         else:
             max_x = max_x * (level_extent_x / level_extent_y)
 
-        thumbnail_org = self.get_region(thumb_level, 0, 0, level_extent_y, level_extent_x)
+        thumbnail_org = self.get_region(thumb_level, 0, 0, level_extent_x, level_extent_y)
         thumbnail_resized = util.img_as_uint(transform.resize(thumbnail_org, (thumbnail_org.shape[0], max_y, max_x)))
         return thumbnail_resized
 
@@ -139,7 +147,7 @@ class OmeTiffSlide(Slide):
     ## private members
 
     def __get_best_original_level(self, level):
-        for i in range(level - 1, 0, -1):
+        for i in range(level - 1, -1, -1):
             if not self.slide_info.levels[i].generated:
                 return self.slide_info.levels[i]
         return None
@@ -151,20 +159,6 @@ class OmeTiffSlide(Slide):
 
     def __read_region_of_page(self, page, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
-        image_width, image_height = page_frame.imagewidth, page_frame.imagelength
-
-        if (
-            size_x < 1
-            or size_y < 1
-            or start_x < 0
-            or start_y < 0
-            or (start_x + size_x > image_height)
-            or (start_y + size_y > image_width)
-        ):
-            raise HTTPException(
-                status_code=422,
-                detail=f"Requested image region exceeds bounds of base level (w={image_width}, h={image_height})",
-            )
 
         if not page_frame.is_tiled:
             return self.__read_region_of_page_untiled(page, start_x, start_y, size_x, size_y)
@@ -173,17 +167,31 @@ class OmeTiffSlide(Slide):
 
     def __read_region_of_page_untiled(self, page, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
+        page_width, page_height = page_frame.imagewidth, page_frame.imagelength
         page_array = page.asarray()
-        out = page_array[start_x : start_x + size_x, start_y : start_y + size_y]
-        out.dtype = page_frame.dtype
+
+        new_height = page_height - start_x if (start_x + size_x > page_height) else size_x
+        new_width = page_width - start_y if (start_y + size_y > page_width) else size_y
+
+        out = np.full(
+            (
+                size_x,
+                size_y,
+            ),
+            self.background_value,
+            dtype=page_frame.dtype,
+        )
+
+        out[0:new_height, 0:new_width] = page_array[start_x : start_x + new_height, start_y : start_y + new_width]
         return np.expand_dims(np.expand_dims(out, axis=0), axis=3)
 
     def __read_region_of_page_tiled(self, page, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
-        image_width = page_frame.imagewidth
+        image_width, image_height = page_frame.imagewidth, page_frame.imagelength
 
         tile_width, tile_height = page_frame.tilewidth, page_frame.tilelength
-        end_x, end_y = start_x + size_x, start_y + size_y
+        end_x = (start_x + size_x) if (start_x + size_x) < image_height else image_height
+        end_y = (start_y + size_y) if (start_y + size_y) < image_width else image_width
 
         start_tile_x0, start_tile_y0 = start_x // tile_height, start_y // tile_width
         end_tile_xn, end_tile_yn = np.ceil([end_x / tile_height, end_y / tile_width]).astype(int)
@@ -191,13 +199,14 @@ class OmeTiffSlide(Slide):
         tile_per_line = int(np.ceil(image_width / tile_width))
 
         # initialize array with size of all relevant tiles
-        out = np.empty(
+        out = np.full(
             (
                 page_frame.imagedepth,
                 (end_tile_xn - start_tile_x0) * tile_height,
                 (end_tile_yn - start_tile_y0) * tile_width,
                 page_frame.samplesperpixel,
             ),
+            self.background_value,
             dtype=page_frame.dtype,
         )
 
@@ -210,34 +219,47 @@ class OmeTiffSlide(Slide):
         if jpegtables is not None:
             jpegtables = jpegtables.value
 
+        used_offsets = []
         # iterate through tiles starting at the top left to the bottom right
         for i in range(start_tile_x0, end_tile_xn):
             for j in range(start_tile_y0, end_tile_yn):
-                index = int(i * tile_per_line + j)
+                with self.locker:
+                    index = int(i * tile_per_line + j)
 
-                offset = page.dataoffsets[index]
-                bytecount = page.databytecounts[index]
+                    if len(page.dataoffsets) <= index:
+                        continue
 
-                # search to tile offset and read image tile
-                fh.seek(offset)
-                if fh.tell() != offset:
-                    raise HTTPException(status_code=422, detail="Failed reading to tile offset")
-                data = fh.read(bytecount)
-                tile, _, _ = page.decode(data, index, jpegtables)
+                    offset = page.dataoffsets[index]
+                    bytecount = page.databytecounts[index]
 
-                # insert tile in temporary output array
-                tile_position_i = (i - start_tile_x0) * tile_height
-                tile_position_j = (j - start_tile_y0) * tile_width
-                out[
-                    :, tile_position_i : tile_position_i + tile_height, tile_position_j : tile_position_j + tile_width :
-                ] = tile
+                    if offset in used_offsets:
+                        continue
+
+                    used_offsets.append(offset)
+
+                    # search to tile offset and read image tile
+                    fh.seek(offset)
+                    if fh.tell() != offset:
+                        raise HTTPException(status_code=422, detail="Failed reading to tile offset")
+                    data = fh.read(bytecount)
+                    tile, indices, shape = page.decode(data, index, jpegtables)
+
+                    # insert tile in temporary output array
+                    tile_position_i = (i - start_tile_x0) * tile_height
+                    tile_position_j = (j - start_tile_y0) * tile_width
+
+                    out[
+                        :,
+                        tile_position_i : tile_position_i + tile_height,
+                        tile_position_j : tile_position_j + tile_width :,
+                    ] = tile
 
         # determine the new start positions of our region
         new_start_x = start_x - start_tile_x0 * tile_height
-        nex_start_y = start_y - start_tile_y0 * tile_width
+        new_start_y = start_y - start_tile_y0 * tile_width
 
         # restrict the output array to the requested region
-        result = out[:, new_start_x : new_start_x + size_x, nex_start_y : nex_start_y + size_y :]
+        result = out[:, new_start_x : new_start_x + size_x, new_start_y : new_start_y + size_y :]
         return result
 
     def __get_levels_ome_tif(self, tif_slide):
