@@ -25,6 +25,8 @@ class OmeTiffSlide(Slide):
     format_kinds = ["OME"]  # what else is supported?
     loader_name = "OmeTiffSlide"
 
+    background_value = 0  # blackground is set to black
+
     def __init__(self, filepath, slide_id):
         self.locker = Lock()
         try:
@@ -119,7 +121,7 @@ class OmeTiffSlide(Slide):
         else:
             max_x = max_x * (level_extent_x / level_extent_y)
 
-        thumbnail_org = self.get_region(thumb_level, 0, 0, level_extent_y, level_extent_x)
+        thumbnail_org = self.get_region(thumb_level, 0, 0, level_extent_x, level_extent_y)
         thumbnail_resized = util.img_as_uint(transform.resize(thumbnail_org, (thumbnail_org.shape[0], max_y, max_x)))
         return thumbnail_resized
 
@@ -176,20 +178,20 @@ class OmeTiffSlide(Slide):
                 size_x,
                 size_y,
             ),
-            0,  # blackground is set to black
+            self.background_value,
             dtype=page_frame.dtype,
         )
 
         out[0:new_height, 0:new_width] = page_array[start_x : start_x + new_height, start_y : start_y + new_width]
-        # out.dtype = page_frame.dtype
         return np.expand_dims(np.expand_dims(out, axis=0), axis=3)
 
     def __read_region_of_page_tiled(self, page, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
-        image_width = page_frame.imagewidth
+        image_width, image_height = page_frame.imagewidth, page_frame.imagelength
 
         tile_width, tile_height = page_frame.tilewidth, page_frame.tilelength
-        end_x, end_y = start_x + size_x, start_y + size_y
+        end_x = (start_x + size_x) if (start_x + size_x) < image_height else image_height
+        end_y = (start_y + size_y) if (start_y + size_y) < image_width else image_width
 
         start_tile_x0, start_tile_y0 = start_x // tile_height, start_y // tile_width
         end_tile_xn, end_tile_yn = np.ceil([end_x / tile_height, end_y / tile_width]).astype(int)
@@ -204,7 +206,7 @@ class OmeTiffSlide(Slide):
                 (end_tile_yn - start_tile_y0) * tile_width,
                 page_frame.samplesperpixel,
             ),
-            0,  # blackground is set to black
+            self.background_value,
             dtype=page_frame.dtype,
         )
 
@@ -217,6 +219,7 @@ class OmeTiffSlide(Slide):
         if jpegtables is not None:
             jpegtables = jpegtables.value
 
+        used_offsets = []
         # iterate through tiles starting at the top left to the bottom right
         for i in range(start_tile_x0, end_tile_xn):
             for j in range(start_tile_y0, end_tile_yn):
@@ -229,16 +232,22 @@ class OmeTiffSlide(Slide):
                     offset = page.dataoffsets[index]
                     bytecount = page.databytecounts[index]
 
+                    if offset in used_offsets:
+                        continue
+
+                    used_offsets.append(offset)
+
                     # search to tile offset and read image tile
                     fh.seek(offset)
                     if fh.tell() != offset:
                         raise HTTPException(status_code=422, detail="Failed reading to tile offset")
                     data = fh.read(bytecount)
-                    tile, _, _ = page.decode(data, index, jpegtables)
+                    tile, indices, shape = page.decode(data, index, jpegtables)
 
                     # insert tile in temporary output array
                     tile_position_i = (i - start_tile_x0) * tile_height
                     tile_position_j = (j - start_tile_y0) * tile_width
+
                     out[
                         :,
                         tile_position_i : tile_position_i + tile_height,
@@ -247,10 +256,10 @@ class OmeTiffSlide(Slide):
 
         # determine the new start positions of our region
         new_start_x = start_x - start_tile_x0 * tile_height
-        nex_start_y = start_y - start_tile_y0 * tile_width
+        new_start_y = start_y - start_tile_y0 * tile_width
 
         # restrict the output array to the requested region
-        result = out[:, new_start_x : new_start_x + size_x, nex_start_y : nex_start_y + size_y :]
+        result = out[:, new_start_x : new_start_x + size_x, new_start_y : new_start_y + size_y :]
         return result
 
     def __get_levels_ome_tif(self, tif_slide):
