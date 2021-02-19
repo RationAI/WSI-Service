@@ -15,3 +15,4 @@ What must be fulfilled in order for the implementation of the requirement/user s
 - *AC: user can specify one or multiple channels when requesting image data*
 - *AC: image compression is compatible with fluoresence files*
 
+See the [Coding Practices](https://collab.mevis.fraunhofer.de/display/EMPAIA/Coding+Practices) page on collab for guidance on regulatory requirements.
