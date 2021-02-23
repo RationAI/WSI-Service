@@ -8,9 +8,12 @@ plugin_directory = {
     ".ome.tiff": OmeTiffSlide,
     ".ome.tif": OmeTiffSlide,
     ".tiff": OpenSlideSlide,
+    ".tif": OpenSlideSlide,
     ".mrxs": OpenSlideSlide,
     ".svs": OpenSlideSlide,
     ".ndpi": OpenSlideSlide,
+    ".bif": OpenSlideSlide,
+    ".scn": OpenSlideSlide,
     # ".tiff": OmeTiffSlide,
     # ".tif": OmeTiffSlide,
 }
