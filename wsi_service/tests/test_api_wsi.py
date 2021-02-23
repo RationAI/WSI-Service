@@ -24,6 +24,8 @@ from wsi_service.tests.test_api_helpers import (
         ("7304006194f8530b9e19df1310a3670f", 3, 8, 12, 234, (256, 256), 101832, 219976),  # mrxs
         ("46061cfc30a65acab7a1ed644771a340", 3, 16, 7, 325, (256, 256), 11260, 22300),  # ome-tif 3x16bit
         ("56ed11a2a9e95f87a1e466cf720ceffa", 5, 8, 8, 498, (512, 512), 24960, 34560),  # ome-tif 5x8bit
+        ("cdad4692405c556ca63185bee512e95e", 3, 8, 12, 232, (256, 256), 114943, 76349),  # bif
+        ("c4682788c7e85d739ce043b3f6eaff70", 3, 8, 13, 250, (256, 256), 106259, 306939),  # scn
     ],
 )
 def test_get_slide_info_valid(
@@ -60,6 +62,8 @@ def test_get_slide_info_valid(
         ("46061cfc30a65acab7a1ed644771a340", 200, (10, 10), (10, 6, 1), (676, 432, 122)),
         ("56ed11a2a9e95f87a1e466cf720ceffa", 200, (0, 0), (0, 0, 0), (6, 0, 0)),
         ("56ed11a2a9e95f87a1e466cf720ceffa", 200, (10, 10), (88, 53, 22), (5713, 3411, 1464)),
+        ("cdad4692405c556ca63185bee512e95e", 200, (5, 5), (241, 241, 241), (241, 241, 241)),
+        ("c4682788c7e85d739ce043b3f6eaff70", 200, (5, 5), (221, 212, 219), (221, 212, 219)),
     ],
 )
 def test_get_slide_thumbnail_valid(
@@ -114,6 +118,8 @@ def test_get_slide_thumbnail_valid(
         ("7304006194f8530b9e19df1310a3670f", True, (200, 221), (222, 222, 222)),
         ("46061cfc30a65acab7a1ed644771a340", False, (), ()),
         ("56ed11a2a9e95f87a1e466cf720ceffa", False, (), ()),
+        ("cdad4692405c556ca63185bee512e95e", False, (), ()),
+        ("c4682788c7e85d739ce043b3f6eaff70", False, (), ()),
     ],
 )
 def test_get_slide_label_valid(
@@ -161,6 +167,8 @@ def test_get_slide_label_valid(
         ("7304006194f8530b9e19df1310a3670f", 200, (213, 438), (129, 129, 129)),
         ("46061cfc30a65acab7a1ed644771a340", 404, (), ()),
         ("56ed11a2a9e95f87a1e466cf720ceffa", 404, (), ()),
+        ("cdad4692405c556ca63185bee512e95e", 200, (0, 0), (60, 51, 36)),
+        ("c4682788c7e85d739ce043b3f6eaff70", 200, (0, 0), (3, 3, 3)),
     ],
 )
 def test_get_slide_macro_valid(
@@ -196,6 +204,8 @@ def test_get_slide_macro_valid(
         ("f863c2ef155654b1af0387acc7ebdb60", (0, 0), (255, 235, 255), 15000, 15000, 345),
         ("c801ce3d1de45f2996e6a07b2d449bca", (0, 0), (220, 219, 227), 15000, 15000, 345),
         ("7304006194f8530b9e19df1310a3670f", (0, 0), (231, 182, 212), 50000, 90000, 345),
+        ("cdad4692405c556ca63185bee512e95e", (0, 0), (245, 241, 242), 30000, 30000, 345),
+        ("c4682788c7e85d739ce043b3f6eaff70", (0, 0), (131, 59, 122), 50000, 55000, 345),
     ],
 )
 def test_get_slide_region_valid_brightfield(
@@ -370,6 +380,7 @@ def test_get_slide_region_invalid_channel(client, slide_id, channels, expected_r
         ("f863c2ef155654b1af0387acc7ebdb60", (223, 217, 222), 15000, 15000, 30045),
         ("c801ce3d1de45f2996e6a07b2d449bca", (218, 217, 225), 15000, 15000, 30045),
         ("7304006194f8530b9e19df1310a3670f", (221, 170, 219), 50000, 90000, 30045),
+        ("cdad4692405c556ca63185bee512e95e", (0, 0, 0), 30000, 30000, 30045),
     ],
 )
 def test_get_slide_region_invalid(client, slide_id, testpixel, start_x, start_y, size, **kwargs):
@@ -395,6 +406,8 @@ import timeit
         ("c801ce3d1de45f2996e6a07b2d449bca", 1, 1, 12),
         ("7304006194f8530b9e19df1310a3670f", 1, 1, 11),
         ("46061cfc30a65acab7a1ed644771a340", 1, 1, 4),
+        ("cdad4692405c556ca63185bee512e95e", 1, 1, 5),
+        ("c4682788c7e85d739ce043b3f6eaff70", 1, 1, 4),
     ],
 )
 def test_get_slide_tile_timing(client, slide_id, tile_x, tile_y, level, **kwargs):
@@ -413,13 +426,15 @@ def test_get_slide_tile_timing(client, slide_id, tile_x, tile_y, level, **kwargs
     [("jpeg", 90), ("jpeg", 95), ("png", 0), ("png", 1), ("bmp", 0), ("gif", 0), ("tiff", 100)],
 )
 @pytest.mark.parametrize(
-    "slide_id,  testpixel, tile_x, tile_y, tile_size",
+    "slide_id, testpixel, tile_x, tile_y, tile_size",
     [
         ("4b0ec5e0ec5e5e05ae9e500857314f20", (243, 243, 243), 21, 22, (128, 128)),
         ("f863c2ef155654b1af0387acc7ebdb60", (246, 246, 243), 21, 22, (256, 256)),
         ("c801ce3d1de45f2996e6a07b2d449bca", (121, 127, 123), 21, 22, (4096, 8)),
         ("7304006194f8530b9e19df1310a3670f", (255, 255, 255), 60, 60, (256, 256)),
         ("56ed11a2a9e95f87a1e466cf720ceffa", (30, 7, 6), 21, 22, (512, 512)),
+        ("cdad4692405c556ca63185bee512e95e", (238, 238, 236), 210, 210, (256, 256)),
+        ("c4682788c7e85d739ce043b3f6eaff70", (137, 75, 138), 210, 210, (256, 256)),
     ],
 )
 def test_get_slide_tile_valid(

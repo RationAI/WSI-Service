@@ -16,7 +16,7 @@ from wsi_service.slide_utils import (
 
 
 class OpenSlideSlide(Slide):
-    supported_file_types = ["mrxs", "tiff", "ndpi", "svs"]
+    supported_vendors = ["aperio", "mirax", "hamamatsu", "ventana", "leica", "trestle"]
     loader_name = "OpenSlide"
 
     def __init__(self, filepath, slide_id):
@@ -110,11 +110,7 @@ class OpenSlideSlide(Slide):
                 pixel_size_nm_y = 1e7 / pixel_per_cm_y
             else:
                 raise ("Unable to extract pixel size from metadata.")
-        elif (
-            self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "aperio"
-            or self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "mirax"
-            or self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "hamamatsu"
-        ):
+        elif self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] in self.supported_vendors:
             pixel_size_nm_x = 1000.0 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X])
             pixel_size_nm_y = 1000.0 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_Y])
         else:

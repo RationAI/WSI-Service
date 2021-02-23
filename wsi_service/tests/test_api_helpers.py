@@ -161,6 +161,36 @@ def setup_mock(kwargs):
             ],
         },
     )
+    mock.get(
+        "http://testserver/slides/cdad4692405c556ca63185bee512e95e",
+        json={
+            "slide_id": "cdad4692405c556ca63185bee512e95e",
+            "storage_type": "fs",
+            "storage_addresses": [
+                {
+                    "address": "Ventana/OS-2.bif",
+                    "main_address": True,
+                    "storage_address_id": "cdad4692405c556ca63185bee512e95e",
+                    "slide_id": "cdad4692405c556ca63185bee512e95e",
+                }
+            ],
+        },
+    )
+    mock.get(
+        "http://testserver/slides/c4682788c7e85d739ce043b3f6eaff70",
+        json={
+            "slide_id": "c4682788c7e85d739ce043b3f6eaff70",
+            "storage_type": "fs",
+            "storage_addresses": [
+                {
+                    "address": "Leica/Leica-2.scn",
+                    "main_address": True,
+                    "storage_address_id": "c4682788c7e85d739ce043b3f6eaff70",
+                    "slide_id": "c4682788c7e85d739ce043b3f6eaff70",
+                }
+            ],
+        },
+    )
     return mock
 
 
