@@ -118,15 +118,20 @@ class OpenSlideSlide(Slide):
         return PixelSizeNm(x=pixel_size_nm_x, y=pixel_size_nm_y)
 
     def __get_tile_extent(self):
+        tile_height = 256
+        tile_width = 256
         if (
             "openslide.level[0].tile-height" in self.openslide_slide.properties
             and "openslide.level[0].tile-width" in self.openslide_slide.properties
         ):
-            tile_height = self.openslide_slide.properties["openslide.level[0].tile-height"]
-            tile_width = self.openslide_slide.properties["openslide.level[0].tile-width"]
-        else:
-            tile_height = 256
-            tile_width = 256
+            # some tiles can have an unequal tile height and width that can cause problems in the slide viewer
+            # since the tile route is soley used for viewing, we provide the default tile width and height
+            temp_height = self.openslide_slide.properties["openslide.level[0].tile-height"]
+            temp_width = self.openslide_slide.properties["openslide.level[0].tile-width"]
+            if tile_height == tile_width:
+                tile_height = temp_height
+                tile_width = temp_width
+
         return Extent(x=tile_width, y=tile_height, z=1)
 
     def __get_rgb_channel_list(self):
