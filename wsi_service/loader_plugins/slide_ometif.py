@@ -13,11 +13,7 @@ from skimage import transform, util
 from wsi_service.models.slide import Channel, Extent, Level, PixelSizeNm, SlideInfo
 from wsi_service.settings import Settings
 from wsi_service.slide import Slide
-from wsi_service.slide_utils import (
-    check_generated_levels_for_originals,
-    get_generated_levels,
-    get_original_levels,
-)
+from wsi_service.slide_utils import get_original_levels
 
 
 class OmeTiffSlide(Slide):
@@ -67,42 +63,10 @@ class OmeTiffSlide(Slide):
             raise HTTPException(status_code=422, detail="Requested image region invalid.")
 
         result_array = []
-        if level_slide.generated:
-            base_level = self.__get_best_original_level(level)
-            if base_level == None:
-                raise HTTPException(
-                    status_code=422, detail=f"No appropriate base level for generagted level {level} found"
-                )
-            downsample_scaling = level_slide.downsample_factor / base_level.downsample_factor
-            base_size = (
-                round(size_y * downsample_scaling),
-                round(size_x * downsample_scaling),
-            )
-            if base_size[0] * base_size[1] > settings.max_returned_region_size:
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"""Requested image region is too large. Maximum number of pixels is set to 
-                        {settings.max_returned_region_size}, your request is for {base_size[0] * base_size[1]} pixels.""",
-                )
-            base_level_location = (
-                (int)(start_y * downsample_scaling),
-                (int)(start_x * downsample_scaling),
-            )
-            tif_level = self.__get_tif_level_for_slide_level(base_level)
-            for page in tif_level.pages:
-                temp_channel = self.__read_region_of_page(
-                    page, base_level_location[0], base_level_location[1], base_size[0], base_size[1]
-                )
-                # resize for requested image level
-                resized = util.img_as_uint(
-                    transform.resize(temp_channel, (temp_channel.shape[0], size_y, size_x, temp_channel.shape[3]))
-                )
-                result_array.append(resized)
-        else:
-            tif_level = self.__get_tif_level_for_slide_level(level_slide)
-            for page in tif_level.pages:
-                temp_channel = self.__read_region_of_page(page, start_y, start_x, size_y, size_x)
-                result_array.append(temp_channel)
+        tif_level = self.__get_tif_level_for_slide_level(level_slide)
+        for page in tif_level.pages:
+            temp_channel = self.__read_region_of_page(page, start_y, start_x, size_y, size_x)
+            result_array.append(temp_channel)
 
         result = np.concatenate(result_array, axis=0)[:, :, :, 0]
         return result
@@ -276,9 +240,7 @@ class OmeTiffSlide(Slide):
                 level_downsamples.append(1)
 
         original_levels = get_original_levels(level_count, level_dimensions, level_downsamples)
-        generated_levels = get_generated_levels(level_dimensions[0], original_levels[-1])
-        check_generated_levels_for_originals(original_levels, generated_levels)
-        return generated_levels
+        return original_levels
 
     def __get_xml_namespace(self):
         m = re.match(r"\{.*\}", self.parsed_metadata.tag)
