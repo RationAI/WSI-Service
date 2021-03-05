@@ -110,12 +110,6 @@ class OmeTiffSlide(Slide):
 
     ## private members
 
-    def __get_best_original_level(self, level):
-        for i in range(level - 1, -1, -1):
-            if not self.slide_info.levels[i].generated:
-                return self.slide_info.levels[i]
-        return None
-
     def __get_tif_level_for_slide_level(self, slide_level):
         for level in self.tif_slide.series[0].levels:
             if level.shape[1] == slide_level.extent.y:

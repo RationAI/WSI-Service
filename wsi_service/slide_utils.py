@@ -17,7 +17,6 @@ def get_original_levels(level_count, level_dimensions, level_downsamples):
             Level(
                 extent=Extent(x=level_dimensions[level][0], y=level_dimensions[level][1], z=1),
                 downsample_factor=level_downsamples[level],
-                generated=False,
             )
         )
     return levels
