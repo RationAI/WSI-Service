@@ -28,7 +28,7 @@ def convert_narray_uintX_to_uint8(array, exp=16, lower=None, upper=None):
         else:
             upper = (2 ** exp) / (exp / 2)
 
-    temp_array = array / upper
+    temp_array = array / upper if upper != 0 else array
     temp_array = temp_array * 255
     return temp_array.astype(np.uint8)
 
