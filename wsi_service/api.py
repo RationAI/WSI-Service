@@ -131,9 +131,8 @@ def get_slide_region(
     z: int = ZStackQuery,
 ):
     """
-    Get region of the slide. Level 0 is highest (original) resolution. Each level has half the
-    resolution and half the extent of the previous level. Coordinates are given with respect
-    to the requested level.
+    Get region of the slide. Level 0 is highest (original) resolution. The available levels
+    depend on the image. Coordinates are given with respect to the requested level.
     """
     validate_image_request(image_format, image_quality)
     if size_x * size_y > settings.max_returned_region_size:
@@ -168,9 +167,8 @@ def get_slide_tile(
 ):
     """
     Get tile of the slide. Extent of the tile is given in slide metadata. Level 0 is highest
-    (original) resolution. Each level has half the resolution and half the extent of the
-    previous level. Coordinates are given with respect to tiles, i.e. tile coordinate n is the
-    n-th tile in the respective dimension.
+    (original) resolution. The available levels depend on the image. Coordinates are given
+    with respect to tiles, i.e. tile coordinate n is the n-th tile in the respective dimension.
     """
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)

@@ -8,11 +8,7 @@ from wsi_service.image_utils import rgba_to_rgb_with_background_color
 from wsi_service.models.slide import Channel, Extent, Level, PixelSizeNm, SlideInfo
 from wsi_service.settings import Settings
 from wsi_service.slide import Slide
-from wsi_service.slide_utils import (
-    check_generated_levels_for_originals,
-    get_generated_levels,
-    get_original_levels,
-)
+from wsi_service.slide_utils import get_original_levels
 
 
 class OpenSlideSlide(Slide):
@@ -42,13 +38,12 @@ class OpenSlideSlide(Slide):
                 detail=f"""The requested pyramid level is not available. 
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
-        base_level = self.openslide_slide.get_best_level_for_downsample(downsample_factor)
+        base_level = level
         if base_level >= len(self.openslide_slide.level_downsamples):
             raise HTTPException(
                 status_code=422, detail=f"Downsample layer for requested base level {base_level} not available."
             )
-        remaining_downsample_factor = downsample_factor / self.openslide_slide.level_downsamples[base_level]
-        base_size = (round(size_x * remaining_downsample_factor), round(size_y * remaining_downsample_factor))
+        base_size = (size_x, size_y)
         level_0_location = (start_x * downsample_factor, start_y * downsample_factor)
         if base_size[0] * base_size[1] > settings.max_returned_region_size:
             raise HTTPException(
@@ -58,8 +53,7 @@ class OpenSlideSlide(Slide):
             )
         try:
             base_img = self.openslide_slide.read_region(level_0_location, base_level, base_size)
-            rgba_img = base_img.resize((size_x, size_y), resample=PIL.Image.BILINEAR, reducing_gap=1.0)
-            rgb_img = rgba_to_rgb_with_background_color(rgba_img)
+            rgb_img = rgba_to_rgb_with_background_color(base_img)
         except openslide.OpenSlideError as e:
             raise HTTPException(status_code=422, detail=f"OpenSlideError: {e}")
 
@@ -97,9 +91,7 @@ class OpenSlideSlide(Slide):
             self.openslide_slide.level_dimensions,
             self.openslide_slide.level_downsamples,
         )
-        generated_levels = get_generated_levels(self.openslide_slide.dimensions, original_levels[-1])
-        check_generated_levels_for_originals(original_levels, generated_levels)
-        return generated_levels
+        return original_levels
 
     def __get_pixel_size(self):
         if self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "generic-tiff":

@@ -21,7 +21,7 @@ class DummySlide(Slide):
             num_levels=0,
             pixel_size_nm=PixelSizeNm(x=0, y=0),
             tile_extent=Extent(x=0, y=0, z=0),
-            levels=[Level(extent=Extent(x=0, y=0, z=0), downsample_factor=0, generated=True)],
+            levels=[Level(extent=Extent(x=0, y=0, z=0), downsample_factor=0)],
         )
 
     def close(self):

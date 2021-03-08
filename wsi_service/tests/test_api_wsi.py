@@ -18,14 +18,14 @@ from wsi_service.tests.test_api_helpers import (
 @pytest.mark.parametrize(
     "slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y",
     [
-        ("4b0ec5e0ec5e5e05ae9e500857314f20", 3, 8, 12, 50, (128, 128), 46000, 32914),  # tiff
-        ("f863c2ef155654b1af0387acc7ebdb60", 3, 8, 7, 499, (256, 256), 46000, 32914),  # svs
-        ("c801ce3d1de45f2996e6a07b2d449bca", 3, 8, 15, 227, (4096, 8), 122880, 110592),  # ndpi
-        ("7304006194f8530b9e19df1310a3670f", 3, 8, 12, 234, (256, 256), 101832, 219976),  # mrxs
-        ("46061cfc30a65acab7a1ed644771a340", 3, 16, 7, 325, (256, 256), 11260, 22300),  # ome-tif 3x16bit
-        ("56ed11a2a9e95f87a1e466cf720ceffa", 5, 8, 8, 498, (512, 512), 24960, 34560),  # ome-tif 5x8bit
-        ("cdad4692405c556ca63185bee512e95e", 3, 8, 12, 232, (256, 256), 114943, 76349),  # bif
-        ("c4682788c7e85d739ce043b3f6eaff70", 3, 8, 13, 250, (256, 256), 106259, 306939),  # scn
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", 3, 8, 10, 50, (128, 128), 46000, 32914),  # tiff
+        ("f863c2ef155654b1af0387acc7ebdb60", 3, 8, 3, 499, (256, 256), 46000, 32914),  # svs
+        ("c801ce3d1de45f2996e6a07b2d449bca", 3, 8, 13, 227, (4096, 8), 122880, 110592),  # ndpi
+        ("7304006194f8530b9e19df1310a3670f", 3, 8, 10, 234, (256, 256), 101832, 219976),  # mrxs
+        ("46061cfc30a65acab7a1ed644771a340", 3, 16, 3, 325, (256, 256), 11260, 22300),  # ome-tif 3x16bit
+        ("56ed11a2a9e95f87a1e466cf720ceffa", 5, 8, 6, 498, (512, 512), 24960, 34560),  # ome-tif 5x8bit
+        ("cdad4692405c556ca63185bee512e95e", 3, 8, 10, 232, (256, 256), 114943, 76349),  # bif
+        ("c4682788c7e85d739ce043b3f6eaff70", 3, 8, 6, 250, (256, 256), 106259, 306939),  # scn
     ],
 )
 def test_get_slide_info_valid(
@@ -58,10 +58,10 @@ def test_get_slide_info_valid(
         ("f863c2ef155654b1af0387acc7ebdb60", 200, (5, 5), (244, 249, 247), (244, 249, 247)),
         ("c801ce3d1de45f2996e6a07b2d449bca", 200, (5, 5), (211, 199, 221), (211, 199, 221)),
         ("7304006194f8530b9e19df1310a3670f", 200, (5, 5), (227, 155, 217), (227, 155, 217)),
-        ("46061cfc30a65acab7a1ed644771a340", 200, (0, 0), (0, 0, 0), (2, 1, 0)),
-        ("46061cfc30a65acab7a1ed644771a340", 200, (10, 10), (10, 6, 1), (676, 432, 122)),
-        ("56ed11a2a9e95f87a1e466cf720ceffa", 200, (0, 0), (0, 0, 0), (6, 0, 0)),
-        ("56ed11a2a9e95f87a1e466cf720ceffa", 200, (10, 10), (88, 53, 22), (5713, 3411, 1464)),
+        ("46061cfc30a65acab7a1ed644771a340", 200, (0, 0), (0, 0, 0), (3, 2, 0)),
+        ("46061cfc30a65acab7a1ed644771a340", 200, (10, 10), (10, 6, 1), (675, 432, 121)),
+        ("56ed11a2a9e95f87a1e466cf720ceffa", 200, (0, 0), (0, 0, 0), (0, 0, 0)),
+        ("56ed11a2a9e95f87a1e466cf720ceffa", 200, (10, 10), (87, 51, 23), (5654, 3341, 1542)),
         ("cdad4692405c556ca63185bee512e95e", 200, (5, 5), (241, 241, 241), (241, 241, 241)),
         ("c4682788c7e85d739ce043b3f6eaff70", 200, (5, 5), (221, 212, 219), (221, 212, 219)),
     ],
@@ -244,7 +244,7 @@ def test_get_slide_region_valid_brightfield(
     "slide_id, channels, start_point, size, pixel_location, testpixel_multichannel, testpixel_rgb",
     [
         ("46061cfc30a65acab7a1ed644771a340", 3, (0, 0), (256, 256), (0, 0), (0, 0, 0), (0, 0, 0)),
-        ("46061cfc30a65acab7a1ed644771a340", 3, (512, 512), (256, 256), (200, 200), (659, 431, 116), (10, 6, 1)),
+        ("46061cfc30a65acab7a1ed644771a340", 3, (512, 512), (256, 256), (100, 100), (3900, 2792, 3859), (60, 43, 60)),
         ("56ed11a2a9e95f87a1e466cf720ceffa", 5, (0, 0), (256, 256), (0, 0), (0, 0, 0), (0, 0, 0)),
         ("56ed11a2a9e95f87a1e466cf720ceffa", 5, (512, 512), (256, 256), (200, 200), (4, 0, 0), (4, 0, 0)),
     ],
@@ -293,8 +293,8 @@ def test_get_slide_region_valid_fluorescence(
     "slide_id, level, channels, start_point, size, pixel_location, testpixel_multichannel, testpixel_rgb",
     [
         ("4b0ec5e0ec5e5e05ae9e500857314f20", 7, [0], (0, 0), (256, 256), (128, 128), [246], (246, 0, 0)),
-        ("46061cfc30a65acab7a1ed644771a340", 5, [0], (0, 0), (256, 256), (128, 128), [4453], (26, 12, 0)),
-        ("46061cfc30a65acab7a1ed644771a340", 5, [0, 1], (0, 0), (256, 256), (128, 128), [4453, 2910], (26, 17, 0)),
+        ("46061cfc30a65acab7a1ed644771a340", 2, [0], (0, 0), (256, 256), (128, 128), [740], (13, 6, 0)),
+        ("46061cfc30a65acab7a1ed644771a340", 2, [0, 1], (0, 0), (256, 256), (128, 128), [740, 525], (13, 9, 0)),
         ("56ed11a2a9e95f87a1e466cf720ceffa", 5, [0], (0, 0), (256, 256), (128, 128), [36], (0, 0, 70)),
         (
             "56ed11a2a9e95f87a1e466cf720ceffa",
@@ -366,7 +366,7 @@ def test_get_slide_region_invalid_channel(client, slide_id, channels, expected_r
     setup_mock(kwargs)
     str_channels = "&".join([f"image_channels={str(ch)}" for ch in channels])
     response = client.get(
-        f"/v1/slides/{slide_id}/region/level/5/start/0/0/size/64/64?{str_channels}",
+        f"/v1/slides/{slide_id}/region/level/2/start/0/0/size/64/64?{str_channels}",
         stream=True,
     )
     assert response.status_code == expected_response
@@ -401,11 +401,11 @@ import timeit
 @pytest.mark.parametrize(
     "slide_id,  tile_x, tile_y, level",
     [
-        ("4b0ec5e0ec5e5e05ae9e500857314f20", 1, 1, 11),
-        ("f863c2ef155654b1af0387acc7ebdb60", 1, 1, 6),
+        ("4b0ec5e0ec5e5e05ae9e500857314f20", 1, 1, 9),
+        ("f863c2ef155654b1af0387acc7ebdb60", 1, 1, 2),
         ("c801ce3d1de45f2996e6a07b2d449bca", 1, 1, 12),
-        ("7304006194f8530b9e19df1310a3670f", 1, 1, 11),
-        ("46061cfc30a65acab7a1ed644771a340", 1, 1, 4),
+        ("7304006194f8530b9e19df1310a3670f", 1, 1, 9),
+        ("46061cfc30a65acab7a1ed644771a340", 1, 1, 2),
         ("cdad4692405c556ca63185bee512e95e", 1, 1, 5),
         ("c4682788c7e85d739ce043b3f6eaff70", 1, 1, 4),
     ],
@@ -472,7 +472,7 @@ def test_get_slide_tile_valid(
         (10, 1, 200),  # ok
         (10, 0, 200),  # ok
         (10, -1, 422),  # level -1 fails
-        (10, 11, 200),  # level 15 ist coarsest level
+        (10, 9, 200),  # level 10 ist coarsest level
         (10, 16, 422),  # level fails
     ],
 )
