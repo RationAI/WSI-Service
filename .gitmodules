@@ -1,3 +1,6 @@
 [submodule "wsi_service/models/slide"]
 	path = wsi_service/models/slide
 	url = ../../models/slide-models.git
+[submodule "wsi_service/loader_plugins/deformation_plugin"]
+	path = wsi_service/loader_plugins/deformation_plugin
+	url = git@gitlab.cc-asp.fraunhofer.de:mevis-histo/deformation_plugin.git
