@@ -10,7 +10,7 @@ class Slide:
     def get_info(self):
         raise (NotImplementedError)
 
-    def get_region(self, level, start_x, start_y, size_x, size_y):
+    def get_region(self, level, start_x, start_y, size_x, size_y, z=0):
         raise (NotImplementedError)
 
     def get_thumbnail(self, max_x, max_y):
@@ -25,5 +25,12 @@ class Slide:
     def get_macro(self):
         raise (NotImplementedError)
 
-    def get_tile(self, level, tile_x, tile_y):
-        raise (NotImplementedError)
+    def get_tile(self, level, tile_x, tile_y, z=0):
+        return self.get_region(
+            level,
+            tile_x * self.slide_info.tile_extent.x,
+            tile_y * self.slide_info.tile_extent.y,
+            self.slide_info.tile_extent.x,
+            self.slide_info.tile_extent.y,
+            z=z,
+        )

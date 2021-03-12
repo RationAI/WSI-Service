@@ -186,7 +186,16 @@ def get_slide_tile(
     """
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
-    image_tile = slide.get_tile(level, tile_x, tile_y)
+    if z != 0:
+        try:
+            image_tile = slide.get_tile(level, tile_x, tile_y, z=z)
+        except TypeError:
+            raise HTTPException(
+                status_code=422,
+                detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers.""",
+            )
+    else:
+        image_tile = slide.get_tile(level, tile_x, tile_y)
     validate_image_channels(slide, image_channels)
     return make_response(slide, image_tile, image_format, image_quality, image_channels)
 
