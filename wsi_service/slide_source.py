@@ -31,8 +31,8 @@ class SlideSource:
             self._close_slide(slide_id)
 
     def get_slide(self, slide_id):
-        with self.lock:
-            if slide_id not in self.opened_slides:
+        if slide_id not in self.opened_slides:
+            with self.lock:
                 self._map_slide(slide_id)
                 filepath = os.path.join(self.data_dir, self.slide_map[slide_id]["address"])
                 slide = load_slide(filepath, slide_id)
