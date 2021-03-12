@@ -149,7 +149,16 @@ def get_slide_region(
         raise HTTPException(status_code=422, detail=f"Requested region must contain at least 1 pixel.")
 
     slide = slide_source.get_slide(slide_id)
-    image_region = slide.get_region(level, start_x, start_y, size_x, size_y)
+    if z != 0:
+        try:
+            image_region = slide.get_region(level, start_x, start_y, size_x, size_y, z=z)
+        except TypeError:
+            raise HTTPException(
+                status_code=422,
+                detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers.""",
+            )
+    else:
+        image_region = slide.get_region(level, start_x, start_y, size_x, size_y)
     validate_image_channels(slide, image_channels)
     return make_response(slide, image_region, image_format, image_quality, image_channels)
 
