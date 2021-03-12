@@ -1,5 +1,6 @@
 import pathlib
 
+from wsi_service.loader_plugins.deformation_plugin.deformed_slide import DeformedSlide
 from wsi_service.loader_plugins.slide_dummy import DummySlide
 from wsi_service.loader_plugins.slide_isyntax import IsyntaxSlide
 from wsi_service.loader_plugins.slide_ometif import OmeTiffSlide
@@ -16,6 +17,7 @@ plugin_directory = {
     ".bif": OpenSlideSlide,
     ".scn": OpenSlideSlide,
     ".isyntax": IsyntaxSlide,
+    ".sqreg": DeformedSlide,
     # ".tiff": OmeTiffSlide,
     # ".tif": OmeTiffSlide,
 }
