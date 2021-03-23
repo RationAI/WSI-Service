@@ -43,7 +43,7 @@
 <body>
     <div id="map" class="map"></div>
     <script type="text/javascript">
-        function setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions) {
+        function setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions, minZoom) {
             let projection = new ol.proj.Projection({
                 code: 'pixels',
                 units: 'pixels',
@@ -57,6 +57,7 @@
                 resolutions: resolutions,
                 extent: extent,
                 tileSize: tileSize,
+                minZoom: minZoom
             })
             let view = new ol.View({
                 resolutions: resolutions,
@@ -97,6 +98,9 @@
 
         function getResolutions(levels) {
             let resolutions = []
+            if (levels[levels.length - 1].downsample_factor < 128) {
+                resolutions.push(128)
+            }
             for (let i = levels.length - 1; i >= 0; i--) {
                 resolutions.push(levels[i].downsample_factor)
             }
@@ -112,10 +116,11 @@
                 let pixelSizeNm = (wsiInfo.pixel_size_nm.x + wsiInfo.pixel_size_nm.y) / 2.0
                 let extent = [0, 0, wsiInfo.extent.x, wsiInfo.extent.y]
                 let tileSize = [wsiInfo.tile_extent.x, wsiInfo.tile_extent.y]
-                let numLevels = wsiInfo.num_levels
                 let resolutions = getResolutions(wsiInfo.levels)
+                let numLevels = resolutions.length
+                let minZoom = numLevels - wsiInfo.levels.length
 
-                setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions)
+                setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions, minZoom)
             })
     </script>
 </body>
