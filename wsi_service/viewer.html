@@ -72,7 +72,7 @@
                 let level = numLevels - tileCoord[0] - 1
                 let x = tileCoord[1]
                 let y = tileCoord[2]
-                return `tile/level/${level}/tile/${x}/${y}`
+                return `tile/level/${level}/tile/${x}/${y}?z=0`
             }
             let source = new ol.source.XYZ({
                 tileUrlFunction: tileUrlFunction,
