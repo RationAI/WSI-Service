@@ -1,6 +1,11 @@
-(C) 2021 Fraunhofer MEVIS. All rights reserved.
+Copyright 2021 Fraunhofer MEVIS.
 Not for clinical use. Research use only.
 
-**IMPORTANT FOR EMPAIA:** This module contains background IP of Fraunhofer MEVIS which may be used **inside** the consortium during and for the performance of the project. It **may not be distributed** to third parties (see Section 5 of the "Kooperationsvertrag").
+This component requires platform specific binaries. These binaries are  background IP of Fraunhofer MEVIS and may only used during and for the purpose of the EMPAIA project. They **must not be distributed** to third parties (see Section 5 of the "Kooperationsvertrag"). For all other files, the followin MIT license applies.
 
-Some files are also licensed under the MIT license, if this is stated at the top of the respective files.
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+

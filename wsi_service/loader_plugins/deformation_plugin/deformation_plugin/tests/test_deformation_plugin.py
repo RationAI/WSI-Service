@@ -3,13 +3,14 @@ import sqlite3
 
 import numpy as np
 import pytest
-from PIL import Image
 import requests_mock
+from PIL import Image
 
 from wsi_service.loader_plugins.deformation_plugin.deformation_plugin import Deformation
 from wsi_service.loader_plugins.deformation_plugin.deformation_plugin.tests.test_helpers import (
     setup_mock,
 )
+
 
 @pytest.fixture
 def deformation_file_all_ones_or_zeroes():
@@ -79,6 +80,7 @@ def deformation_file_all_ones_or_zeroes():
     conn.commit()
     conn.close()
 
+
 def test_get_four_edges_world(deformation_file_all_ones_or_zeroes):
     deformation_file_all_ones_or_zeroes
     d = Deformation("test_data/zeros.sqreg")
@@ -136,8 +138,8 @@ def test_get_region_no_def():
     start_y = 3550
     size_x = sourceSizePixel[0]
     size_y = sourceSizePixel[1]
-    rgb_imageR = d.get_region(level, start_x, start_y, size_x, size_y, 0, image_format = "png")
-    rgb_imageT = d.get_region(level, start_x, start_y, size_x, size_y, 1, image_format = "png")
+    rgb_imageR = d.get_region(level, start_x, start_y, size_x, size_y, 0, image_format="png")
+    rgb_imageT = d.get_region(level, start_x, start_y, size_x, size_y, 1, image_format="png")
     # rgb_imageR.show()
     # rgb_imageT.show()
     assert rgb_imageR.getpixel((0, 0)) == pytest.approx(rgb_imageT.getpixel((0, 0)), 1)

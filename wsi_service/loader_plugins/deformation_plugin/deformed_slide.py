@@ -3,8 +3,9 @@ import math
 
 import PIL
 import requests
-import wsi_service.slide_utils
 from PIL import Image
+
+import wsi_service.slide_utils
 from wsi_service.image_utils import rgba_to_rgb_with_background_color
 from wsi_service.loader_plugins.deformation_plugin.deformation_plugin import Deformation
 from wsi_service.models.slide import SlideInfo
