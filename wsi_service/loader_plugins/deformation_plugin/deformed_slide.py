@@ -71,6 +71,16 @@ class DeformedSlide(Slide):
         img_rgb.load()
         return img_rgb
 
+    def get_tile(self, level, tile_x, tile_y, z=0):
+        return self.get_region(
+            level,
+            tile_x * self.slide_info.tile_extent.x,
+            tile_y * self.slide_info.tile_extent.y,
+            self.slide_info.tile_extent.x,
+            self.slide_info.tile_extent.y,
+            z=z,
+        )
+
     def __get_rgb_channel_list(self):
         channels = []
         channels.append(Channel(id=0, name="Red", color_int=16711680))

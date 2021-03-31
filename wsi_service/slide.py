@@ -26,11 +26,4 @@ class Slide:
         raise (NotImplementedError)
 
     def get_tile(self, level, tile_x, tile_y, z=0):
-        return self.get_region(
-            level,
-            tile_x * self.slide_info.tile_extent.x,
-            tile_y * self.slide_info.tile_extent.y,
-            self.slide_info.tile_extent.x,
-            self.slide_info.tile_extent.y,
-            z=z,
-        )
+        raise (NotImplementedError)

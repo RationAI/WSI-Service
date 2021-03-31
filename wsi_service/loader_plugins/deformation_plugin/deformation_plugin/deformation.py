@@ -67,7 +67,7 @@ class Deformation:
             [int, int]: number of pixels in the target image
         """
         pts = self.get_four_edges_world(WR, sourceSizePixel)
-        ptsDef, ptsDefW = self.transform_point(self._defInterp, WR, pts)
+        _ptsDef, ptsDefW = self.transform_point(self._defInterp, WR, pts)
 
         minx = min([p[0] for p in ptsDefW])
         miny = min([p[1] for p in ptsDefW])
@@ -138,12 +138,12 @@ class Deformation:
         if z == self._reference_slide_index:
             return self.fetch_region(level, start_x, start_y, size_x, size_y, z, image_format=image_format)
         start_R_px = [start_x, start_y]
-        defX, defY, Wdef, dimsX, dimsY, slide_id_R, slide_id_T = self._deformation_tuple
+        defX, defY, Wdef, _dimsX, _dimsY, _slide_id_R, _slide_id_T = self._deformation_tuple
         WR = self.get_world_matrix(level, self._reference_slide_index)
         WR_region = WR.copy()
         WR_region[0, 3] = start_x * WR[0, 0]
         WR_region[1, 3] = start_y * WR[1, 1]
-        WT, start_T_px, sizeT = self.get_target_region_area(WR_region, [size_x, size_y])
+        _WT, start_T_px, sizeT = self.get_target_region_area(WR_region, [size_x, size_y])
         undeformedTemplate = self.fetch_region(
             level, start_T_px[0], start_T_px[1], sizeT[0], sizeT[1], z, image_format=image_format
         )

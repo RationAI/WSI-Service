@@ -114,7 +114,7 @@ def test_get_target_area_no_deformation():
     sourceSizePixel = [512, 512]
 
     d = Deformation("test_data/zeros.sqreg")
-    WT, start_T_px, targetSizePixel = d.get_target_region_area(WR, sourceSizePixel)
+    WT, _start_T_px, targetSizePixel = d.get_target_region_area(WR, sourceSizePixel)
 
     # just extended, no deformation added
     assert WT[0, 3] == pytest.approx(
