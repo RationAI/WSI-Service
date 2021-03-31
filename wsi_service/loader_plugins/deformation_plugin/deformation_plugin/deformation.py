@@ -9,8 +9,6 @@ from PIL import Image
 
 from ._interpolate import ffi, lib
 
-# from ._interpolate.lib import interpolate_tile
-
 
 class Deformation:
     def __init__(self, filepath: str, wsi_service: str = "http://localhost:8080"):

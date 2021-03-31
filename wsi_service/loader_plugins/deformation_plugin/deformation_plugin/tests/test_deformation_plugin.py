@@ -7,9 +7,6 @@ import requests_mock
 from PIL import Image
 
 from wsi_service.loader_plugins.deformation_plugin.deformation_plugin import Deformation
-from wsi_service.loader_plugins.deformation_plugin.deformation_plugin.tests.test_helpers import (
-    setup_mock,
-)
 
 
 @pytest.fixture
