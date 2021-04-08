@@ -12,11 +12,11 @@ from wsi_service.__main__ import load_example_data
 
 
 def setup_environment_variables():
-    if os.path.exists("/data/OpenSlide_adapted"):
-        os.environ["data_dir"] = "/data/OpenSlide_adapted"
+    if os.path.exists("/data"):
+        os.environ["data_dir"] = "/data"
     else:
         test_folder = os.path.dirname(os.path.realpath(__file__))
-        os.environ["data_dir"] = os.path.join(test_folder, "data", "OpenSlide_adapted")
+        os.environ["data_dir"] = os.path.join(test_folder, "data")
     os.environ["local_mode"] = str(True)
     os.environ["mapper_address"] = "http://testserver/slides/{slide_id}"
 
@@ -38,9 +38,13 @@ def client_invalid_data_dir():
 @pytest.fixture()
 def client():
     setup_environment_variables()
+
     if not os.path.exists(os.environ["data_dir"]):
         os.mkdir(os.environ["data_dir"])
-    load_example_data(os.path.join(os.environ["data_dir"]))
+
+    # load data and update update data_dir
+    os.environ["data_dir"] = load_example_data(os.environ["data_dir"])
+
     yield get_client()
 
 
@@ -61,7 +65,7 @@ def client_changed_timeout():
     setup_environment_variables()
     if not os.path.exists(os.environ["data_dir"]):
         os.mkdir(os.environ["data_dir"])
-    load_example_data(os.path.join(os.environ["data_dir"]))
+    os.environ["data_dir"] = load_example_data(os.path.join(os.environ["data_dir"]))
     os.environ["inactive_histo_image_timeout_seconds"] = str(1)
     import wsi_service.api
 

@@ -42,7 +42,7 @@ def test_check_plugins_loaded_dummy(filepath, slide_id):
 )
 def test_check_plugins_loaded_openslide(filepath, slide_id):
     setup_environment_variables()
-    filepath = os.path.join(os.environ["data_dir"], filepath)
+    filepath = os.path.join(os.environ["data_dir"], "OpenSlide_adapted", filepath)
     slide = load_slide(filepath, slide_id, plugin_directory=plugin_directory)
     assert slide.loader_name == "OpenSlide"
 
@@ -56,6 +56,6 @@ def test_check_plugins_loaded_openslide(filepath, slide_id):
 )
 def test_check_plugins_loaded_ometiff(filepath, slide_id):
     setup_environment_variables()
-    filepath = os.path.join(os.environ["data_dir"], filepath)
+    filepath = os.path.join(os.environ["data_dir"], "OpenSlide_adapted", filepath)
     slide = load_slide(filepath, slide_id, plugin_directory=plugin_directory)
     assert slide.loader_name == "OmeTiffSlide"
