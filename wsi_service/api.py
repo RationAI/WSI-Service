@@ -2,7 +2,7 @@ import os
 import pathlib
 from typing import List
 
-from fastapi import FastAPI, HTTPException, Path
+from fastapi import FastAPI, HTTPException, Path, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
 
@@ -53,6 +53,11 @@ if settings.cors_allow_origins:
     )
 
 slide_source = SlideSource(settings.mapper_address, settings.data_dir, settings.inactive_histo_image_timeout_seconds)
+
+
+@api.get("/alive", status_code=status.HTTP_200_OK)
+def get_service_status():
+    return {"status": "ok"}
 
 
 @api.get("/v1/slides/{slide_id}/info", response_model=SlideInfo, tags=["Main Routes"])
