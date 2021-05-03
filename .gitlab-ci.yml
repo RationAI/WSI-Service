@@ -29,6 +29,9 @@ run_tests:
     - mkdir -p $(pwd)/wsi-service/tests/data/OpenSlide_adapted
     - chmod -R 777 $(pwd)/wsi-service/tests/data/OpenSlide_adapted
     - poetry install
+    - cd wsi_service/loader_plugins/deformation_plugin/
+    - wget $DEFORMATION_BINARY_URL -O deformation-plugin-linux.zip
+    - unzip deformation-plugin-linux.zip
     - docker-compose build
   script:
     - poetry run pytest wsi_service/tests --cov .
