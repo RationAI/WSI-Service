@@ -8,7 +8,7 @@ try:
     )
 
     plugin_directory["sqreg"] = DeformedSlide
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     print("Cannot load DeformedSlide loader. Continuing without support for deformed slides.")
 from wsi_service.loader_plugins.slide_dummy import DummySlide
 from wsi_service.loader_plugins.slide_isyntax import IsyntaxSlide
