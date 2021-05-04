@@ -7,7 +7,7 @@ import requests
 import scipy.interpolate
 from PIL import Image
 
-from ._interpolate import ffi, lib
+from ._interpolate import ffi, lib  # pylint: disable=no-name-in-module
 
 
 class Deformation:

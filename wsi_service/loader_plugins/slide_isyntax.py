@@ -129,13 +129,13 @@ class IsyntaxSlide(Slide):
             image = image.resize((data["width"] - 1, data["height"] - 1), Image.ANTIALIAS)
             return image
         else:
-            raise HTTPException(status_code=data["status_code"], details=data["details"])
+            raise HTTPException(status_code=data["status_code"], detail=data["details"])
 
     # private member
 
     def __get_new_context_socket(self):
         context = zmq.Context()
-        socket = context.socket(zmq.REQ)
+        socket = context.socket(zmq.REQ)  # pylint: disable=no-member
         socket.setsockopt(zmq.LINGER, 1)
         socket.connect(f"tcp://{self.ip}:{self.port}")
         return socket
