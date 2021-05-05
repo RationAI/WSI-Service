@@ -2,12 +2,14 @@ import os
 import pathlib
 
 import pytest
+from fastapi import HTTPException
 
 from wsi_service.loader_plugins.slide_dummy import DummySlide
+from wsi_service.loader_plugins.slide_isyntax import IsyntaxSlide
 from wsi_service.loader_plugins.slide_ometif import OmeTiffSlide
 from wsi_service.loader_plugins.slide_openslide import OpenSlideSlide
 from wsi_service.plugin_loader import load_slide, plugin_directory
-from wsi_service.tests.test_api_helpers import setup_environment_variables
+from wsi_service.tests.api.test_api_helpers import setup_environment_variables
 
 plugin_directory = {
     ".ome.tif": OmeTiffSlide,
@@ -16,6 +18,7 @@ plugin_directory = {
     ".mrxs": DummySlide,
     ".svs": OpenSlideSlide,
     ".ndpi": OpenSlideSlide,
+    ".isyntax": IsyntaxSlide,
 }
 
 
@@ -50,8 +53,8 @@ def test_check_plugins_loaded_openslide(filepath, slide_id):
 @pytest.mark.parametrize(
     "filepath, slide_id,",
     [
-        ("Fluorescence OME-Tif/2019_10_15__0014_GOOD.ome.tif", "46061cfc30a65acab7a1ed644771a340"),  # svs
-        ("Fluorescence OME-Tif/LuCa-7color_Scan1.ome.tiff", "56ed11a2a9e95f87a1e466cf720ceffa"),  # ndpi
+        ("Fluorescence OME-Tif/2019_10_15__0014_GOOD.ome.tif", "46061cfc30a65acab7a1ed644771a340"),
+        ("Fluorescence OME-Tif/LuCa-7color_Scan1.ome.tiff", "56ed11a2a9e95f87a1e466cf720ceffa"),
     ],
 )
 def test_check_plugins_loaded_ometiff(filepath, slide_id):

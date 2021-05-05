@@ -49,7 +49,6 @@ class OmeTiffSlide(Slide):
         return self.slide_info
 
     def get_region(self, level, start_x, start_y, size_x, size_y):
-        settings = Settings()
         try:
             level_slide = self.slide_info.levels[level]
         except IndexError:
@@ -131,14 +130,7 @@ class OmeTiffSlide(Slide):
         new_height = page_height - start_x if (start_x + size_x > page_height) else size_x
         new_width = page_width - start_y if (start_y + size_y > page_width) else size_y
 
-        out = np.full(
-            (
-                size_x,
-                size_y,
-            ),
-            self.background_value,
-            dtype=page_frame.dtype,
-        )
+        out = np.full((size_x, size_y), self.background_value, dtype=page_frame.dtype)
 
         out[0:new_height, 0:new_width] = page_array[start_x : start_x + new_height, start_y : start_y + new_width]
         return np.expand_dims(np.expand_dims(out, axis=0), axis=3)
@@ -319,6 +311,3 @@ class OmeTiffSlide(Slide):
         metadata = xml.tostring(self.parsed_metadata).decode("utf-8")
         # add xml decoding
         self.ome_metadata = f'<?xml version="1.0" encoding="UTF-8"?>\n{metadata}'
-
-
-256

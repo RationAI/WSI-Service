@@ -8,7 +8,7 @@ from wsi_service.image_utils import rgba_to_rgb_with_background_color
 from wsi_service.models.slide import Channel, Extent, Level, PixelSizeNm, SlideInfo
 from wsi_service.settings import Settings
 from wsi_service.slide import Slide
-from wsi_service.slide_utils import get_original_levels
+from wsi_service.slide_utils import get_original_levels, get_rgb_channel_list
 
 
 class OpenSlideSlide(Slide):
@@ -126,13 +126,6 @@ class OpenSlideSlide(Slide):
 
         return Extent(x=tile_width, y=tile_height, z=1)
 
-    def __get_rgb_channel_list(self):
-        channels = []
-        channels.append(Channel(id=0, name="Red", color_int=16711680))
-        channels.append(Channel(id=1, name="Green", color_int=65280))
-        channels.append(Channel(id=2, name="Blue", color_int=255))
-        return channels
-
     def __get_slide_info_openslide(self, slide_id):
         try:
             levels = self.__get_levels_openslide()
@@ -141,7 +134,7 @@ class OpenSlideSlide(Slide):
         try:
             slide_info = SlideInfo(
                 id=slide_id,
-                channels=self.__get_rgb_channel_list(),  # rgb channels
+                channels=get_rgb_channel_list(),  # rgb channels
                 channel_depth=8,  # 8bit each channel
                 extent=Extent(x=self.openslide_slide.dimensions[0], y=self.openslide_slide.dimensions[1], z=1),
                 pixel_size_nm=self.__get_pixel_size(),

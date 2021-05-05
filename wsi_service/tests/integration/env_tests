@@ -1,0 +1,9 @@
+WS_PORT=8080
+WS_DATA_PATH=/data/OpenSlide_adapted
+WS_ISYNTAX_IP=isyntax_backend
+WS_ISYNTAX_PORT=5556
+WS_DEBUG=false
+WS_LOAD_EXAMPLE_DATA=false
+
+COMPOSE_RESTART=no
+COMPOSE_NETWORK=default
