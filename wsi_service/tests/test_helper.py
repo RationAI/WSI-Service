@@ -1,76 +1,51 @@
 import io
 import os
-import shutil
-from importlib import reload
 
 import PIL.Image as Image
 import pytest
 import tifffile
-from fastapi.testclient import TestClient
 
 from wsi_service.__main__ import load_example_data
 
 
 def setup_environment_variables():
-    if os.path.exists("/data"):
-        os.environ["data_dir"] = "/data"
-    else:
-        test_folder = os.path.dirname(os.path.realpath(__file__))
-        os.environ["data_dir"] = os.path.join(test_folder, "data")
+    test_folder = os.path.dirname(os.path.realpath(__file__))
+    os.environ["data_dir"] = os.path.join(test_folder, "data")
     os.environ["local_mode"] = str(True)
     os.environ["mapper_address"] = "http://testserver/slides/{slide_id}"
+    os.environ["port_isyntax"] = "5556"
 
 
-def get_client():
-    import wsi_service.api
+def make_dir_if_not_exists(dir):
+    if not os.path.exists(dir):
+        os.mkdir(dir)
+    os.chmod(dir, 0o777)
 
-    reload(wsi_service.api)
-    return TestClient(wsi_service.api.api)
 
-
-@pytest.fixture()
-def client_invalid_data_dir():
+@pytest.fixture(scope="session")
+def fetch_test_data():
     setup_environment_variables()
-    os.environ["data_dir"] = "/data/non_existing_dir"
-    yield get_client()
-
-
-@pytest.fixture()
-def client():
-    setup_environment_variables()
-
-    if not os.path.exists(os.environ["data_dir"]):
-        os.mkdir(os.environ["data_dir"])
+    make_dir_if_not_exists(os.environ["data_dir"])
 
     # load data and update update data_dir
+    print(f"fetch data: " + os.environ["data_dir"])
     os.environ["data_dir"] = load_example_data(os.environ["data_dir"])
 
-    yield get_client()
+
+def get_image(response):
+    return Image.open(io.BytesIO(response.raw.data))
 
 
-@pytest.fixture()
-def client_no_data():
-    setup_environment_variables()
-    data_dir = os.environ["data_dir"]
-    del os.environ["data_dir"]
-    os.environ["data_dir"] = os.path.join(data_dir, "empty")
-    if not os.path.exists(os.environ["data_dir"]):
-        os.mkdir(os.environ["data_dir"])
-    yield get_client()
-    shutil.rmtree(os.environ["data_dir"])
+def get_tiff_image(response):
+    return tifffile.TiffFile(io.BytesIO(response.raw.data))
 
 
-@pytest.fixture()
-def client_changed_timeout():
-    setup_environment_variables()
-    if not os.path.exists(os.environ["data_dir"]):
-        os.mkdir(os.environ["data_dir"])
-    os.environ["data_dir"] = load_example_data(os.path.join(os.environ["data_dir"]))
-    os.environ["inactive_histo_image_timeout_seconds"] = str(1)
-    import wsi_service.api
-
-    reload(wsi_service.api)
-    yield TestClient(wsi_service.api.api), wsi_service.api.slide_source
+def tiff_pixels_equal(tiff_image, pixel_location, testpixel):
+    narray = tiff_image.asarray()
+    pixel = narray[pixel_location[0]][pixel_location[1]][pixel_location[2]]
+    if pixel != testpixel[pixel_location[0]]:
+        return False
+    return True
 
 
 def setup_mock(kwargs):
@@ -195,20 +170,19 @@ def setup_mock(kwargs):
             ],
         },
     )
+    mock.get(
+        "http://testserver/slides/5c1c0cc5cd3a501480fc6a4cb04ddda8",
+        json={
+            "slide_id": "5c1c0cc5cd3a501480fc6a4cb04ddda8",
+            "storage_type": "fs",
+            "storage_addresses": [
+                {
+                    "address": "Philips iSyntax/4399.isyntax",
+                    "main_address": True,
+                    "storage_address_id": "5c1c0cc5cd3a501480fc6a4cb04ddda8",
+                    "slide_id": "5c1c0cc5cd3a501480fc6a4cb04ddda8",
+                }
+            ],
+        },
+    )
     return mock
-
-
-def get_image(response):
-    return Image.open(io.BytesIO(response.raw.data))
-
-
-def get_tiff_image(response):
-    return tifffile.TiffFile(io.BytesIO(response.raw.data))
-
-
-def tiff_pixels_equal(tiff_image, pixel_location, testpixel):
-    narray = tiff_image.asarray()
-    pixel = narray[pixel_location[0]][pixel_location[1]][pixel_location[2]]
-    if pixel != testpixel[pixel_location[0]]:
-        return False
-    return True

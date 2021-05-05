@@ -61,9 +61,12 @@ class LocalMapper:
                     )
 
     def _is_supported_format(self, filepath):
-        if OpenSlide.detect_format(filepath):
-            return True
-        elif filepath.endswith(".tiff") or filepath.endswith(".tif"):
+        if (
+            OpenSlide.detect_format(filepath)
+            or filepath.endswith(".tiff")
+            or filepath.endswith(".tif")
+            or filepath.endswith(".isyntax")
+        ):
             return True
         else:
             return False

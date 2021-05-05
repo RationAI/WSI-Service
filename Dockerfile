@@ -1,6 +1,7 @@
 FROM python:3.8 AS build_0
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 RUN apt-get update \
   && apt-get install --no-install-recommends -y \
@@ -30,8 +31,9 @@ COPY --from=build_0 /wsi_service/dist/ /wsi_service/dist/
 
 RUN pip3 install /wsi_service/dist/*.whl
 
-
 FROM python:3.8-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 COPY --from=build_0 /openslide_deps/* /usr/lib/x86_64-linux-gnu/
 COPY --from=build_1 /usr/local/lib/python3.8/site-packages/ /usr/local/lib/python3.8/site-packages/

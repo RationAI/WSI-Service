@@ -1,2 +1,5 @@
 [run]
-omit = wsi_service/tests/*,wsi_service/__*
+omit = 
+    wsi_service/tests/*
+    wsi_service/__*
+    wsi_service/loader_plugins/isyntax/*

@@ -95,9 +95,23 @@ The last five endpoints all return image data. The image format and its quality 
 
 The region and the tile endpoint also offer the selection of a layer with the index z in a Z-Stack.
 
+### Supported formats
+
+- Aperio (\*.svs)
+- Hamamatsu (\*.ndpi)
+- 3DHistech/Mirax (\*.mrxs)
+- Generic Tif (_.tif / _.tiff)
+- Fluorescence OME.tif (\*.ome.tif)
+- Philips Isyntax (\*.isyntax)
+
+Partially supported:
+
+- Leica (\*.scn)
+- Ventana (\*.bif)
+
 ### Standalone version
 
-The WSI Service relies on the [Storage Mapper Service](https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/storage-mapper-service) to get storage information for a certain slide_id. If the mapper-address is not provived (see _How to run_), the WSI Service will be run in standalone mode using a local mapper. This local mapper fulfills the function of the storage mapper service, the id mapper service and part of the clinical data service by creating case ids for folders found in the data folder and slide ids for images within these case folders. In the standalone mode there are few additional endpoints, which can be accessed:
+The WSI Service relies on the [Storage Mapper Service](https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/storage-mapper-service) to get storage information for a certain slide*id. If the mapper-address is not provived (see \_How to run*), the WSI Service will be run in standalone mode using a local mapper. This local mapper fulfills the function of the storage mapper service, the id mapper service and part of the clinical data service by creating case ids for folders found in the data folder and slide ids for images within these case folders. In the standalone mode there are few additional endpoints, which can be accessed:
 
 - `GET /v1/cases/` - Get cases
 - `GET /v1/cases/{case_id}/slides/` - Get available slides
@@ -141,52 +155,47 @@ optional arguments:
 
 Afterwards, visit http://localhost:8080
 
+Note: **This runs the Wsi-Service without isyntax-Support!**
+
 ### Run with docker
 
-Download the turnkey ready docker image
+_TODO(pull from registry)_: Download the turnkey ready docker image
 
 ```
 docker pull registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service
 ```
 
-or build the docker image yourself from source
+or build and run the docker images yourself from source
 
 ```
-cd PATH_OF_DOCKERFILE
-docker build -t registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service .
+cd wsi_service
+docker-compose up
 ```
 
-Of course, it can be tagged e.g. with only _wsi-service_, here the tag is just used for consistency with following commands.
-
-Run the docker image (Caution: ~13GB of example data will be downloaded):
+set options by defining environment parameters in shell or `.env`-file:
 
 ```
-docker run -it --rm -p 8080:8080 registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service --load-example-data
-```
+WS_PORT=8080
+WS_DATA_PATH=/data
+WS_ISYNTAX_IP=isyntax_backend
+WS_ISYNTAX_PORT=5556
+WS_DEBUG=false
+WS_LOAD_EXAMPLE_DATA=false
 
-Or with more options
-
-```
-docker run \
-  -it \
-  -p 8080:8080 \
-  --rm \
-  -v PATH_TO_DATA_DIR_ON_HOST:/data \
-  -v PATH_TO_REPOSITORY_ROOT:/wsi_service \
-  registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service \
-  --debug
+COMPOSE_RESTART=no
+COMPOSE_NETWORK=default
 ```
 
 Short explanation of the parameters used:
 
-- `-it` initializes an interactive tty
-- `-p 8080:8080` forward the port
-- `--rm` optional, remove if container should be reused (recommended)
-- `-v PATH_TO_DATA_DIR_ON_HOST:/data` optional, if not set, empty dir will be used. Make sure container user (-u) has read access
-- `-v PATH_TO_REPOSITORY_ROOT:/wsi_service` optional, will use the source code of host and automatically restart server on changes
-- `--debug` optional, use debug config and activate reload
+- `WS_PORT` external port of the wsi-service
+- `WS_DATA_PATH` mounted volume to the image data
+- `WS_ISYNTAX_IP` IP address or name of the iysntax backend
+- `WS_ISYNTAX_PORT` external port of the isyntax backend
+- `WS_DEBUG` optional, use debug config and activate reload
+- `WS_LOAD_EXAMPLE_DATA` optional, download sample data (about 16GB)
 
-Afterwards, visit http://localhost:8080
+Afterwards, visit http://localhost:${WS_PORT}
 
 ## Development
 
@@ -199,34 +208,12 @@ poetry shell
 python3 -m wsi_service --debug data_dir
 ```
 
-or using docker with
-
-```
-docker run \
-  -it \
-  -p 8080:8080 \
-  --rm \
-  -v PATH_TO_DATA_DIR_ON_HOST:/data \
-  -v PATH_TO_REPOSITORY_ROOT:/wsi_service \
-  registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service \
-  --debug
-```
+or using docker with by setting debug environment variable (`WS_DEBUG`).
 
 ### Run tests
 
 ```
 poetry run pytest --pyargs wsi_service
-```
-
-or using docker with
-
-```
-docker run \
-  -it \
-  --rm \
-  --entrypoint python3 \
-  registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service \
-  -m pytest --pyargs wsi_service
 ```
 
 ### Run static code analysis and fix issues
