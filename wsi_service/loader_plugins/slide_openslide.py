@@ -120,7 +120,7 @@ class OpenSlideSlide(Slide):
             # since the tile route is soley used for viewing, we provide the default tile width and height
             temp_height = self.openslide_slide.properties["openslide.level[0].tile-height"]
             temp_width = self.openslide_slide.properties["openslide.level[0].tile-width"]
-            if tile_height == tile_width:
+            if temp_height == temp_width:
                 tile_height = temp_height
                 tile_width = temp_width
 

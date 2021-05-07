@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Fix for unequal tile sizes in info route
+
 ## 0.1.2
 
 - Added support for Philips isyntax format
