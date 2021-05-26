@@ -36,7 +36,6 @@ run_tests:
     - docker-compose build
   script:
     - poetry run pytest --cov .
-    - 
   after_script:
     - docker-compose down
     - docker system prune -a -f
