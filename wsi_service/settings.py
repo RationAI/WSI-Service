@@ -16,5 +16,5 @@ class Settings(BaseSettings):
     mapper_address: str
     local_mode: bool
     inactive_histo_image_timeout_seconds: int = 600
-    max_returned_region_size: int = 6250000  # 2500 x 2500
+    max_returned_region_size: int = 4 * 6250000  # 5000 x 5000
     root_path: str = None

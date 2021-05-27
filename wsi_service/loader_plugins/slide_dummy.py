@@ -30,7 +30,7 @@ class DummySlide(Slide):
     def get_info(self):
         return self.slide_info
 
-    def get_region(self, level, start_x, start_y, size_x, size_y):
+    def get_region(self, level, start_x, start_y, size_x, size_y, z=0):
         rgb_img = PIL.Image.new("RGB", (size_x, size_y), color="red")
         return rgb_img
 
@@ -50,11 +50,12 @@ class DummySlide(Slide):
         rgb_img = PIL.Image.new("RGB", (10, 10), color="red")
         return rgb_img
 
-    def get_tile(self, level, tile_x, tile_y):
+    def get_tile(self, level, tile_x, tile_y, z=0):
         return self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
             tile_y * self.slide_info.tile_extent.y,
             self.slide_info.tile_extent.x,
             self.slide_info.tile_extent.y,
+            z=z,
         )

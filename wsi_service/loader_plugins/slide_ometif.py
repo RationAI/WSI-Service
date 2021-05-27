@@ -192,7 +192,7 @@ class OmeTiffSlide(Slide):
                     if fh.tell() != offset:
                         raise HTTPException(status_code=422, detail="Failed reading to tile offset")
                     data = fh.read(bytecount)
-                    tile, indices, shape = page.decode(data, index, jpegtables)
+                    tile, _indices, _shape = page.decode(data, index, jpegtables)
 
                     # insert tile in temporary output array
                     tile_position_i = (i - start_tile_x0) * tile_height

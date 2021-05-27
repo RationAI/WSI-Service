@@ -68,6 +68,8 @@ class LocalMapper:
             or filepath.endswith(".isyntax")
         ):
             return True
+        elif filepath.endswith(".sqreg"):
+            return True
         else:
             return False
 

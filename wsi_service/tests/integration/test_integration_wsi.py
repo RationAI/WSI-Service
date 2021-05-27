@@ -57,7 +57,7 @@ def test_get_slide_info_valid(
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
     "image_format, image_quality",
-    [("jpeg", 90), ("jpeg", 95), ("png", 0), ("png", 1), ("bmp", 0), ("gif", 0), ("tiff", 100)],
+    [("jpeg", 90), ("png", 0), ("tiff", 100)],
 )
 @pytest.mark.parametrize(
     "slide_id, return_value, pixel_location, testpixel_rgb, testpixel_multichannel",
@@ -114,7 +114,7 @@ def test_get_slide_thumbnail_valid(
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
     "image_format, image_quality",
-    [("jpeg", 90), ("jpeg", 95), ("png", 0), ("png", 1), ("bmp", 0), ("gif", 0), ("tiff", 100)],
+    [("jpeg", 90), ("png", 0), ("tiff", 100)],
 )
 @pytest.mark.parametrize(
     "slide_id, has_label, pixel_location, testpixel",
@@ -164,7 +164,7 @@ def test_get_slide_label_valid(
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
     "image_format, image_quality",
-    [("jpeg", 90), ("jpeg", 95), ("png", 0), ("png", 1), ("bmp", 0), ("gif", 0), ("tiff", 100)],
+    [("jpeg", 90), ("png", 0), ("tiff", 100)],
 )
 @pytest.mark.parametrize(
     "slide_id, return_value, pixel_location, testpixel",
@@ -208,7 +208,7 @@ def test_get_slide_macro_valid(
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
     "image_format, image_quality",
-    [("jpeg", 100), ("png", 100), ("png", 100), ("bmp", 100), ("gif", 100), ("tiff", 100)],
+    [("jpeg", 100), ("png", 100), ("tiff", 100)],
 )
 @pytest.mark.parametrize(
     "slide_id,  pixel_location, testpixel, start_x, start_y, size",
@@ -253,7 +253,7 @@ def test_get_slide_region_valid_brightfield(
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
-@pytest.mark.parametrize("image_format, image_quality", [("tiff", 100), ("jpeg", 90), ("png", 100), ("bmp", 100)])
+@pytest.mark.parametrize("image_format, image_quality", [("tiff", 100), ("jpeg", 90), ("png", 100)])
 @pytest.mark.parametrize(
     "slide_id, channels, start_point, size, pixel_location, testpixel_multichannel, testpixel_rgb",
     [
@@ -441,7 +441,7 @@ def test_get_slide_tile_timing(wsi_service, slide_id, tile_x, tile_y, level, **k
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize(
     "image_format, image_quality",
-    [("jpeg", 90), ("jpeg", 95), ("png", 0), ("png", 1), ("bmp", 0), ("gif", 0), ("tiff", 100)],
+    [("jpeg", 90), ("png", 0), ("tiff", 100)],
 )
 @pytest.mark.parametrize(
     "slide_id, testpixel, tile_x, tile_y, tile_size",

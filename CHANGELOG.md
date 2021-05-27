@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0
+
+- Added support for deformed slides in .sqreg format (requires additional (optional) binaries)
+
 ## 0.1.3
 
 - Fix for unequal tile sizes in info route
