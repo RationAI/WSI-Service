@@ -3,7 +3,7 @@ stages:
   - version
   - test
   - build_docker
-  - extend_docker_image_deformation
+  - extend_docker_deformation_plugin
 
 run_static_analysis:
   stage: static_analysis
@@ -74,6 +74,7 @@ run_build_isyntax:
     - export BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
     - /kaniko/executor --context $CI_PROJECT_DIR/wsi_service/loader_plugins/isyntax --dockerfile $CI_PROJECT_DIR/wsi_service/loader_plugins/isyntax/Dockerfile --destination $CI_REGISTRY_IMAGE/isyntax --destination $CI_REGISTRY_IMAGE/isyntax:$VERSION --label org.opencontainers.image.created=$BUILD_TIME --label org.opencontainers.image.authors="EMPAIA" --label org.opencontainers.image.version=isyntax-$VERSION --label org.opencontainers.image.vendor="EMPAIA" --label org.opencontainers.image.version=$CI_COMMIT_TAG --label org.opencontainers.image.source=$CI_PROJECT_URL --label org.opencontainers.image.revision=$CI_COMMIT_SHA --label org.opencontainers.image.title="Isyntax backend" --label org.opencontainers.image.description="Backend service to open and load iysntax file format"
   needs:
+    - job: run_tests
     - job: version
       artifacts: true
 
@@ -93,11 +94,12 @@ run_build_wsi_service:
     - export BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE --destination $CI_REGISTRY_IMAGE:$VERSION --label org.opencontainers.image.created=$BUILD_TIME --label org.opencontainers.image.authors="EMPAIA" --label org.opencontainers.image.version=$VERSION --label org.opencontainers.image.vendor="EMPAIA" --label org.opencontainers.image.version=$CI_COMMIT_TAG --label org.opencontainers.image.source=$CI_PROJECT_URL --label org.opencontainers.image.revision=$CI_COMMIT_SHA --label org.opencontainers.image.title="WSI Service" --label org.opencontainers.image.description="WSI-Service to stream whole slide images tile-based via HTTP"
   needs:
+    - job: run_tests
     - job: version
       artifacts: true
 
 extend_docker_image_deformation:
-  stage: extend_docker_image_deformation
+  stage: extend_docker_deformation_plugin
   only:
     - master
   tags:
@@ -118,8 +120,9 @@ extend_docker_image_deformation:
     - docker push $CI_REGISTRY_IMAGE:deformation
     - docker push $CI_REGISTRY_IMAGE:deformation-$VERSION
   after_script:
-    - docker rm wsi-deformation
+    - docker rm -f wsi-deformation
     - docker logout $CI_REGISTRY
   needs:
+    - job: run_build_wsi_service
     - job: version
       artifacts: true
