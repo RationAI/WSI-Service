@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Updated docker image from Python 3.8 to 3.9
+
 ## 0.2.0
 
 - Added support for deformed slides in .sqreg format (requires additional (optional) binaries)

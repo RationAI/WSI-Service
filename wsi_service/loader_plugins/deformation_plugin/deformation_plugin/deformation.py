@@ -56,7 +56,7 @@ class Deformation:
         defYInterp = scipy.interpolate.RectBivariateSpline(gridX, gridY, defY)
         return (defXInterp, defYInterp), slide_id_R, slide_id_T
 
-    def get_target_region_area(self, WR: np.array, sourceSizePixel: tuple[int]):
+    def get_target_region_area(self, WR: np.array, sourceSizePixel):
         """
         Args:
             WR (4x4 numpy float): world matrix of the source area
@@ -171,10 +171,10 @@ class Deformation:
         defX: np.ndarray,
         defY: np.ndarray,
         Wdef: np.ndarray,
-        size_out: tuple[int],
+        size_out,
         WR: np.ndarray,
-        start_T_px: tuple[int],
-        start_R_px: tuple[int],
+        start_T_px,
+        start_R_px,
     ) -> np.array:
         rgb_channels = undeformedTemplate.split()
         channels = len(rgb_channels)
@@ -205,10 +205,10 @@ class Deformation:
         defX: np.ndarray,
         defY: np.ndarray,
         Wdef: np.ndarray,
-        size_out: tuple[int],
+        size_out,
         WR: np.ndarray,
-        start_T_px: tuple[int],
-        start_R_px: tuple[int],
+        start_T_px,
+        start_R_px,
         deformedTemplate: np.ndarray,
     ) -> None:
         channels = 1
@@ -251,7 +251,7 @@ class Deformation:
         )
 
     @staticmethod
-    def get_four_edges_world(WR, sourceSizePixel: tuple[int]) -> list[np.array]:
+    def get_four_edges_world(WR, sourceSizePixel):
         pts = []
         sourceSizeWorld = np.dot(WR, np.append(sourceSizePixel, [0, 1]))
         pts.append(WR[:, 3].copy())

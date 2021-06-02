@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wsi_service"
-version = "0.2.0"
+version = "0.2.1"
 description = "The WSI Service enables users to stream Whole Slide Images (WSI) tile-based via HTTP. It is based on a FastAPI webserver and OpenSlide to access whole slide image data."
 authors = ["Michael Franz", "Henning Höfener", "Johannes Lotz", "Nick Weiss",]
 
