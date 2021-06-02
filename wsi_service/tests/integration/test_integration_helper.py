@@ -51,7 +51,11 @@ def add_absolute_test_dir_to_env():
     for line in content:
         sline = line.split("=")
         if line.startswith("WS_DATA_PATH"):
-            line = f"{sline[0]}={test_path}{sline[1]}"
+            if "WS_DATA_PATH" in os.environ:
+                data_path = os.environ["WS_DATA_PATH"]
+                line = f"{sline[0]}={data_path}\n"
+            else:
+                line = f"{sline[0]}={test_path}{sline[1]}"
         elif line.startswith("WS_PORT"):
             line = f"{sline[0]}={port_wsi_service}\n"
         elif line.startswith("WS_ISYNTAX_PORT"):

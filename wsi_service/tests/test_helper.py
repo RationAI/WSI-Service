@@ -9,8 +9,11 @@ from wsi_service.__main__ import load_example_data
 
 
 def setup_environment_variables():
-    test_folder = os.path.dirname(os.path.realpath(__file__))
-    os.environ["data_dir"] = os.path.join(test_folder, "data")
+    if "WS_DATA_PATH" in os.environ:
+        os.environ["data_dir"] = os.environ["WS_DATA_PATH"]
+    else:
+        test_folder = os.path.dirname(os.path.realpath(__file__))
+        os.environ["data_dir"] = os.path.join(test_folder, "data")
     os.environ["local_mode"] = str(True)
     os.environ["mapper_address"] = "http://testserver/slides/{slide_id}"
     os.environ["port_isyntax"] = "5556"
@@ -19,7 +22,6 @@ def setup_environment_variables():
 def make_dir_if_not_exists(dir):
     if not os.path.exists(dir):
         os.mkdir(dir)
-    os.chmod(dir, 0o777)
 
 
 @pytest.fixture(scope="session")

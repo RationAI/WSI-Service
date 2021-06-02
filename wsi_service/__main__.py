@@ -18,7 +18,7 @@ def set_env_from_args(data_dir, mapper_address, local_mode, port_isyntax):
 def load_example_data(download_folder="/data"):
     data_path = os.path.join(download_folder, "OpenSlide_adapted")
     zip_file = os.path.join(download_folder, "testdata.zip")
-    if not os.path.exists(zip_file) or os.path.getsize(zip_file) != 16669324020:
+    if not os.path.exists(zip_file) or os.path.getsize(zip_file) != 16671922545:
         print("Beginning file download (16 GB)...")
         url = "https://nextcloud.empaia.org/s/4fpdFEn69gqgrgK/download"
         urlretrieve(url, zip_file)

@@ -1,8 +1,9 @@
 stages:
   - static_analysis
-  - test
   - version
+  - test
   - build_docker
+  - extend_docker_image_deformation
 
 run_static_analysis:
   stage: static_analysis
@@ -16,29 +17,6 @@ run_static_analysis:
     - poetry run black . --check
     - poetry run isort . --check --profile black
     - poetry run pylint wsi_service --disable=all --enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode --extension-pkg-whitelist=pydantic --disable=F0401 --disable=E1136
-
-run_tests:
-  stage: test
-  tags:
-    - mevis-ubuntu-vm-wsi
-  variables:
-    GIT_SUBMODULE_STRATEGY: recursive
-    PYTHONDONTWRITEBYTECODE: 1
-  before_script:
-    - cp wsi_service/tests/integration/env_tests .env
-    - mkdir -p $(pwd)/wsi-service/tests/data/OpenSlide_adapted
-    - chmod -R 777 $(pwd)/wsi-service/tests/data/OpenSlide_adapted
-    - poetry install
-    - cd wsi_service/loader_plugins/deformation_plugin/
-    - wget $DEFORMATION_BINARY_URL -O deformation-plugin-linux.zip
-    - unzip deformation-plugin-linux.zip
-    - cd ../../..
-    - docker-compose build
-  script:
-    - poetry run pytest --cov .
-  after_script:
-    - docker-compose down
-    - docker system prune -a -f
 
 version:
   stage: version
@@ -57,6 +35,28 @@ version:
   artifacts:
     reports:
       dotenv: version.env
+
+run_tests:
+  stage: test
+  tags:
+    - mevis-ubuntu-vm-wsi
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    PYTHONDONTWRITEBYTECODE: 1
+    WS_DATA_PATH: /data
+  before_script:
+    - cp wsi_service/tests/integration/env_tests .env
+    - poetry install
+    - cd wsi_service/loader_plugins/deformation_plugin/
+    - wget $DEFORMATION_BINARY_URL -O deformation-plugin-linux.zip
+    - unzip deformation-plugin-linux.zip
+    - cp deformation_plugin/_interpolate.cpython-39-x86_64-linux-gnu.so deformation_plugin/_interpolate.cpython-38-x86_64-linux-gnu.so
+    - cd ../../..
+    - docker-compose build
+  script:
+    - poetry run pytest --cov .
+  after_script:
+    - docker-compose down
 
 run_build_isyntax:
   stage: build_docker
@@ -92,6 +92,34 @@ run_build_wsi_service:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"gitlab-ci-token\",\"password\":\"$CI_JOB_TOKEN\"}}}" > /kaniko/.docker/config.json
     - export BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE --destination $CI_REGISTRY_IMAGE:$VERSION --label org.opencontainers.image.created=$BUILD_TIME --label org.opencontainers.image.authors="EMPAIA" --label org.opencontainers.image.version=$VERSION --label org.opencontainers.image.vendor="EMPAIA" --label org.opencontainers.image.version=$CI_COMMIT_TAG --label org.opencontainers.image.source=$CI_PROJECT_URL --label org.opencontainers.image.revision=$CI_COMMIT_SHA --label org.opencontainers.image.title="WSI Service" --label org.opencontainers.image.description="WSI-Service to stream whole slide images tile-based via HTTP"
+  needs:
+    - job: version
+      artifacts: true
+
+extend_docker_image_deformation:
+  stage: extend_docker_image_deformation
+  only:
+    - master
+  tags:
+    - mevis-ubuntu-vm-wsi
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - wget $DEFORMATION_BINARY_URL -O deformation-plugin-linux.zip
+    - unzip deformation-plugin-linux.zip
+  script:
+    - docker pull $CI_REGISTRY_IMAGE
+    - docker run -d --name=wsi-deformation $CI_REGISTRY_IMAGE
+    - docker cp deformation_plugin/* wsi-deformation:/usr/local/lib/python3.9/site-packages/wsi_service/loader_plugins/deformation_plugin/deformation_plugin/
+    - docker stop wsi-deformation
+    - docker commit wsi-deformation $CI_REGISTRY_IMAGE:deformation
+    - docker tag $CI_REGISTRY_IMAGE:deformation $CI_REGISTRY_IMAGE:deformation-$VERSION
+    - docker push $CI_REGISTRY_IMAGE:deformation
+    - docker push $CI_REGISTRY_IMAGE:deformation-$VERSION
+  after_script:
+    - docker rm wsi-deformation
+    - docker logout $CI_REGISTRY
   needs:
     - job: version
       artifacts: true
