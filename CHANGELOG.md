@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2
+
+- Fixed deformation bug in deformation_plugin
+- Changed data format from png to jpeg in deformation_plugin
+
 ## 0.2.1
 
 - Updated docker image from Python 3.8 to 3.9

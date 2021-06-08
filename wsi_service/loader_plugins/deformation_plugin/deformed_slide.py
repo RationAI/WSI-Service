@@ -36,7 +36,7 @@ class DeformedSlide(Slide):
         return self.slide_info
 
     def get_region(self, level, start_x, start_y, size_x, size_y, z=0):
-        return self.deformation.get_region(level, start_x, start_y, size_x, size_y, z, image_format="png")
+        return self.deformation.get_region(level, start_x, start_y, size_x, size_y, z, image_format="jpeg")
 
     def get_thumbnail(self, max_x, max_y):
         slide_id = self._slides[0]

@@ -77,8 +77,6 @@ class Deformation:
 
         start_x_world = minx - 0.1 * (maxx - minx)
         start_y_world = miny - 0.1 * (maxy - miny)
-        # start_x_world = minx - 0.0 * (maxx - minx)
-        # start_y_world = miny - 0.0 * (maxy - miny)
 
         start_x_px = int(round(start_x_world / WT[0, 0]))
         start_y_px = int(round(start_y_world / WT[1, 1]))
@@ -87,7 +85,6 @@ class Deformation:
         WT[1, 3] = start_y_px * WT[1, 1]
 
         extentWorld = [1.2 * (maxx - minx), 1.2 * (maxy - miny)]
-        # extentWorld = [1.0 * (maxx - minx), 1.0 * (maxy - miny)]
         targetSizePixel = np.array([round(extentWorld[0] / WR[0, 0]) - 1, round(extentWorld[1] / WR[1, 1]) - 1]).astype(
             int
         )
@@ -95,7 +92,7 @@ class Deformation:
         return WT, (start_x_px, start_y_px), targetSizePixel
 
     def fetch_region(
-        self, level: int, start_x: int, start_y: int, size_x: int, size_y: int, z: int, image_format: str = "png"
+        self, level: int, start_x: int, start_y: int, size_x: int, size_y: int, z: int, image_format: str = "jpeg"
     ) -> Image:
         slide_id = self._slides[z]
         r = requests.get(
@@ -133,7 +130,7 @@ class Deformation:
             self._pixelsize_nm[z] = response["pixel_size_nm"]
 
     def get_region(
-        self, level: int, start_x: int, start_y: int, size_x: int, size_y: int, z: int, image_format: str = "png"
+        self, level: int, start_x: int, start_y: int, size_x: int, size_y: int, z: int, image_format: str = "jpeg"
     ) -> Image:
         if z == self._reference_slide_index:
             return self.fetch_region(level, start_x, start_y, size_x, size_y, z, image_format=image_format)
@@ -144,8 +141,16 @@ class Deformation:
         WR_region[0, 3] = start_x * WR[0, 0]
         WR_region[1, 3] = start_y * WR[1, 1]
         _WT, start_T_px, sizeT = self.get_target_region_area(WR_region, [size_x, size_y])
+        if start_T_px[0] < 0:
+            start_T_px_0 = start_T_px[0] - 1
+        else:
+            start_T_px_0 = start_T_px[0]
+        if start_T_px[1] < 0:
+            start_T_px_1 = start_T_px[1] - 1
+        else:
+            start_T_px_1 = start_T_px[1]
         undeformedTemplate = self.fetch_region(
-            level, start_T_px[0], start_T_px[1], sizeT[0], sizeT[1], z, image_format=image_format
+            level, start_T_px_0, start_T_px_1, sizeT[0], sizeT[1], z, image_format=image_format
         )
         np_imgT = self.interpolate_region(
             undeformedTemplate,
