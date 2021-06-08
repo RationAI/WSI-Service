@@ -43,19 +43,19 @@ try:
             },
         )
         mock.get(
-            "http://testserver_registration/v1/slides/4b0ec5e0ec5e5e05ae9e500857314f20/region/level/2/start/3050/3550/size/1000/1000?image_format=png",
+            "http://testserver_registration/v1/slides/4b0ec5e0ec5e5e05ae9e500857314f20/region/level/2/start/3050/3550/size/1000/1000?image_format=jpeg",
             content=testdata.fetch_region_3050,
-            headers={"content-type": "image/png", "transfer-encoding": "chunked"},
+            headers={"content-type": "image/jpeg", "transfer-encoding": "chunked"},
         )
         mock.get(
-            "http://testserver_registration/v1/slides/4b0ec5e0ec5e5e05ae9e500857314f20/region/level/2/start/2950/3450/size/1200/1200?image_format=png",
+            "http://testserver_registration/v1/slides/4b0ec5e0ec5e5e05ae9e500857314f20/region/level/2/start/2950/3450/size/1200/1200?image_format=jpeg",
             content=testdata.fetch_region_2950,
-            headers={"content-type": "image/png", "transfer-encoding": "chunked"},
+            headers={"content-type": "image/jpeg", "transfer-encoding": "chunked"},
         )
         mock.get(
-            "http://testserver_registration/v1/slides/4b0ec5e0ec5e5e05ae9e500857314f20/region/level/2/start/3000/3500/size/1200/1200?image_format=png",
+            "http://testserver_registration/v1/slides/4b0ec5e0ec5e5e05ae9e500857314f20/region/level/2/start/3000/3500/size/1200/1200?image_format=jpeg",
             content=testdata.fetch_region_3000,
-            headers={"content-type": "image/png", "transfer-encoding": "chunked"},
+            headers={"content-type": "image/jpeg", "transfer-encoding": "chunked"},
         )
         return mock
 
@@ -222,8 +222,8 @@ try:
         start_y = 3550
         size_x = sourceSizePixel[0]
         size_y = sourceSizePixel[1]
-        rgb_imageR = d.get_region(level, start_x, start_y, size_x, size_y, 0, image_format="png")
-        rgb_imageT = d.get_region(level, start_x, start_y, size_x, size_y, 1, image_format="png")
+        rgb_imageR = d.get_region(level, start_x, start_y, size_x, size_y, 0, image_format="jpeg")
+        rgb_imageT = d.get_region(level, start_x, start_y, size_x, size_y, 1, image_format="jpeg")
         # rgb_imageR.show()
         # rgb_imageT.show()
         assert rgb_imageR.getpixel((0, 0)) == pytest.approx(rgb_imageT.getpixel((0, 0)), 1)
@@ -244,8 +244,8 @@ try:
             start_y = int(16000 / 2 ** level)
             size_x = sourceSizePixel[0]
             size_y = sourceSizePixel[1]
-            rgb_imageR = d.get_region(level, start_x, start_y, size_x, size_y, 0, image_format="png")
-            rgb_imageT = d.get_region(level, start_x, start_y, size_x, size_y, 1, image_format="png")
+            rgb_imageR = d.get_region(level, start_x, start_y, size_x, size_y, 0, image_format="jpeg")
+            rgb_imageT = d.get_region(level, start_x, start_y, size_x, size_y, 1, image_format="jpeg")
             # rgb_imageR.show()
             # rgb_imageT.show()
 
@@ -275,8 +275,8 @@ try:
             start_y = 3550
             size_x = sourceSizePixel[0]
             size_y = sourceSizePixel[1]
-            rgb_imageR = d.get_region(level, start_x, start_y, size_x, size_y, 0, image_format="png")
-            rgb_imageT = d.get_region(level, start_x, start_y, size_x, size_y, 1, image_format="png")
+            rgb_imageR = d.get_region(level, start_x, start_y, size_x, size_y, 0, image_format="jpeg")
+            rgb_imageT = d.get_region(level, start_x, start_y, size_x, size_y, 1, image_format="jpeg")
             # rgb_imageR.show()
             # rgb_imageT.show()
 
