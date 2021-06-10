@@ -1,9 +1,10 @@
 WS_PORT=8080
 WS_DATA_PATH=/data
-WS_ISYNTAX_IP=isyntax_backend
 WS_ISYNTAX_PORT=5556
 WS_DEBUG=false
-WS_LOAD_EXAMPLE_DATA=false
+WS_DEFAULT_MAPPER_ADDRESS=default
+
+ISX_PHILIPS_SDK_FILEPATH=philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip
 
 COMPOSE_RESTART=no
 COMPOSE_NETWORK=default

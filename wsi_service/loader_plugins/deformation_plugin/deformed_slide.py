@@ -1,16 +1,13 @@
 import io
 import math
 
-import PIL
 import requests
 from PIL import Image
 
 import wsi_service.slide_utils
-from wsi_service.image_utils import rgba_to_rgb_with_background_color
 from wsi_service.loader_plugins.deformation_plugin.deformation_plugin import Deformation
 from wsi_service.models.slide import SlideInfo
 from wsi_service.slide import Slide
-from wsi_service.slide_utils import Channel, Extent, Level, PixelSizeNm
 
 
 class DeformedSlide(Slide):
@@ -80,13 +77,6 @@ class DeformedSlide(Slide):
             self.slide_info.tile_extent.y,
             z=z,
         )
-
-    def __get_rgb_channel_list(self):
-        channels = []
-        channels.append(Channel(id=0, name="Red", color_int=16711680))
-        channels.append(Channel(id=1, name="Green", color_int=65280))
-        channels.append(Channel(id=2, name="Blue", color_int=255))
-        return channels
 
     def close(self):
         pass  # we let the dependent slides expire.

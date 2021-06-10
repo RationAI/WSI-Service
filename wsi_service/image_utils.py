@@ -1,11 +1,13 @@
 from io import BytesIO
 
 import numpy as np
-import PIL
+from PIL import Image
+
+from wsi_service.models.slide import Color
 
 
 def rgba_to_rgb_with_background_color(image_rgba, background_color=(255, 255, 255)):
-    image_rgb = PIL.Image.new("RGB", image_rgba.size, background_color)
+    image_rgb = Image.new("RGB", image_rgba.size, background_color)
     image_rgb.paste(image_rgba, mask=image_rgba.split()[3])
     return image_rgb
 
@@ -22,7 +24,7 @@ def convert_narray_uintX_to_uint8(array, exp=16, lower=None, upper=None):
     if upper is None:
         # default color mapping
         if exp == 8:
-            upper = 255
+            return array
         elif exp == 16:
             upper = (2 ** exp) / 4
         else:
@@ -33,7 +35,7 @@ def convert_narray_uintX_to_uint8(array, exp=16, lower=None, upper=None):
     return temp_array.astype(np.uint8)
 
 
-def covert_int_to_rgba_array(i):
+def convert_int_to_rgba_array(i):
     return [(i >> 24) & 0xFF, (i >> 16) & 0xFF, (i >> 8) & 0xFF, i & 0xFF]
 
 
@@ -70,7 +72,7 @@ def convert_narray_to_pil_image(narray, lower=None, upper=None):
 
     # we need to transpose the array here to make it readable for pillow (width, height, channel)
     narray_uint8 = np.ascontiguousarray(narray_uint8.transpose(1, 2, 0))
-    pil_image = PIL.Image.fromarray(narray_uint8, mode="RGB")
+    pil_image = Image.fromarray(narray_uint8, mode="RGB")
     return pil_image
 
 
@@ -93,10 +95,10 @@ def get_requested_channels_as_rgb_array(narray, image_channels, slide):
     elif len(image_channels) == 1:
         # return a single channel image
         try:
-            color = slide.slide_info.channels[image_channels[0]].color_int
+            color = slide.slide_info.channels[image_channels[0]].color
         except IndexError:
             # if there is no color defined we set channel to red by default
-            color = [255, 0, 0, 0]
+            color = Color(r=255, g=0, b=0, a=0)
         temp_array = get_single_channel(separate_channels, image_channels[0], color)
     elif len(image_channels) == 2:
         temp_array = []
@@ -123,10 +125,10 @@ def get_multi_channel_as_rgb(separate_channels):
 
 
 def get_single_channel(separate_channels, channel, color):
-    rgb = covert_int_to_rgba_array(color)
     temp_array = []
     for i in range(3):
-        temp_channel = separate_channels[channel] * (rgb[i] / 255)
+        c = color.r if i == 0 else (color.g if i == 1 else color.b)
+        temp_channel = separate_channels[channel] * (c / 255)
         temp_array.append(temp_channel)
     return temp_array
 

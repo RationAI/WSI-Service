@@ -1,12 +1,11 @@
 import requests
 
 from wsi_service.tests.integration.test_integration_helper import (
-    add_absolute_test_dir_to_env,
     copy_env,
     docker_compose_file,
+    modify_ports_in_test_env,
     wsi_service,
 )
-from wsi_service.tests.test_helper import fetch_test_data
 
 
 def test_alive(wsi_service):

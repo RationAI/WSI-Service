@@ -1,11 +1,8 @@
-import math
-
 import openslide
-import PIL
 from fastapi import HTTPException
 
 from wsi_service.image_utils import rgba_to_rgb_with_background_color
-from wsi_service.models.slide import Channel, Extent, Level, PixelSizeNm, SlideInfo
+from wsi_service.models.slide import Extent, PixelSizeNm, SlideInfo
 from wsi_service.settings import Settings
 from wsi_service.slide import Slide
 from wsi_service.slide_utils import get_original_levels, get_rgb_channel_list

@@ -2,36 +2,19 @@ import io
 import os
 
 import PIL.Image as Image
-import pytest
 import tifffile
-
-from wsi_service.__main__ import load_example_data
 
 
 def setup_environment_variables():
-    if "WS_DATA_PATH" in os.environ:
-        os.environ["data_dir"] = os.environ["WS_DATA_PATH"]
-    else:
-        test_folder = os.path.dirname(os.path.realpath(__file__))
-        os.environ["data_dir"] = os.path.join(test_folder, "data")
+    path = os.path.dirname(os.path.realpath(__file__))
+    os.environ["data_dir"] = path
     os.environ["local_mode"] = str(True)
     os.environ["mapper_address"] = "http://testserver/slides/{slide_id}"
-    os.environ["port_isyntax"] = "5556"
 
 
 def make_dir_if_not_exists(dir):
     if not os.path.exists(dir):
         os.mkdir(dir)
-
-
-@pytest.fixture(scope="session")
-def fetch_test_data():
-    setup_environment_variables()
-    make_dir_if_not_exists(os.environ["data_dir"])
-
-    # load data and update update data_dir
-    print(f"fetch data: " + os.environ["data_dir"])
-    os.environ["data_dir"] = load_example_data(os.environ["data_dir"])
 
 
 def get_image(response):

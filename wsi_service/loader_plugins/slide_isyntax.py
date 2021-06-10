@@ -1,32 +1,27 @@
 import importlib
 import os
-import time
 from io import BytesIO
 
-import numpy as np
 import zmq
 from fastapi import HTTPException
 from PIL import Image
-from skimage import transform, util
 
-from wsi_service.models.slide import Channel, Extent, Level, PixelSizeNm, SlideInfo
-from wsi_service.settings import Settings
+from wsi_service.models.slide import Extent, Level, PixelSizeNm, SlideInfo
 from wsi_service.slide import Slide
 from wsi_service.slide_utils import get_rgb_channel_list
 
 
 class IsyntaxSlide(Slide):
     loader_name = "IsyntaxSlide"
-    ip = "isyntax_backend"
     port = 5556
 
     def __init__(self, filepath, slide_id):
         self.filepath = filepath
         self.slide_id = slide_id
-        self.port = os.environ["port_isyntax"]
+        self.port = os.environ["WS_ISYNTAX_PORT"]
 
         # we need to remove the local data dir from our filename because the local
-        # dir is mapped to /data in isyntax_backend container
+        # dir is mapped to /data in isyntax-backend container
         if filepath.startswith("/data"):
             self.filepath = filepath.replace("/data", "")
 
@@ -137,7 +132,7 @@ class IsyntaxSlide(Slide):
         context = zmq.Context()
         socket = context.socket(zmq.REQ)  # pylint: disable=no-member
         socket.setsockopt(zmq.LINGER, 1)
-        socket.connect(f"tcp://{self.ip}:{self.port}")
+        socket.connect(f"tcp://isyntax-backend:{self.port}")
         return socket
 
     def __parse_levels(self, info):

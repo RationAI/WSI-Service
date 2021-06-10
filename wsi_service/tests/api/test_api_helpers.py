@@ -8,7 +8,6 @@ import pytest
 import tifffile
 from fastapi.testclient import TestClient
 
-from wsi_service.__main__ import load_example_data
 from wsi_service.tests.test_helper import (
     make_dir_if_not_exists,
     setup_environment_variables,
@@ -25,20 +24,7 @@ def get_client():
 @pytest.fixture()
 def client_invalid_data_dir():
     setup_environment_variables()
-    os.environ["data_dir"] = "/data/non_existing_dir"
-    yield get_client()
-
-
-@pytest.fixture()
-def client():
-    setup_environment_variables()
-    make_dir_if_not_exists(os.environ["data_dir"])
-
-    # load data and update update data_dir
-    os.environ["data_dir"] = load_example_data(os.environ["data_dir"])
-    print("test directory: " + os.environ["data_dir"])
-    print("content: " + os.listdir(os.environ["data_dir"]))
-
+    os.environ["data_dir"] = os.environ["data_dir"] + "/non_existing_dir"
     yield get_client()
 
 
@@ -56,8 +42,8 @@ def client_no_data():
 @pytest.fixture()
 def client_changed_timeout():
     setup_environment_variables()
+    os.environ["data_dir"] = os.environ["WS_DATA_PATH"]
     make_dir_if_not_exists(os.environ["data_dir"])
-    os.environ["data_dir"] = load_example_data(os.path.join(os.environ["data_dir"]))
     os.environ["inactive_histo_image_timeout_seconds"] = str(1)
     import wsi_service.api
 

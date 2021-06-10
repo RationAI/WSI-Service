@@ -97,7 +97,7 @@ class Deformation:
         slide_id = self._slides[z]
         r = requests.get(
             self._wsi_service
-            + f"/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format={image_format}",
+            + f"/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format={image_format}"
         )
         assert r.status_code == 200
         image_bytes = io.BytesIO(r.content)

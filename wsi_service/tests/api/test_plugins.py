@@ -26,7 +26,7 @@ plugin_directory = {
     "filepath, slide_id,",
     [
         ("tests/data/OpenSlideAdapted/Generic TIFF/CMU-1.tiff", "4b0ec5e0ec5e5e05ae9e500857314f20"),  # tiff
-        ("MIRAX/Mirax2.2-1.mrxs", "7304006194f8530b9e19df1310a3670f"),  # mrxs
+        ("OpenSlide_adapted/MIRAX/Mirax2.2-1.mrxs", "7304006194f8530b9e19df1310a3670f"),  # mrxs
     ],
 )
 def test_check_plugins_loaded_dummy(filepath, slide_id):
@@ -44,8 +44,7 @@ def test_check_plugins_loaded_dummy(filepath, slide_id):
     ],
 )
 def test_check_plugins_loaded_openslide(filepath, slide_id):
-    setup_environment_variables()
-    filepath = os.path.join(os.environ["data_dir"], "OpenSlide_adapted", filepath)
+    filepath = os.path.join(os.environ["WS_DATA_PATH"], filepath)
     slide = load_slide(filepath, slide_id, plugin_directory=plugin_directory)
     assert slide.loader_name == "OpenSlide"
 
@@ -58,7 +57,6 @@ def test_check_plugins_loaded_openslide(filepath, slide_id):
     ],
 )
 def test_check_plugins_loaded_ometiff(filepath, slide_id):
-    setup_environment_variables()
-    filepath = os.path.join(os.environ["data_dir"], "OpenSlide_adapted", filepath)
+    filepath = os.path.join(os.environ["WS_DATA_PATH"], filepath)
     slide = load_slide(filepath, slide_id, plugin_directory=plugin_directory)
     assert slide.loader_name == "OmeTiffSlide"

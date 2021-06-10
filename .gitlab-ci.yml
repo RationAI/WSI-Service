@@ -43,7 +43,7 @@ run_tests:
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
     PYTHONDONTWRITEBYTECODE: 1
-    WS_DATA_PATH: /data
+    WS_DATA_PATH: /data/OpenSlide_adapted
   before_script:
     - cp wsi_service/tests/integration/env_tests .env
     - poetry install
@@ -51,10 +51,12 @@ run_tests:
     - wget $DEFORMATION_BINARY_URL -O deformation-plugin-linux.zip
     - unzip deformation-plugin-linux.zip
     - cp deformation_plugin/_interpolate.cpython-39-x86_64-linux-gnu.so deformation_plugin/_interpolate.cpython-38-x86_64-linux-gnu.so
+    - cd ../isyntax
+    - wget $ISX_PHILIPS_SDK_URL -O philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip
     - cd ../../..
     - docker-compose build
   script:
-    - poetry run pytest --cov .
+    - poetry run pytest --pyargs wsi_service --cov .
   after_script:
     - docker-compose down
 

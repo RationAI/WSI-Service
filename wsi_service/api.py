@@ -7,10 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from wsi_service.api_utils import (
-    make_image_response,
     make_response,
-    process_image_region,
-    process_image_region_raw,
     validate_image_channels,
     validate_image_request,
 )
@@ -37,7 +34,7 @@ api = FastAPI(
     title=settings.title,
     description=settings.description,
     version=settings.version,
-    docs_url="/",
+    docs_url="/docs",
     redoc_url=None,
     openapi_url="/openapi.json" if not settings.disable_openapi else "",
     root_path=settings.root_path,
@@ -154,8 +151,7 @@ def get_slide_region(
             image_region = slide.get_region(level, start_x, start_y, size_x, size_y, z=z)
         except TypeError:
             raise HTTPException(
-                status_code=422,
-                detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers.""",
+                status_code=422, detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers."""
             )
     else:
         image_region = slide.get_region(level, start_x, start_y, size_x, size_y)
@@ -191,8 +187,7 @@ def get_slide_tile(
             image_tile = slide.get_tile(level, tile_x, tile_y, z=z)
         except TypeError:
             raise HTTPException(
-                status_code=422,
-                detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers.""",
+                status_code=422, detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers."""
             )
     else:
         image_tile = slide.get_tile(level, tile_x, tile_y)

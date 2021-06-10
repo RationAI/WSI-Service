@@ -1,12 +1,7 @@
-import math
-
 import PIL
 
-import wsi_service.slide_utils
-from wsi_service.image_utils import rgba_to_rgb_with_background_color
-from wsi_service.models.slide import SlideInfo
+from wsi_service.models.slide import Extent, Level, PixelSizeNm, SlideInfo
 from wsi_service.slide import Slide
-from wsi_service.slide_utils import Extent, Level, PixelSizeNm
 
 
 class DummySlide(Slide):

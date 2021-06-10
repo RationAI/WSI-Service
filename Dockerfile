@@ -49,4 +49,4 @@ ENV WEB_CONCURRENCY=8
 RUN mkdir /data
 
 EXPOSE 8080/tcp
-ENTRYPOINT ["python", "-m", "wsi_service", "--port", "8080", "/data"]
+ENTRYPOINT ["python", "-m", "wsi_service"]

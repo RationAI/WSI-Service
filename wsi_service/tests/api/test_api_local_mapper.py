@@ -39,4 +39,4 @@ def test_get_available_slides_empty_case(client_no_data):
 def test_get_case_invalid_dir(client_invalid_data_dir):
     response = client_invalid_data_dir.get("/v1/cases/")
     assert response.status_code == 404
-    assert response.json()["detail"] == "No such directory: /data/non_existing_dir"
+    assert response.json()["detail"] == f"No such directory: {os.environ['data_dir']}"
