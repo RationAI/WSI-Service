@@ -7,8 +7,6 @@ import pytest
 import requests
 from requests.exceptions import ConnectionError
 
-from wsi_service.tests.test_helper import fetch_test_data
-
 
 def is_responsive(url):
     try:
@@ -39,24 +37,18 @@ def get_service_ports():
     return port1, port2
 
 
-def add_absolute_test_dir_to_env():
+def modify_ports_in_test_env():
     path = os.path.dirname(os.path.realpath(__file__))
-    test_path = path.replace("/integration", "")
+    project_dir = path.replace("/wsi_service/tests/integration", "")
     port_wsi_service, port_isyntax = get_service_ports()
 
-    with open(f"{path}/env_tests", "r") as f:
+    with open(f"{project_dir}/.env", "r") as f:
         content = f.readlines()
 
     new_content = ""
     for line in content:
         sline = line.split("=")
-        if line.startswith("WS_DATA_PATH"):
-            if "WS_DATA_PATH" in os.environ:
-                data_path = os.environ["WS_DATA_PATH"]
-                line = f"{sline[0]}={data_path}\n"
-            else:
-                line = f"{sline[0]}={test_path}{sline[1]}"
-        elif line.startswith("WS_PORT"):
+        if line.startswith("WS_PORT"):
             line = f"{sline[0]}={port_wsi_service}\n"
         elif line.startswith("WS_ISYNTAX_PORT"):
             line = f"{sline[0]}={port_isyntax}\n"
@@ -70,7 +62,7 @@ def add_absolute_test_dir_to_env():
 
 @pytest.fixture(scope="session", autouse=True)
 def copy_env():
-    env_file = add_absolute_test_dir_to_env()
+    env_file = modify_ports_in_test_env()
     subprocess.call(f"mv {env_file} .env", shell=True)
 
 
@@ -80,8 +72,8 @@ def docker_compose_file(pytestconfig, copy_env):
 
 
 @pytest.fixture(scope="session")
-def wsi_service(docker_ip, docker_services, docker_compose_file, fetch_test_data):
+def wsi_service(docker_ip, docker_services, docker_compose_file):
     port = docker_services.port_for("wsi_service", 8080)
     url = f"http://{docker_ip}:{port}"
-    docker_services.wait_until_responsive(timeout=30.0, pause=0.1, check=lambda: is_responsive(url))
+    docker_services.wait_until_responsive(timeout=30.0, pause=0.1, check=lambda: is_responsive(f"{url}/docs"))
     return url

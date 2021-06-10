@@ -21,17 +21,32 @@ There are several endpoints made available by this service:
     {
       "id": 0,
       "name": "Red",
-      "color_int": 16711680
+      "color": {
+        "r": 255,
+        "g": 126,
+        "b": 0,
+        "a": 0
+      }
     },
     {
       "id": 1,
       "name": "Green",
-      "color_int": 65280
+      "color": {
+        "r": 0,
+        "g": 255,
+        "b": 0,
+        "a": 0
+      }
     },
     {
       "id": 2,
       "name": "Blue",
-      "color_int": 255
+      "color": {
+        "r": 0,
+        "g": 0,
+        "b": 255,
+        "a": 0
+      }
     }
   ],
   "channel_depth": 8,
@@ -106,7 +121,6 @@ The region and the tile endpoint also offer the selection of a layer with the in
 
 Partially supported:
 
-- Leica (\*.scn)
 - Ventana (\*.bif)
 
 ### Standalone version
@@ -122,65 +136,22 @@ There is also a simple viewer, which can be used by accessing: http://localhost:
 
 ## How to run
 
-WSI Service is a python module and can be run either locally or via docker.
+WSI Service is a python module and has to be run via docker.
 
 ### Run locally
 
-Make sure [OpenSlide](https://openslide.org/download/) and [Poetry](https://python-poetry.org/) is installed. Install WSI Service by running the following lines within this folder
+Make sure [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) is installed.
 
-```
-cd wsi_service
-poetry install
-poetry shell
-```
+Set environment variables in your shell or in a `.env` file:
 
-Make sure that libpixman is on version 0.40.0 or later to prevent broken MRXS files. (such as by defining (and installing) `LD_PRELOAD=/usr/local/lib/libpixman-1.so.0.40.0` on older os versions).
-
-Start via
-
-```
-python3 -m wsi_service [OPTIONS] data_dir
-
-positional arguments:
-  data_dir             Base path to histo data
-
-optional arguments:
-  -h, --help           Show this help message and exit
-  --port PORT          Port the WSI Service listens to
-  --debug              Use the debug config
-  --load-example-data  This will download an example image into the data
-                       folder before starting the server
-  --mapper-address     Mapper-Service Address
-```
-
-Afterwards, visit http://localhost:8080
-
-Note: **This runs the Wsi-Service without isyntax-Support!**
-
-### Run with docker
-
-_TODO(pull from registry)_: Download the turnkey ready docker image
-
-```
-docker pull registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service
-```
-
-or build and run the docker images yourself from source
-
-```
-cd wsi_service
-docker-compose up
-```
-
-set options by defining environment parameters in shell or `.env`-file:
-
-```
+```bash
 WS_PORT=8080
 WS_DATA_PATH=/data
-WS_ISYNTAX_IP=isyntax_backend
 WS_ISYNTAX_PORT=5556
 WS_DEBUG=false
-WS_LOAD_EXAMPLE_DATA=false
+WS_DEFAULT_MAPPER_ADDRESS=default
+
+ISX_PHILIPS_SDK_FILENAME=philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip
 
 COMPOSE_RESTART=no
 COMPOSE_NETWORK=default
@@ -189,28 +160,92 @@ COMPOSE_NETWORK=default
 Short explanation of the parameters used:
 
 - `WS_PORT` external port of the wsi-service
-- `WS_DATA_PATH` mounted volume to the image data
-- `WS_ISYNTAX_IP` IP address or name of the iysntax backend
+- `WS_DATA_PATH` mounted volume to the image data (e.g. `/home/user/Documents/data/OpenSlide_adapted`)
 - `WS_ISYNTAX_PORT` external port of the isyntax backend
 - `WS_DEBUG` optional, use debug config and activate reload
-- `WS_LOAD_EXAMPLE_DATA` optional, download sample data (about 16GB)
+- `WS_DEFAULT_MAPPER_ADDRESS` when set to default, local mapper address is used
+- `ISX_PHILIPS_SDK_FILENAME` path to the Philips Isyntax SDK to enable support for `isyntax`-files.
 
-Afterwards, visit http://localhost:${WS_PORT}
+For `isyntax`-support register and download the SDK for free on the [Philips Pathology SDK Site](https://www.usa.philips.com/healthcare/sites/pathology/about/sdk) (Note: Make sure to download version for _Ubuntu 18.04_ and _Python 3.6.9_). 
+
+**Note: Before building the docker images make sure to locate the zip-file under the following project directory: `/wsi-service/wsi_service/loader_plugins/isyntax` and add the filename to your environment variables.**
+
+To build and run the WSI Service **with** ISyntax-support run the following command:
+
+```
+docker-compose up
+```
+
+To build the WSI Service **without** ISyntax-support run the following command:
+
+```
+docker-compose up --build wsi_service
+```
+
+Afterwards, visit http://localhost:${WS_PORT}/docs (Note: Running on port that is defined as environment variable)
+
+### Run without docker
+
+To run the WSI Service without docker make sure [OpenSlide](https://openslide.org/download/) and [Poetry](https://python-poetry.org/) is installed and environment variables are set. Then run:
+
+```
+sudo apt update && apt install python3-venv python3-pip
+cd wsi_service
+python3 -m venv .venv
+source .venv/bin/activate
+poetry install
+[docker-compose up --build isyntax-backend] # to enable isyntax support
+uvicorn --host=0.0.0.0 --port=8080 wsi_service.api:api
+```
+
+Or without virtual environment:
+
+```
+cd wsi_service
+poetry install
+poetry shell
+uvicorn --host=0.0.0.0 --port=8080 wsi_service.api:api
+```
+
+Note: Make sure that libpixman is on version 0.40.0 or later to prevent broken MRXS files. (such as by defining (and installing) `LD_PRELOAD=/usr/local/lib/libpixman-1.so.0.40.0` on older os versions).
+
+### Pull from registry
+
+Download the turnkey ready docker image
+
+```
+docker pull registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service
+```
 
 ## Development
 
+For development make sure [OpenSlide](https://openslide.org/download/) and [Poetry](https://python-poetry.org/) is installed besides Docker/Docker Compose. Then run following commands:
+
+```
+cd wsi_service
+poetry install
+poetry shell
+```
+
 ### Use debug to activate reload
 
-Service is reloaded after code changes. Activate locally with
+Service is reloaded after code changes. Activate locally by setting
 
 ```
-poetry shell
-python3 -m wsi_service --debug data_dir
+WS_DEBUG=true
 ```
-
-or using docker with by setting debug environment variable (`WS_DEBUG`).
 
 ### Run tests
+
+To run tests locally, make sure you have the latest [**testdata**](https://nextcloud.empaia.org/s/4fpdFEn69gqgrgK).
+
+After downloading the testdata, set the path of the `OpenSlide_adapted` folder as environment variable:
+
+```
+WS_DATA_PATH=/home/user/Documents/testdata/OpenSlide_adapted
+```
+
+Then run tests with
 
 ```
 poetry run pytest --pyargs wsi_service

@@ -3,3 +3,4 @@ omit =
     wsi_service/tests/*
     wsi_service/__*
     wsi_service/loader_plugins/isyntax/*
+    wsi_service/loader_plugins/deformation_plugin/deformation_plugin/tests/*

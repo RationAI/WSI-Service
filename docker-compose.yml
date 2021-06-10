@@ -1,32 +1,38 @@
 version: "3.8"
 
 services:
+  isyntax-backend:
+    build:
+      context: "./wsi_service/loader_plugins/isyntax"
+      network: ${COMPOSE_NETWORK}
+      args:
+        - ISX_PHILIPS_SDK_FILEPATH=${ISX_PHILIPS_SDK_FILEPATH}
+    restart: ${COMPOSE_RESTART}
+    environment:
+      PYTHONUNBUFFERED: 1
+      WS_ISYNTAX_PORT: ${WS_ISYNTAX_PORT}
+    tty: true
+    volumes:
+      - ./wsi_service/loader_plugins/isyntax:/root/isyntax/backend
+      - ${WS_DATA_PATH}:/data
+    command: python3 -m backend.__main__
+    ports:
+      - ${WS_ISYNTAX_PORT}:5556
+
   wsi_service:
     build:
       context: "."
       network: ${COMPOSE_NETWORK}
     restart: ${COMPOSE_RESTART}
+    environment:
+      WS_PORT: ${WS_PORT}
+      WS_DATA_PATH: ${WS_DATA_PATH}
+      WS_ISYNTAX_PORT: ${WS_ISYNTAX_PORT}
+      WS_DEBUG: ${WS_DEBUG}
+      WS_DEFAULT_MAPPER_ADDRESS: ${WS_DEFAULT_MAPPER_ADDRESS}
     tty: true
     volumes:
       - ./wsi_service/:/usr/local/lib/python3.9/site-packages/wsi_service/
       - ${WS_DATA_PATH}:/data
-    command: --port-isyntax ${WS_ISYNTAX_PORT} --debug ${WS_DEBUG} --load-example-data ${WS_LOAD_EXAMPLE_DATA}
     ports:
       - ${WS_PORT}:8080
-    depends_on:
-      - isyntax_backend
-
-  isyntax_backend:
-    build:
-      context: "./wsi_service/loader_plugins/isyntax"
-      network: ${COMPOSE_NETWORK}
-    restart: ${COMPOSE_RESTART}
-    environment:
-      - PYTHONUNBUFFERED:1
-    tty: true
-    volumes:
-      - ./wsi_service/loader_plugins/isyntax:/root/isyntax/backend
-      - ${WS_DATA_PATH}:/data
-    command: python3 -m backend.__main__ --ip ${WS_ISYNTAX_IP} --port ${WS_ISYNTAX_PORT}
-    ports:
-      - ${WS_ISYNTAX_PORT}:5556

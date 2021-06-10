@@ -1,5 +1,3 @@
-import pathlib
-
 plugin_directory = {}
 
 try:
@@ -23,7 +21,7 @@ plugin_directory[".mrxs"] = OpenSlideSlide
 plugin_directory[".svs"] = OpenSlideSlide
 plugin_directory[".ndpi"] = OpenSlideSlide
 plugin_directory[".bif"] = OpenSlideSlide
-plugin_directory[".scn"] = OpenSlideSlide
+# plugin_directory[".scn"] = OpenSlideSlide
 plugin_directory[".isyntax"] = IsyntaxSlide
 
 

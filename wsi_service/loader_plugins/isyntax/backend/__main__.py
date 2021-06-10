@@ -1,14 +1,11 @@
-import argparse
-import json
 import os
-import time
 
-import numpy
 import zmq
 from backend.isyntax_reader import IsyntaxSlide
 
 
-def server_handler(ip="127.0.0.1", port="5556"):
+def server_handler():
+    port = os.environ["WS_ISYNTAX_PORT"]
     print(f"starting isyntax backend...")
     context = zmq.Context()
     socket = context.socket(zmq.REP)
@@ -39,21 +36,20 @@ def server_handler(ip="127.0.0.1", port="5556"):
             )
             send_array_response(socket, resp, image_array, width, height)
         elif message["req"] == "get_tile":
-            resp, image_array, width, height = reader.get_tile(
-                message["level"],
-                message["tile_x"],
-                message["tile_y"],
-            )
+            resp, image_array, width, height = reader.get_tile(message["level"], message["tile_x"], message["tile_y"])
             send_array_response(socket, resp, image_array, width, height)
         elif message["req"] == "get_thumbnail":
-            resp, image_array, width, height = reader.get_thumbnail(
-                message["max_x"],
-                message["max_y"],
-            )
+            resp, image_array, width, height = reader.get_thumbnail(message["max_x"], message["max_y"])
             send_array_response(socket, resp, image_array, width, height)
         else:
             req = message["req"]
-            socket.send_json({"rep": "error", "status_code": 422, "detail": f"Invalid request ({req})"})
+            socket.send_json(
+                {
+                    "rep": "error",
+                    "status_code": 422,
+                    "detail": f"Invalid request ({req})",
+                }
+            )
 
 
 def send_array_response(socket, resp, image_array, width, height):
@@ -75,10 +71,4 @@ def send_array_response(socket, resp, image_array, width, height):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--ip", default=argparse.SUPPRESS, help="IP of (Docker) machine")
-    parser.add_argument("--port", default=argparse.SUPPRESS, help="Port of (Docker) machine")
-
-    args, leftovers = parser.parse_known_args()
-
-    server_handler(**vars(args))
+    server_handler()

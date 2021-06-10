@@ -1,8 +1,6 @@
 import math
 
-from fastapi import HTTPException
-
-from wsi_service.models.slide import Channel, Extent, Level, PixelSizeNm, SlideInfo
+from wsi_service.models.slide import Channel, Color, Extent, Level
 
 
 def calc_num_levels(dimensions):
@@ -24,7 +22,7 @@ def get_original_levels(level_count, level_dimensions, level_downsamples):
 
 def get_rgb_channel_list():
     channels = []
-    channels.append(Channel(id=0, name="Red", color_int=16711680))
-    channels.append(Channel(id=1, name="Green", color_int=65280))
-    channels.append(Channel(id=2, name="Blue", color_int=255))
+    channels.append(Channel(id=0, name="Red", color=Color(r=255, g=0, b=0, a=0)))
+    channels.append(Channel(id=1, name="Green", color=Color(r=0, g=255, b=0, a=0)))
+    channels.append(Channel(id=2, name="Blue", color=Color(r=0, g=0, b=255, a=0)))
     return channels

@@ -1,5 +1,3 @@
-import json
-import os.path as os
 import re
 import xml.etree.ElementTree as xml
 from threading import Lock
@@ -10,8 +8,8 @@ from fastapi import HTTPException
 from PIL import Image
 from skimage import transform, util
 
-from wsi_service.models.slide import Channel, Extent, Level, PixelSizeNm, SlideInfo
-from wsi_service.settings import Settings
+from wsi_service.image_utils import convert_int_to_rgba_array
+from wsi_service.models.slide import Channel, Color, Extent, PixelSizeNm, SlideInfo
 from wsi_service.slide import Slide
 from wsi_service.slide_utils import get_original_levels
 
@@ -241,7 +239,10 @@ class OmeTiffSlide(Slide):
         )
         channels = []
         for i, xmlc in enumerate(xml_channels):
-            temp_channel = Channel(id=i, name=xmlc.get("Name"), color_int=int(xmlc.get("Color")))
+            color_int = convert_int_to_rgba_array(int(xmlc.get("Color")))
+            temp_channel = Channel(
+                id=i, name=xmlc.get("Name"), color=Color(r=color_int[0], g=color_int[1], b=color_int[2], a=color_int[3])
+            )
             channels.append(temp_channel)
         return channels
 

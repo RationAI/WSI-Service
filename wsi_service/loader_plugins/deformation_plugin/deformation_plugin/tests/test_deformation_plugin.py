@@ -19,9 +19,9 @@ try:
             json={
                 "id": "4b0ec5e0ec5e5e05ae9e500857314f20",
                 "channels": [
-                    {"id": 0, "name": "Red", "color_int": 16711680},
-                    {"id": 1, "name": "Green", "color_int": 65280},
-                    {"id": 2, "name": "Blue", "color_int": 255},
+                    {"id": 0, "name": "Red", "color": {"r": 255, "g": 0, "b": 0, "a": 0}},
+                    {"id": 1, "name": "Green", "color": {"r": 0, "g": 255, "b": 0, "a": 0}},
+                    {"id": 2, "name": "Blue", "color": {"r": 0, "g": 0, "b": 255, "a": 0}},
                 ],
                 "channel_depth": 8,
                 "extent": {"x": 46000, "y": 32914, "z": 1},
@@ -92,14 +92,7 @@ try:
         c.execute("INSERT INTO sqreg VALUES(0,'_',NULL,NULL,0,0,NULL, ?)", (slideid,))
         c.execute(
             "INSERT INTO sqreg VALUES(1,'_',?,?,?,?,?, ?)",
-            (
-                deformation_ones,
-                deformation_ones,
-                n_pixels,
-                n_pixels,
-                Wdef,
-                slideid,
-            ),
+            (deformation_ones, deformation_ones, n_pixels, n_pixels, Wdef, slideid),
         )
         conn.commit()
         conn.close()
@@ -119,14 +112,7 @@ try:
         c.execute("INSERT INTO sqreg VALUES(0,'_',NULL,NULL,0,0,NULL, ?)", (slideid,))
         c.execute(
             "INSERT INTO sqreg VALUES(1,'_',?,?,?,?,?, ?)",
-            (
-                deformation_zeros,
-                deformation_zeros,
-                n_pixels,
-                n_pixels,
-                Wdef,
-                slideid,
-            ),
+            (deformation_zeros, deformation_zeros, n_pixels, n_pixels, Wdef, slideid),
         )
 
         conn.commit()
@@ -147,14 +133,7 @@ try:
         c.execute("INSERT INTO sqreg VALUES(0,'_',NULL,NULL,0,0,NULL, ?)", (slideid,))
         c.execute(
             "INSERT INTO sqreg VALUES(1,'_',?,?,?,?,?, ?)",
-            (
-                deformation_dot_zero_ones,
-                deformation_dot_zero_ones,
-                n_pixels,
-                n_pixels,
-                Wdef,
-                slideid,
-            ),
+            (deformation_dot_zero_ones, deformation_dot_zero_ones, n_pixels, n_pixels, Wdef, slideid),
         )
 
         conn.commit()
@@ -268,9 +247,7 @@ try:
 
         d = Deformation("test_data/dot_zero_ones.sqreg", wsi_service="http://testserver_registration")
 
-        for level in [
-            2,
-        ]:
+        for level in [2]:
             start_x = 3050
             start_y = 3550
             size_x = sourceSizePixel[0]

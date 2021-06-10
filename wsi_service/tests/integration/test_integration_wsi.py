@@ -7,13 +7,12 @@ from PIL import Image
 from wsi_service.models.slide import SlideInfo
 from wsi_service.settings import Settings
 from wsi_service.tests.integration.test_integration_helper import (
-    add_absolute_test_dir_to_env,
     copy_env,
     docker_compose_file,
+    modify_ports_in_test_env,
     wsi_service,
 )
 from wsi_service.tests.test_helper import (
-    fetch_test_data,
     get_image,
     get_tiff_image,
     setup_mock,
@@ -32,7 +31,7 @@ from wsi_service.tests.test_helper import (
         ("46061cfc30a65acab7a1ed644771a340", 3, 16, 3, 325, (256, 256), 11260, 22300),  # ome-tif 3x16bit
         ("56ed11a2a9e95f87a1e466cf720ceffa", 5, 8, 6, 498, (512, 512), 24960, 34560),  # ome-tif 5x8bit
         ("cdad4692405c556ca63185bee512e95e", 3, 8, 10, 232, (256, 256), 114943, 76349),  # bif
-        ("c4682788c7e85d739ce043b3f6eaff70", 3, 8, 6, 250, (256, 256), 106259, 306939),  # scn
+        # ("c4682788c7e85d739ce043b3f6eaff70", 3, 8, 6, 250, (256, 256), 106259, 306939),  # scn
         ("5c1c0cc5cd3a501480fc6a4cb04ddda8", 3, 8, 9, 250, (128, 128), 192518, 88070),  # isyntax
     ],
 )
@@ -55,10 +54,7 @@ def test_get_slide_info_valid(
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
-@pytest.mark.parametrize(
-    "image_format, image_quality",
-    [("jpeg", 90), ("png", 0), ("tiff", 100)],
-)
+@pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
 @pytest.mark.parametrize(
     "slide_id, return_value, pixel_location, testpixel_rgb, testpixel_multichannel",
     [
@@ -71,7 +67,7 @@ def test_get_slide_info_valid(
         ("56ed11a2a9e95f87a1e466cf720ceffa", 200, (0, 0), (0, 0, 0), (0, 0, 0)),
         ("56ed11a2a9e95f87a1e466cf720ceffa", 200, (10, 10), (87, 51, 23), (5654, 3341, 1542)),
         ("cdad4692405c556ca63185bee512e95e", 200, (5, 5), (241, 241, 241), (241, 241, 241)),
-        ("c4682788c7e85d739ce043b3f6eaff70", 200, (5, 5), (221, 212, 219), (221, 212, 219)),
+        # ("c4682788c7e85d739ce043b3f6eaff70", 200, (5, 5), (221, 212, 219), (221, 212, 219)),
         ("5c1c0cc5cd3a501480fc6a4cb04ddda8", 200, (5, 5), (254, 254, 254), (254, 254, 254)),
     ],
 )
@@ -112,10 +108,7 @@ def test_get_slide_thumbnail_valid(
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
-@pytest.mark.parametrize(
-    "image_format, image_quality",
-    [("jpeg", 90), ("png", 0), ("tiff", 100)],
-)
+@pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
 @pytest.mark.parametrize(
     "slide_id, has_label, pixel_location, testpixel",
     [
@@ -128,7 +121,7 @@ def test_get_slide_thumbnail_valid(
         ("46061cfc30a65acab7a1ed644771a340", False, (), ()),
         ("56ed11a2a9e95f87a1e466cf720ceffa", False, (), ()),
         ("cdad4692405c556ca63185bee512e95e", False, (), ()),
-        ("c4682788c7e85d739ce043b3f6eaff70", False, (), ()),
+        # ("c4682788c7e85d739ce043b3f6eaff70", False, (), ()),
         ("5c1c0cc5cd3a501480fc6a4cb04ddda8", True, (200, 200), (255, 255, 255)),
     ],
 )
@@ -162,10 +155,7 @@ def test_get_slide_label_valid(
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
-@pytest.mark.parametrize(
-    "image_format, image_quality",
-    [("jpeg", 90), ("png", 0), ("tiff", 100)],
-)
+@pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
 @pytest.mark.parametrize(
     "slide_id, return_value, pixel_location, testpixel",
     [
@@ -179,7 +169,7 @@ def test_get_slide_label_valid(
         ("46061cfc30a65acab7a1ed644771a340", 404, (), ()),
         ("56ed11a2a9e95f87a1e466cf720ceffa", 404, (), ()),
         ("cdad4692405c556ca63185bee512e95e", 200, (0, 0), (60, 51, 36)),
-        ("c4682788c7e85d739ce043b3f6eaff70", 200, (0, 0), (3, 3, 3)),
+        # ("c4682788c7e85d739ce043b3f6eaff70", 200, (0, 0), (3, 3, 3)),
         ("5c1c0cc5cd3a501480fc6a4cb04ddda8", 200, (0, 0), (189, 210, 203)),
     ],
 )
@@ -206,10 +196,7 @@ def test_get_slide_macro_valid(
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
-@pytest.mark.parametrize(
-    "image_format, image_quality",
-    [("jpeg", 100), ("png", 100), ("tiff", 100)],
-)
+@pytest.mark.parametrize("image_format, image_quality", [("jpeg", 100), ("png", 100), ("tiff", 100)])
 @pytest.mark.parametrize(
     "slide_id,  pixel_location, testpixel, start_x, start_y, size",
     [
@@ -218,7 +205,7 @@ def test_get_slide_macro_valid(
         ("c801ce3d1de45f2996e6a07b2d449bca", (0, 0), (220, 219, 227), 15000, 15000, 345),
         ("7304006194f8530b9e19df1310a3670f", (0, 0), (231, 182, 212), 50000, 90000, 345),
         ("cdad4692405c556ca63185bee512e95e", (0, 0), (245, 241, 242), 30000, 30000, 345),
-        ("c4682788c7e85d739ce043b3f6eaff70", (0, 0), (131, 59, 122), 50000, 55000, 345),
+        # ("c4682788c7e85d739ce043b3f6eaff70", (0, 0), (131, 59, 122), 50000, 55000, 345),
         ("5c1c0cc5cd3a501480fc6a4cb04ddda8", (0, 0), (234, 234, 247), 140000, 50000, 345),
     ],
 )
@@ -379,9 +366,11 @@ def test_get_slide_region_dedicated_channel(
 def test_get_slide_region_invalid_channel(wsi_service, slide_id, channels, expected_response, **kwargs):
     setup_mock(kwargs)
     str_channels = "&".join([f"image_channels={str(ch)}" for ch in channels])
+    print(f"{wsi_service}/v1/slides/{slide_id}/region/level/2/start/0/0/size/64/64?{str_channels}")
     response = requests.get(
         f"{wsi_service}/v1/slides/{slide_id}/region/level/2/start/0/0/size/64/64?{str_channels}", stream=True
     )
+    print(response)
     assert response.status_code == expected_response
 
 
@@ -422,7 +411,7 @@ import timeit
         ("7304006194f8530b9e19df1310a3670f", 1, 1, 9),
         ("46061cfc30a65acab7a1ed644771a340", 1, 1, 2),
         ("cdad4692405c556ca63185bee512e95e", 1, 1, 5),
-        ("c4682788c7e85d739ce043b3f6eaff70", 1, 1, 4),
+        # ("c4682788c7e85d739ce043b3f6eaff70", 1, 1, 4),
         ("5c1c0cc5cd3a501480fc6a4cb04ddda8", 1, 1, 4),
     ],
 )
@@ -439,10 +428,7 @@ def test_get_slide_tile_timing(wsi_service, slide_id, tile_x, tile_y, level, **k
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
-@pytest.mark.parametrize(
-    "image_format, image_quality",
-    [("jpeg", 90), ("png", 0), ("tiff", 100)],
-)
+@pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
 @pytest.mark.parametrize(
     "slide_id, testpixel, tile_x, tile_y, tile_size",
     [
@@ -452,7 +438,7 @@ def test_get_slide_tile_timing(wsi_service, slide_id, tile_x, tile_y, level, **k
         ("7304006194f8530b9e19df1310a3670f", (255, 255, 255), 60, 60, (256, 256)),
         ("56ed11a2a9e95f87a1e466cf720ceffa", (30, 7, 6), 21, 22, (512, 512)),
         ("cdad4692405c556ca63185bee512e95e", (238, 238, 236), 210, 210, (256, 256)),
-        ("c4682788c7e85d739ce043b3f6eaff70", (137, 75, 138), 210, 210, (256, 256)),
+        # ("c4682788c7e85d739ce043b3f6eaff70", (137, 75, 138), 210, 210, (256, 256)),
         ("5c1c0cc5cd3a501480fc6a4cb04ddda8", (26, 26, 26), 21, 22, (128, 128)),
     ],
 )

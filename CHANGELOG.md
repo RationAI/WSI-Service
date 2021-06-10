@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+- Refactored wsi-service (entrypoint, tests, color value in info, philips sdk)
+
 ## 0.2.2
 
 - Fixed deformation bug in deformation_plugin
