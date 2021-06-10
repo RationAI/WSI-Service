@@ -71,6 +71,11 @@ run_build_isyntax:
     - asprunner
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
+    ISX_PHILIPS_SDK_FILEPATH: philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip
+  before_script:
+    - cd wsi_service/loader_plugins/isyntax
+    - wget $ISX_PHILIPS_SDK_URL -O philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip
+    - cd ../../..
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"gitlab-ci-token\",\"password\":\"$CI_JOB_TOKEN\"}}}" > /kaniko/.docker/config.json
     - export BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
