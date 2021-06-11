@@ -13,7 +13,8 @@ RUN apt-get update \
 RUN curl -fsSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python3
 
 COPY isyntax_backend /root/isyntax/isyntax_backend
-COPY pyproject.toml /root/isyntax
+COPY pyproject.toml /root/isyntax/pyproject.toml
+
 WORKDIR /root/isyntax
 
 ENV PATH="${PATH}:/root/.poetry/bin"

@@ -5,19 +5,12 @@ services:
     build:
       context: "./wsi_service/loader_plugins/isyntax"
       network: ${COMPOSE_NETWORK}
-      args:
-        - ISX_PHILIPS_SDK_FILEPATH=${ISX_PHILIPS_SDK_FILEPATH}
     restart: ${COMPOSE_RESTART}
     environment:
       PYTHONUNBUFFERED: 1
       WS_ISYNTAX_PORT: 5556
-    tty: true
     volumes:
-      - ./wsi_service/loader_plugins/isyntax:/root/isyntax/backend
       - ${COMPOSE_DATA_DIR}:/data
-    command: python3 -m backend
-    ports:
-      - ${COMPOSE_ISYNTAX_PORT}:5556
 
   wsi_service:
     build:
@@ -41,9 +34,7 @@ services:
       WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS: ${WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS}
       WS_MAX_RETURNED_REGION_SIZE: ${WS_MAX_RETURNED_REGION_SIZE}
       WS_ROOT_PATH: ${WS_ROOT_PATH}
-    tty: true
     volumes:
-      - ./wsi_service/:/usr/local/lib/python3.9/site-packages/wsi_service/
       - ${COMPOSE_DATA_DIR}:/data
     ports:
       - ${COMPOSE_WS_PORT}:8080
