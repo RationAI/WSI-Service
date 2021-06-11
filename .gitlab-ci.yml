@@ -73,6 +73,7 @@ run_build_isyntax:
     - cd wsi_service/loader_plugins/isyntax
     - wget $ISX_PHILIPS_SDK_URL -O philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip
     - cd ../../..
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
     - docker pull $CI_REGISTRY_IMAGE
     - docker run -d --name=isyntax-backend $CI_REGISTRY_IMAGE
