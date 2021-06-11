@@ -147,7 +147,6 @@ Set environment variables in your shell or in a `.env` file:
 ```bash
 WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DISABLE_OPENAPI=False
-WS_PORT=8080
 WS_ISYNTAX_PORT=5556
 WS_DEBUG=False
 WS_DATA_DIR=/data
