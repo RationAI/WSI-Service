@@ -11,6 +11,8 @@ services:
       WS_ISYNTAX_PORT: 5556
     volumes:
       - ${COMPOSE_DATA_DIR}:/data
+    ports:
+      - ${COMPOSE_ISYNTAX_PORT}:5556
 
   wsi_service:
     build:

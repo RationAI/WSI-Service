@@ -48,9 +48,9 @@ def modify_ports_in_test_env():
     new_content = ""
     for line in content:
         sline = line.split("=")
-        if line.startswith("WS_PORT"):
+        if line.startswith("COMPOSE_WS_PORT"):
             line = f"{sline[0]}={port_wsi_service}\n"
-        elif line.startswith("WS_ISYNTAX_PORT"):
+        elif line.startswith("COMPOSE_ISYNTAX_PORT"):
             line = f"{sline[0]}={port_isyntax}\n"
         new_content += line
 

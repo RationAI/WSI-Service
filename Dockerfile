@@ -17,8 +17,10 @@ RUN cd pixman-0.40.0 && ./configure && make && make install
 
 RUN pip3 install poetry
 
-COPY . /wsi_service
-WORKDIR /wsi_service
+COPY wsi_service /wsi-service/wsi_service
+COPY pyproject.toml /wsi-service/pyproject.toml
+COPY poetry.lock /wsi-service/poetry.lock
+WORKDIR /wsi-service
 
 RUN poetry build
 RUN poetry export --dev --without-hashes --output requirements_dev.txt
@@ -27,9 +29,9 @@ RUN poetry export --dev --without-hashes --output requirements_dev.txt
 FROM python:3.9 AS build_1
 
 COPY --from=build_0 /openslide_deps/* /usr/lib/x86_64-linux-gnu/
-COPY --from=build_0 /wsi_service/dist/ /wsi_service/dist/
+COPY --from=build_0 /wsi-service/dist/ /wsi-service/dist/
 
-RUN pip3 install /wsi_service/dist/*.whl
+RUN pip3 install /wsi-service/dist/*.whl
 
 FROM python:3.9-slim
 
@@ -40,8 +42,8 @@ RUN pip3 install uvicorn
 COPY --from=build_0 /openslide_deps/* /usr/lib/x86_64-linux-gnu/
 COPY --from=build_1 /usr/local/lib/python3.9/site-packages/ /usr/local/lib/python3.9/site-packages/
 
-COPY --from=build_0 /wsi_service/requirements_dev.txt /usr/local/lib/python3.9/site-packages/wsi_service/requirements_dev.txt
-WORKDIR /usr/local/lib/python3.9/site-packages/wsi_service/
+COPY --from=build_0 /wsi-service/requirements_dev.txt /usr/local/lib/python3.9/site-packages/wsi-service/requirements_dev.txt
+WORKDIR /usr/local/lib/python3.9/site-packages/wsi-service/
 
 COPY --from=build_0 /usr/local/lib/libpixman-1.so.0.40.0 /usr/local/lib/libpixman-1.so.0.40.0
 ENV LD_PRELOAD=/usr/local/lib/libpixman-1.so.0.40.0
