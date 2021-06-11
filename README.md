@@ -170,12 +170,12 @@ Short explanation of the parameters used:
 - `WS_PORT` external port of the wsi-service
 - `WS_ISYNTAX_PORT` external port of the isyntax backend
 - `WS_DEBUG` optional, use debug config and activate reload
-- `WS_DATA_PATH` mounted volume to the image data (e.g. `/home/user/Documents/data/OpenSlide_adapted`)
 - `WS_MAPPER_ADDRESS` mapper-service address
 - `WS_LOCAL_MODE` when set to true, WSI Service is started in local mode
 - `WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS` set timeout for inactive histo images (default is 600 seconds)
 - `WS_MAX_RETURNED_REGION_SIZE` set maximum image region size for service (channels * width * height; default is 4 * 5000 * 5000)
 - `ISX_PHILIPS_SDK_FILENAME` path to the Philips Isyntax SDK to enable support for `isyntax`-files.
+- `COMPOSE_DATA_DIR` mounted volume to the image data (e.g. `/home/user/Documents/data/OpenSlide_adapted`)
 
 For `isyntax`-support register and download the SDK for free on the [Philips Pathology SDK Site](https://www.usa.philips.com/healthcare/sites/pathology/about/sdk) (Note: Make sure to download version for _Ubuntu 18.04_ and _Python 3.6.9_). 
 
@@ -250,7 +250,7 @@ To run tests locally, make sure you have the latest [**testdata**](https://nextc
 After downloading the testdata, set the path of the `OpenSlide_adapted` folder as environment variable:
 
 ```
-WS_DATA_PATH=/home/user/pathto/testdata/OpenSlide_adapted
+PYTEST_DATA_DIR=/home/user/pathto/testdata/OpenSlide_adapted
 ```
 
 Then run tests with

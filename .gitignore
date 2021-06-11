@@ -153,3 +153,5 @@ data
 
 # WSI Service specific
 /wsi_service/loader_plugins/isyntax/*.zip
+
+.vscode

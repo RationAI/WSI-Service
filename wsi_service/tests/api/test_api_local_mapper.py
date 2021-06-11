@@ -8,6 +8,8 @@ from wsi_service.tests.api.test_api_helpers import (
     client_no_data,
 )
 
+from .singletons import test_settings
+
 
 def test_get_cases_no_data(client_no_data):
     response = client_no_data.get("/v1/cases/")
