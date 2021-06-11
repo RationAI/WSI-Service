@@ -1,6 +1,11 @@
 import PIL
 
-from wsi_service.models.slide import Extent, Level, PixelSizeNm, SlideInfo
+from wsi_service.models.slide import (
+    SlideExtent,
+    SlideInfo,
+    SlideLevel,
+    SlidePixelSizeNm,
+)
 from wsi_service.slide import Slide
 
 
@@ -12,11 +17,11 @@ class DummySlide(Slide):
             id="id",
             channels=[],
             channel_depth=8,
-            extent=Extent(x=0, y=0, z=0),
+            extent=SlideExtent(x=0, y=0, z=0),
             num_levels=0,
-            pixel_size_nm=PixelSizeNm(x=0, y=0),
-            tile_extent=Extent(x=0, y=0, z=0),
-            levels=[Level(extent=Extent(x=0, y=0, z=0), downsample_factor=0)],
+            pixel_size_nm=SlidePixelSizeNm(x=0, y=0),
+            tile_extent=SlideExtent(x=0, y=0, z=0),
+            levels=[SlideLevel(extent=SlideExtent(x=0, y=0, z=0), downsample_factor=0)],
         )
 
     def close(self):

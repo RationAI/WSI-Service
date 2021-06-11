@@ -5,7 +5,7 @@ import tifffile
 from PIL import Image
 
 from wsi_service.models.slide import SlideInfo
-from wsi_service.settings import Settings
+from wsi_service.singletons import settings
 from wsi_service.tests.integration.test_integration_helper import (
     copy_env,
     docker_compose_file,
@@ -492,7 +492,6 @@ def test_get_slide_tile_invalid(wsi_service, slide_id, tile_x, level, expected_r
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
 @pytest.mark.parametrize("tile_size", [-1, 0, 1, 2500, 2501, 5000, 10000])
 def test_get_region_maximum_extent(wsi_service, tile_size, **kwargs):
-    wsi_settings = Settings()
     setup_mock(kwargs)
     level = 5
     start_x = 13
@@ -502,7 +501,7 @@ def test_get_region_maximum_extent(wsi_service, tile_size, **kwargs):
         f"{wsi_service}/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{tile_size}/{tile_size}",
         stream=True,
     )
-    if tile_size * tile_size > wsi_settings.max_returned_region_size:
+    if tile_size * tile_size > settings.max_returned_region_size:
         assert response.status_code == 403  # requested data too large
     elif tile_size <= 0:
         assert response.status_code == 422  # Unprocessable Entity

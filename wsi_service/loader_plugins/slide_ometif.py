@@ -9,7 +9,13 @@ from PIL import Image
 from skimage import transform, util
 
 from wsi_service.image_utils import convert_int_to_rgba_array
-from wsi_service.models.slide import Channel, Color, Extent, PixelSizeNm, SlideInfo
+from wsi_service.models.slide import (
+    SlideChannel,
+    SlideColor,
+    SlideExtent,
+    SlideInfo,
+    SlidePixelSizeNm,
+)
 from wsi_service.slide import Slide
 from wsi_service.slide_utils import get_original_levels
 
@@ -240,8 +246,10 @@ class OmeTiffSlide(Slide):
         channels = []
         for i, xmlc in enumerate(xml_channels):
             color_int = convert_int_to_rgba_array(int(xmlc.get("Color")))
-            temp_channel = Channel(
-                id=i, name=xmlc.get("Name"), color=Color(r=color_int[0], g=color_int[1], b=color_int[2], a=color_int[3])
+            temp_channel = SlideChannel(
+                id=i,
+                name=xmlc.get("Name"),
+                color=SlideColor(r=color_int[0], g=color_int[1], b=color_int[2], a=color_int[3]),
             )
             channels.append(temp_channel)
         return channels
@@ -265,15 +273,15 @@ class OmeTiffSlide(Slide):
             self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").get("PhysicalSizeY")
         )
         if pixel_unit_x == "nm":
-            return PixelSizeNm(x=float(pixel_size_x), y=float(pixel_size_y))
+            return SlidePixelSizeNm(x=float(pixel_size_x), y=float(pixel_size_y))
         elif pixel_unit_x == "µm":
             x = float(pixel_size_x) * 1000
             y = float(pixel_size_y) * 1000
-            return PixelSizeNm(x=x, y=y)
+            return SlidePixelSizeNm(x=x, y=y)
         elif pixel_unit_x == "cm":
             x = float(pixel_size_x) * 1e6
             y = float(pixel_size_y) * 1e6
-            return PixelSizeNm(x=x, y=y)
+            return SlidePixelSizeNm(x=x, y=y)
         else:
             raise HTTPException(status_code=422, detail=f"Invalid pixel size unit ({pixel_unit_x})")
 
@@ -287,9 +295,13 @@ class OmeTiffSlide(Slide):
                 id=slide_id,
                 channels=channels,
                 channel_depth=serie.keyframe.bitspersample,
-                extent=Extent(x=serie.keyframe.imagewidth, y=serie.keyframe.imagelength, z=serie.keyframe.imagedepth),
+                extent=SlideExtent(
+                    x=serie.keyframe.imagewidth, y=serie.keyframe.imagelength, z=serie.keyframe.imagedepth
+                ),
                 pixel_size_nm=pixel_size,
-                tile_extent=Extent(x=serie.keyframe.tilewidth, y=serie.keyframe.tilelength, z=serie.keyframe.tiledepth),
+                tile_extent=SlideExtent(
+                    x=serie.keyframe.tilewidth, y=serie.keyframe.tilelength, z=serie.keyframe.tiledepth
+                ),
                 num_levels=len(levels),
                 levels=levels,
             )

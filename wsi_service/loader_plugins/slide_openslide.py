@@ -2,8 +2,8 @@ import openslide
 from fastapi import HTTPException
 
 from wsi_service.image_utils import rgba_to_rgb_with_background_color
-from wsi_service.models.slide import Extent, PixelSizeNm, SlideInfo
-from wsi_service.settings import Settings
+from wsi_service.models.slide import SlideExtent, SlideInfo, SlidePixelSizeNm
+from wsi_service.singletons import settings
 from wsi_service.slide import Slide
 from wsi_service.slide_utils import get_original_levels, get_rgb_channel_list
 
@@ -26,7 +26,6 @@ class OpenSlideSlide(Slide):
         return self.slide_info
 
     def get_region(self, level, start_x, start_y, size_x, size_y):
-        settings = Settings()
         try:
             downsample_factor = int(self.slide_info.levels[level].downsample_factor)
         except IndexError:
@@ -104,7 +103,7 @@ class OpenSlideSlide(Slide):
             pixel_size_nm_y = 1000.0 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_Y])
         else:
             raise ("Unable to extract pixel size from metadata.")
-        return PixelSizeNm(x=pixel_size_nm_x, y=pixel_size_nm_y)
+        return SlidePixelSizeNm(x=pixel_size_nm_x, y=pixel_size_nm_y)
 
     def __get_tile_extent(self):
         tile_height = 256
@@ -121,7 +120,7 @@ class OpenSlideSlide(Slide):
                 tile_height = temp_height
                 tile_width = temp_width
 
-        return Extent(x=tile_width, y=tile_height, z=1)
+        return SlideExtent(x=tile_width, y=tile_height, z=1)
 
     def __get_slide_info_openslide(self, slide_id):
         try:
@@ -133,7 +132,7 @@ class OpenSlideSlide(Slide):
                 id=slide_id,
                 channels=get_rgb_channel_list(),  # rgb channels
                 channel_depth=8,  # 8bit each channel
-                extent=Extent(x=self.openslide_slide.dimensions[0], y=self.openslide_slide.dimensions[1], z=1),
+                extent=SlideExtent(x=self.openslide_slide.dimensions[0], y=self.openslide_slide.dimensions[1], z=1),
                 pixel_size_nm=self.__get_pixel_size(),
                 tile_extent=self.__get_tile_extent(),
                 num_levels=len(levels),
