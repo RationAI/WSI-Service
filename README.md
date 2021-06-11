@@ -145,13 +145,19 @@ Make sure [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](htt
 Set environment variables in your shell or in a `.env` file:
 
 ```bash
+WS_CORS_ALLOW_ORIGINS=["*"]
+WS_DISABLE_OPENAPI=False
 WS_PORT=8080
-WS_DATA_PATH=/data
 WS_ISYNTAX_PORT=5556
-WS_DEBUG=false
-WS_DEFAULT_MAPPER_ADDRESS=default
+WS_DEBUG=False
+WS_DATA_DIR=/data
+WS_MAPPER_ADDRESS=http://localhost:8080/v1/slides/{slide_id}/storage
+WS_LOCAL_MODE=True
+WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600
+WS_MAX_RETURNED_REGION_SIZE=25000000
+WS_ROOT_PATH=
 
-ISX_PHILIPS_SDK_FILENAME=philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip
+ISX_PHILIPS_SDK_FILEPATH=philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip
 
 COMPOSE_RESTART=no
 COMPOSE_NETWORK=default
@@ -160,10 +166,13 @@ COMPOSE_NETWORK=default
 Short explanation of the parameters used:
 
 - `WS_PORT` external port of the wsi-service
-- `WS_DATA_PATH` mounted volume to the image data (e.g. `/home/user/Documents/data/OpenSlide_adapted`)
 - `WS_ISYNTAX_PORT` external port of the isyntax backend
 - `WS_DEBUG` optional, use debug config and activate reload
-- `WS_DEFAULT_MAPPER_ADDRESS` when set to default, local mapper address is used
+- `WS_DATA_PATH` mounted volume to the image data (e.g. `/home/user/Documents/data/OpenSlide_adapted`)
+- `WS_MAPPER_ADDRESS` mapper-service address
+- `WS_LOCAL_MODE` when set to true, WSI Service is started in local mode
+- `WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS` set timeout for inactive histo images (default is 600 seconds)
+- `WS_MAX_RETURNED_REGION_SIZE` set maximum image region size for service (channels * width * height; default is 4 * 5000 * 5000)
 - `ISX_PHILIPS_SDK_FILENAME` path to the Philips Isyntax SDK to enable support for `isyntax`-files.
 
 For `isyntax`-support register and download the SDK for free on the [Philips Pathology SDK Site](https://www.usa.philips.com/healthcare/sites/pathology/about/sdk) (Note: Make sure to download version for _Ubuntu 18.04_ and _Python 3.6.9_). 
@@ -214,22 +223,19 @@ Note: Make sure that libpixman is on version 0.40.0 or later to prevent broken M
 Download the turnkey ready docker image
 
 ```
+docker pull registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service/isyntax
 docker pull registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service
 ```
 
 ## Development
 
-For development make sure [OpenSlide](https://openslide.org/download/) and [Poetry](https://python-poetry.org/) is installed besides Docker/Docker Compose. Then run following commands:
+See section `Run without docker`. To enable reload after code changes, start uvicorn with -reload`-flag:
 
 ```
-cd wsi_service
-poetry install
-poetry shell
+uvicorn --host=0.0.0.0 --port=8080 wsi_service.api:api --reload
 ```
 
-### Use debug to activate reload
-
-Service is reloaded after code changes. Activate locally by setting
+Or when developing with docker container set env variable `WS_DEBUG`:
 
 ```
 WS_DEBUG=true
@@ -242,13 +248,13 @@ To run tests locally, make sure you have the latest [**testdata**](https://nextc
 After downloading the testdata, set the path of the `OpenSlide_adapted` folder as environment variable:
 
 ```
-WS_DATA_PATH=/home/user/Documents/testdata/OpenSlide_adapted
+WS_DATA_PATH=/home/user/pathto/testdata/OpenSlide_adapted
 ```
 
 Then run tests with
 
 ```
-poetry run pytest --pyargs wsi_service
+poetry run pytest --pyargs wsi_service # --maxfail=1
 ```
 
 ### Run static code analysis and fix issues

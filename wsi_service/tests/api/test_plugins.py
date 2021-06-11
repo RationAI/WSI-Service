@@ -9,7 +9,8 @@ from wsi_service.loader_plugins.slide_isyntax import IsyntaxSlide
 from wsi_service.loader_plugins.slide_ometif import OmeTiffSlide
 from wsi_service.loader_plugins.slide_openslide import OpenSlideSlide
 from wsi_service.plugin_loader import load_slide, plugin_directory
-from wsi_service.tests.api.test_api_helpers import setup_environment_variables
+from wsi_service.singletons import settings
+from wsi_service.tests.api.test_api_helpers import initialize_settings
 
 plugin_directory = {
     ".ome.tif": OmeTiffSlide,
@@ -30,8 +31,8 @@ plugin_directory = {
     ],
 )
 def test_check_plugins_loaded_dummy(filepath, slide_id):
-    setup_environment_variables()
-    filepath = os.path.join(os.environ["data_dir"], filepath)
+    initialize_settings()
+    filepath = os.path.join(settings.data_dir, filepath)
     slide = load_slide(filepath, slide_id, plugin_directory=plugin_directory)
     assert slide.loader_name == "DummySlide"
 
@@ -44,7 +45,7 @@ def test_check_plugins_loaded_dummy(filepath, slide_id):
     ],
 )
 def test_check_plugins_loaded_openslide(filepath, slide_id):
-    filepath = os.path.join(os.environ["WS_DATA_PATH"], filepath)
+    filepath = os.path.join(settings.data_dir, filepath)
     slide = load_slide(filepath, slide_id, plugin_directory=plugin_directory)
     assert slide.loader_name == "OpenSlide"
 
@@ -57,6 +58,6 @@ def test_check_plugins_loaded_openslide(filepath, slide_id):
     ],
 )
 def test_check_plugins_loaded_ometiff(filepath, slide_id):
-    filepath = os.path.join(os.environ["WS_DATA_PATH"], filepath)
+    filepath = os.path.join(settings.data_dir, filepath)
     slide = load_slide(filepath, slide_id, plugin_directory=plugin_directory)
     assert slide.loader_name == "OmeTiffSlide"

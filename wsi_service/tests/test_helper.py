@@ -4,12 +4,7 @@ import os
 import PIL.Image as Image
 import tifffile
 
-
-def setup_environment_variables():
-    path = os.path.dirname(os.path.realpath(__file__))
-    os.environ["data_dir"] = path
-    os.environ["local_mode"] = str(True)
-    os.environ["mapper_address"] = "http://testserver/slides/{slide_id}"
+from wsi_service.singletons import settings
 
 
 def make_dir_if_not_exists(dir):

@@ -25,15 +25,14 @@ from wsi_service.queries import (
     ZStackQuery,
 )
 from wsi_service.responses import ImageRegionResponse, ImageResponses
-from wsi_service.settings import Settings
+from wsi_service.singletons import settings
 from wsi_service.slide_source import SlideSource
-
-settings = Settings()
 
 api = FastAPI(
     title=settings.title,
     description=settings.description,
     version=settings.version,
+    debug=settings.debug,
     docs_url="/docs",
     redoc_url=None,
     openapi_url="/openapi.json" if not settings.disable_openapi else "",

@@ -35,6 +35,8 @@ FROM python:3.9-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
+RUN pip3 install uvicorn
+
 COPY --from=build_0 /openslide_deps/* /usr/lib/x86_64-linux-gnu/
 COPY --from=build_1 /usr/local/lib/python3.9/site-packages/ /usr/local/lib/python3.9/site-packages/
 
@@ -49,4 +51,3 @@ ENV WEB_CONCURRENCY=8
 RUN mkdir /data
 
 EXPOSE 8080/tcp
-ENTRYPOINT ["python", "-m", "wsi_service"]

@@ -10,7 +10,7 @@ from wsi_service.image_utils import (
     get_requested_channels_as_rgb_array,
     get_single_channel,
 )
-from wsi_service.models.slide import Color
+from wsi_service.models.slide import SlideColor
 
 ndarray = np.array(
     [
@@ -64,7 +64,7 @@ def test_get_multi_channel_as_rgb():
 
 
 def test_get_single_channel():
-    single_channel = get_single_channel(ndarray, 0, Color(r=255, g=0, b=0, a=0))
+    single_channel = get_single_channel(ndarray, 0, SlideColor(r=255, g=0, b=0, a=0))
     assert len(single_channel) == 3
     red_channel = single_channel[0] == ndarray[0]
     assert red_channel.all()

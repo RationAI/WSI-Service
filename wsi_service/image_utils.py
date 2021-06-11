@@ -3,7 +3,7 @@ from io import BytesIO
 import numpy as np
 from PIL import Image
 
-from wsi_service.models.slide import Color
+from wsi_service.models.slide import SlideColor
 
 
 def rgba_to_rgb_with_background_color(image_rgba, background_color=(255, 255, 255)):
@@ -98,7 +98,7 @@ def get_requested_channels_as_rgb_array(narray, image_channels, slide):
             color = slide.slide_info.channels[image_channels[0]].color
         except IndexError:
             # if there is no color defined we set channel to red by default
-            color = Color(r=255, g=0, b=0, a=0)
+            color = SlideColor(r=255, g=0, b=0, a=0)
         temp_array = get_single_channel(separate_channels, image_channels[0], color)
     elif len(image_channels) == 2:
         temp_array = []

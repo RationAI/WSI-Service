@@ -1,12 +1,17 @@
 import importlib
-import os
 from io import BytesIO
 
 import zmq
 from fastapi import HTTPException
 from PIL import Image
 
-from wsi_service.models.slide import Extent, Level, PixelSizeNm, SlideInfo
+from wsi_service.models.slide import (
+    SlideExtent,
+    SlideInfo,
+    SlideLevel,
+    SlidePixelSizeNm,
+)
+from wsi_service.singletons import settings
 from wsi_service.slide import Slide
 from wsi_service.slide_utils import get_rgb_channel_list
 
@@ -18,7 +23,7 @@ class IsyntaxSlide(Slide):
     def __init__(self, filepath, slide_id):
         self.filepath = filepath
         self.slide_id = slide_id
-        self.port = os.environ["WS_ISYNTAX_PORT"]
+        self.port = settings.isyntax_port
 
         # we need to remove the local data dir from our filename because the local
         # dir is mapped to /data in isyntax-backend container
@@ -139,8 +144,8 @@ class IsyntaxSlide(Slide):
         levels = []
         for level in info["levels"]:
             levels.append(
-                Level(
-                    extent=Extent(x=level["extent"]["x"], y=level["extent"]["y"], z=level["extent"]["z"]),
+                SlideLevel(
+                    extent=SlideExtent(x=level["extent"]["x"], y=level["extent"]["y"], z=level["extent"]["z"]),
                     downsample_factor=level["downsample_factor"],
                 )
             )
@@ -152,9 +157,9 @@ class IsyntaxSlide(Slide):
             id=info["id"],
             channels=get_rgb_channel_list(),  # rgb channels
             channel_depth=8,  # 8bit each channel
-            extent=Extent(x=info["extent"]["x"], y=info["extent"]["y"], z=info["extent"]["z"]),
-            pixel_size_nm=PixelSizeNm(x=info["pixel_size_nm"][0], y=info["pixel_size_nm"][1], z=0),
-            tile_extent=Extent(x=info["tile_extent"]["x"], y=info["tile_extent"]["y"], z=info["tile_extent"]["z"]),
+            extent=SlideExtent(x=info["extent"]["x"], y=info["extent"]["y"], z=info["extent"]["z"]),
+            pixel_size_nm=SlidePixelSizeNm(x=info["pixel_size_nm"][0], y=info["pixel_size_nm"][1], z=0),
+            tile_extent=SlideExtent(x=info["tile_extent"]["x"], y=info["tile_extent"]["y"], z=info["tile_extent"]["z"]),
             num_levels=len(levels),
             levels=levels,
         )

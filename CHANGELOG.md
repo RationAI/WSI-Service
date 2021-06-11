@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.4
+
+- Populate settings from environment
+
 ## 0.2.3
 
 - Refactored wsi-service (entrypoint, tests, color value in info, philips sdk)

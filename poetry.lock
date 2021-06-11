@@ -276,7 +276,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
 name = "imagecodecs"
-version = "2021.5.20"
+version = "2021.6.8"
 description = "Image transformation, compression, and decompression codecs"
 category = "main"
 optional = false
@@ -518,6 +518,7 @@ optional = false
 python-versions = ">=3.6.1"
 
 [package.dependencies]
+python-dotenv = {version = ">=0.10.4", optional = true, markers = "extra == \"dotenv\""}
 typing-extensions = ">=3.7.4.3"
 
 [package.extras]
@@ -639,7 +640,7 @@ six = ">=1.5"
 name = "python-dotenv"
 version = "0.17.1"
 description = "Read key-value pairs from a .env file and set them as environment variables"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -791,7 +792,7 @@ python-versions = "*"
 
 [[package]]
 name = "tifffile"
-version = "2021.4.8"
+version = "2021.6.6"
 description = "Read and write TIFF files"
 category = "main"
 optional = false
@@ -801,7 +802,7 @@ python-versions = ">=3.7"
 numpy = ">=1.15.1"
 
 [package.extras]
-all = ["imagecodecs (>=2021.3.31)", "matplotlib (>=3.2)", "lxml"]
+all = ["imagecodecs (>=2021.4.28)", "matplotlib (>=3.2)", "lxml"]
 
 [[package]]
 name = "toml"
@@ -885,7 +886,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "ff1b118b6d20fc1f1abc2c6c14eeb9b828bbd69c83c5be9899c9526661371b40"
+content-hash = "4825c2639cd85fdc1545f90c192948c119db10770b79cb4f9b972c7a8a363ca9"
 
 [metadata.files]
 appdirs = [
@@ -1078,24 +1079,24 @@ idna = [
     {file = "idna-2.10.tar.gz", hash = "sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6"},
 ]
 imagecodecs = [
-    {file = "imagecodecs-2021.5.20-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:75cbb7fe07041752bf246e4b2fb7937738a448aa7cc8c4b11b5ff9fcf2e060d9"},
-    {file = "imagecodecs-2021.5.20-cp37-cp37m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ea7d3a8737c94a8706a669768f73f1a80c9e2f89646de22b6a8ec53584d8fc2d"},
-    {file = "imagecodecs-2021.5.20-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a0c0bda30e2931eb2afd8a6fef237d30ea3f6a93b04e13c3a3f9d361b35d7db2"},
-    {file = "imagecodecs-2021.5.20-cp37-cp37m-win32.whl", hash = "sha256:ac876376dd6da54078c734f80ef5c7089850ee971b66ce4b14a76500abfd9097"},
-    {file = "imagecodecs-2021.5.20-cp37-cp37m-win_amd64.whl", hash = "sha256:a95913f106f5babb44d15c21e459403e262f88c49bd45891b81cc5739ec6287f"},
-    {file = "imagecodecs-2021.5.20-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:221a3a11d6eaf4623e2666b79f4fc9140c69699dbe5c7c424fb3895f89857a94"},
-    {file = "imagecodecs-2021.5.20-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:587d8705e7e5357d2484e7fe82a66915f28628e61cdc3aae4813a6a682ddc1c3"},
-    {file = "imagecodecs-2021.5.20-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2617106ccea13ec52bcdb1b484fc9d83dc07dcb6bb448173bde8a517f1971b03"},
-    {file = "imagecodecs-2021.5.20-cp38-cp38-win32.whl", hash = "sha256:c21996b47921af2485c20bd29be75bea5b9cea7ac240334e8be2cdb68c05a2b9"},
-    {file = "imagecodecs-2021.5.20-cp38-cp38-win_amd64.whl", hash = "sha256:dd4dd3f7d9d9897421668e68d2f47d20a6880400dc1c9e3ebf1889c1b6920572"},
-    {file = "imagecodecs-2021.5.20-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:9dc3e8e10cb40e1d0029ca13016b83dc3a028f1c630b9ae94feec5229e66f748"},
-    {file = "imagecodecs-2021.5.20-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:bae81a4ff9b93401dcbaa555ef7ed0d2575d4bd042e950baf9f9d04e80c7fa7f"},
-    {file = "imagecodecs-2021.5.20-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9a45eeaf6af47f9b475c07fdb8bf66b1ae1544ef87ea94907ccc207e101326b7"},
-    {file = "imagecodecs-2021.5.20-cp39-cp39-win32.whl", hash = "sha256:5aa0f9f8c1c8ba273d22a80b17146a8d31c520c4a6b7b6f83a3192dd2ad9d328"},
-    {file = "imagecodecs-2021.5.20-cp39-cp39-win_amd64.whl", hash = "sha256:a309c2c46e2ff869cb14f122aa5f2707fec5097f5bd0226e02221065976da83e"},
-    {file = "imagecodecs-2021.5.20-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:030a1719911851e35490239bbec48cff65c313055b8e0fff1be555bb9c87a3ad"},
-    {file = "imagecodecs-2021.5.20-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:cbabf6b2f3eb0d36fda2c17436713297ff600843f3a845927f3cb4914c5d0749"},
-    {file = "imagecodecs-2021.5.20.tar.gz", hash = "sha256:4d7073bece0fa1c9c4422777f32e55b2a79c3ca8246261832337197a9e5ae935"},
+    {file = "imagecodecs-2021.6.8-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:3ef42a0709d5f08ea7195efc73093b2d88c97ba366c98830ad104ad1662679c1"},
+    {file = "imagecodecs-2021.6.8-cp37-cp37m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:29ab42b9a6b4cd0a9ae1781471da534139862c0d9761f49b2a5cad8ee7df0688"},
+    {file = "imagecodecs-2021.6.8-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7b59a1b5d5d3d57a6de694bcccb2c9e81800ebc6ac2b7e75142bdc3162c47751"},
+    {file = "imagecodecs-2021.6.8-cp37-cp37m-win32.whl", hash = "sha256:5679f7160fc5abe819c6a667e8c28e3938311e64dc578d6d743dbb4ac2c79d2d"},
+    {file = "imagecodecs-2021.6.8-cp37-cp37m-win_amd64.whl", hash = "sha256:4d31baaddf396b71848b6ba8ecaa83c80b4487becdb2ae20aa763ca305773b04"},
+    {file = "imagecodecs-2021.6.8-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:d43a58f68590e12d52fce23e65c1c87661148880b9135a5b4cf05fdb27afe4bf"},
+    {file = "imagecodecs-2021.6.8-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:d49f48c04990a0035b62d546db8a3c880c0835cca190bd492bca7b2ed3758931"},
+    {file = "imagecodecs-2021.6.8-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d4b24ebb3c31091eadca58589434ba3e2d33a3c3a12c701fa3a4b258ad97eafe"},
+    {file = "imagecodecs-2021.6.8-cp38-cp38-win32.whl", hash = "sha256:d90318d636d45ce661fb4f80ad3f3b2af9a2e3610c08cbab605573690b1a7647"},
+    {file = "imagecodecs-2021.6.8-cp38-cp38-win_amd64.whl", hash = "sha256:d28c9e986593736ebbf9cfd2d8a783cfa33f012fabc929a24da3e9c102f33a28"},
+    {file = "imagecodecs-2021.6.8-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:2347e733f7b6178722c66de100497ced23c5943f18933807f1c42da89f031782"},
+    {file = "imagecodecs-2021.6.8-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c5f91fdbc88655845e5030f7275e9989d6ee195c1688d42f1d893aa19c0fc72c"},
+    {file = "imagecodecs-2021.6.8-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1cdf234c9135425a6b7c79838ee2dc61b909478b0fa29102b3471113ba467f86"},
+    {file = "imagecodecs-2021.6.8-cp39-cp39-win32.whl", hash = "sha256:5e1dede7fa4036741f336f893c0e19cc74ea2bbd163d3211223d474032e6ec92"},
+    {file = "imagecodecs-2021.6.8-cp39-cp39-win_amd64.whl", hash = "sha256:37cd5e57126607e2bd72cf1da46157a1a7721db6ba547952ee6070fd89c011cf"},
+    {file = "imagecodecs-2021.6.8-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:fcb394eebaf4deb3e698024221f0afab17b9442eac8f1e9be479be2a66c42f16"},
+    {file = "imagecodecs-2021.6.8-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:31bad1159c31587e7549561f580aa974a35408bf23ab965bcb503e7f11b476b1"},
+    {file = "imagecodecs-2021.6.8.tar.gz", hash = "sha256:4b2799ee39a3bc465d2068b70dc6eb643aa4817435d3ef38cc087f5e863dc9da"},
 ]
 imageio = [
     {file = "imageio-2.9.0-py3-none-any.whl", hash = "sha256:3604d751f03002e8e0e7650aa71d8d9148144a87daf17cb1f3228e80747f2e6b"},
@@ -1582,8 +1583,8 @@ texttable = [
     {file = "texttable-1.6.3.tar.gz", hash = "sha256:ce0faf21aa77d806bbff22b107cc22cce68dc9438f97a2df32c93e9afa4ce436"},
 ]
 tifffile = [
-    {file = "tifffile-2021.4.8-py3-none-any.whl", hash = "sha256:1cfc55f5b728e200142580a7bf108b72775c4097d007b4111876559fa1fb7432"},
-    {file = "tifffile-2021.4.8.tar.gz", hash = "sha256:55aa8baad38e1567c9fe450fff52160e4a21294a612f241c5e414da80f87209b"},
+    {file = "tifffile-2021.6.6-py3-none-any.whl", hash = "sha256:73a750277e89f1d9cb88bba03e2e31aeda1aa714d91a20c477abf3cb85fa112f"},
+    {file = "tifffile-2021.6.6.tar.gz", hash = "sha256:aa6c2afb75378432856e2ecfba8cba347b6615b541bb71f1f83a9860ebe8fa70"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
