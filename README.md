@@ -140,6 +140,8 @@ WSI Service is a python module and has to be run via docker.
 
 ### Run locally
 
+Download `philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip` to `wsi_service/loader_plugins/isyntax/philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip`.
+
 Make sure [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) is installed.
 
 Set environment variables in your shell or in a `.env` file:
@@ -155,8 +157,6 @@ WS_LOCAL_MODE=True
 WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600
 WS_MAX_RETURNED_REGION_SIZE=25000000
 WS_ROOT_PATH=
-
-ISX_PHILIPS_SDK_FILEPATH=philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip
 
 COMPOSE_RESTART=no
 COMPOSE_NETWORK=default
@@ -174,7 +174,6 @@ Short explanation of the parameters used:
 - `WS_LOCAL_MODE` when set to true, WSI Service is started in local mode
 - `WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS` set timeout for inactive histo images (default is 600 seconds)
 - `WS_MAX_RETURNED_REGION_SIZE` set maximum image region size for service (channels * width * height; default is 4 * 5000 * 5000)
-- `ISX_PHILIPS_SDK_FILENAME` path to the Philips Isyntax SDK to enable support for `isyntax`-files.
 - `COMPOSE_DATA_DIR` mounted volume to the image data (e.g. `/home/user/Documents/data/OpenSlide_adapted`)
 
 For `isyntax`-support register and download the SDK for free on the [Philips Pathology SDK Site](https://www.usa.philips.com/healthcare/sites/pathology/about/sdk) (Note: Make sure to download version for _Ubuntu 18.04_ and _Python 3.6.9_). 

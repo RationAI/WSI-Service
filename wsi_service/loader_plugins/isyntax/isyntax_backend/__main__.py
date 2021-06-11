@@ -1,7 +1,7 @@
 import os
 
 import zmq
-from backend.isyntax_reader import IsyntaxSlide
+from isyntax_backend.isyntax_reader import IsyntaxSlide
 
 
 def server_handler():

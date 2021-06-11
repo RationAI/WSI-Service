@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "backend"
-version = "0.1.0"
+name = "isyntax-backend"
+version = "0.2.4"
 description = "Backend for reading isyntax through Philips Pathology SDK."
 authors = ["Henning Höfener", "Johannes Lotz", "Nick Weiss", "Michael Franz"]
 
