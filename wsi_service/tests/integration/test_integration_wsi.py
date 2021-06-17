@@ -12,12 +12,7 @@ from wsi_service.tests.integration.test_integration_helper import (
     modify_ports_in_test_env,
     wsi_service,
 )
-from wsi_service.tests.test_helper import (
-    get_image,
-    get_tiff_image,
-    setup_mock,
-    tiff_pixels_equal,
-)
+from wsi_service.tests.test_helper import get_image, get_tiff_image, setup_mock, tiff_pixels_equal
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")
@@ -114,23 +109,24 @@ def test_get_slide_thumbnail_valid(
     [
         ("4b0ec5e0ec5e5e05ae9e500857314f20", False, (), ()),
         ("f863c2ef155654b1af0387acc7ebdb60", True, (0, 0), (0, 0, 0)),
-        ("f863c2ef155654b1af0387acc7ebdb60", True, (104, 233), (216, 142, 66)),
+        ("f863c2ef155654b1af0387acc7ebdb60", True, (50, 50), (202, 131, 50)),
         ("c801ce3d1de45f2996e6a07b2d449bca", False, (), ()),
         ("7304006194f8530b9e19df1310a3670f", True, (0, 0), (19, 19, 19)),
-        ("7304006194f8530b9e19df1310a3670f", True, (200, 221), (222, 222, 222)),
+        ("7304006194f8530b9e19df1310a3670f", True, (50, 50), (23, 23, 23)),
         ("46061cfc30a65acab7a1ed644771a340", False, (), ()),
         ("56ed11a2a9e95f87a1e466cf720ceffa", False, (), ()),
         ("cdad4692405c556ca63185bee512e95e", False, (), ()),
         # ("c4682788c7e85d739ce043b3f6eaff70", False, (), ()),
-        ("5c1c0cc5cd3a501480fc6a4cb04ddda8", True, (200, 200), (255, 255, 255)),
+        ("5c1c0cc5cd3a501480fc6a4cb04ddda8", True, (50, 50), (255, 255, 255)),
     ],
 )
 def test_get_slide_label_valid(
     wsi_service, image_format, image_quality, slide_id, has_label, pixel_location, testpixel, **kwargs
 ):
     setup_mock(kwargs)
+    max_x, max_y = 200, 200
     response = requests.get(
-        f"{wsi_service}/v1/slides/{slide_id}/label?image_format={image_format}&image_quality={image_quality}",
+        f"{wsi_service}/v1/slides/{slide_id}/label/max_size/{max_x}/{max_y}?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
     if has_label:
@@ -161,24 +157,25 @@ def test_get_slide_label_valid(
     [
         ("4b0ec5e0ec5e5e05ae9e500857314f20", 404, (), ()),
         ("f863c2ef155654b1af0387acc7ebdb60", 200, (0, 0), (0, 0, 0)),
-        ("f863c2ef155654b1af0387acc7ebdb60", 200, (457, 223), (179, 149, 174)),
-        ("c801ce3d1de45f2996e6a07b2d449bca", 200, (0, 0), (67, 67, 67)),
-        ("c801ce3d1de45f2996e6a07b2d449bca", 200, (800, 65), (182, 155, 172)),
-        ("7304006194f8530b9e19df1310a3670f", 200, (0, 0), (219, 219, 219)),
-        ("7304006194f8530b9e19df1310a3670f", 200, (213, 438), (129, 129, 129)),
+        ("f863c2ef155654b1af0387acc7ebdb60", 200, (50, 50), (238, 240, 240)),
+        ("c801ce3d1de45f2996e6a07b2d449bca", 200, (0, 0), (117, 117, 117)),
+        ("c801ce3d1de45f2996e6a07b2d449bca", 200, (50, 50), (12, 12, 12)),
+        ("7304006194f8530b9e19df1310a3670f", 200, (0, 0), (221, 221, 221)),
+        ("7304006194f8530b9e19df1310a3670f", 200, (50, 50), (157, 157, 157)),
         ("46061cfc30a65acab7a1ed644771a340", 404, (), ()),
         ("56ed11a2a9e95f87a1e466cf720ceffa", 404, (), ()),
-        ("cdad4692405c556ca63185bee512e95e", 200, (0, 0), (60, 51, 36)),
+        ("cdad4692405c556ca63185bee512e95e", 200, (0, 0), (95, 76, 51)),
         # ("c4682788c7e85d739ce043b3f6eaff70", 200, (0, 0), (3, 3, 3)),
-        ("5c1c0cc5cd3a501480fc6a4cb04ddda8", 200, (0, 0), (189, 210, 203)),
+        ("5c1c0cc5cd3a501480fc6a4cb04ddda8", 200, (0, 0), (183, 180, 181)),
     ],
 )
 def test_get_slide_macro_valid(
     wsi_service, image_format, image_quality, slide_id, return_value, pixel_location, testpixel, **kwargs
 ):
     setup_mock(kwargs)
+    max_x, max_y = 200, 200
     response = requests.get(
-        f"{wsi_service}/v1/slides/{slide_id}/macro?image_format={image_format}&image_quality={image_quality}",
+        f"{wsi_service}/v1/slides/{slide_id}/macro/max_size/{max_x}/{max_y}?image_format={image_format}&image_quality={image_quality}",
         stream=True,
     )
     assert response.status_code == return_value
@@ -467,6 +464,28 @@ def test_get_slide_tile_valid(
         assert (x == tile_size[0]) or (y == tile_size[1])
         if image_format in ["png", "bmp"]:
             assert image.getpixel((0, 0)) == testpixel
+
+
+@requests_mock.Mocker(real_http=True, kw="requests_mock")
+@pytest.mark.parametrize("slide_id", ["4b0ec5e0ec5e5e05ae9e500857314f20"])
+@pytest.mark.parametrize(
+    "tile_x, tile_y, level, expected_response, size",
+    [
+        (0, 0, 9, 200, (128, 128)),  # ok
+    ],
+)
+def test_get_slide_tile_padding_color(wsi_service, slide_id, tile_x, tile_y, level, expected_response, size, **kwargs):
+    setup_mock(kwargs)
+    response = requests.get(
+        f"{wsi_service}/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}?image_format=png&padding_color=%23AABBCC",
+        stream=True,
+    )
+    assert response.status_code == expected_response
+    assert response.headers["content-type"] == f"image/png"
+    image = get_image(response)
+    x, y = image.size
+    assert (x == size[0]) and (y == size[1])
+    assert image.getpixel((size[0] - 1, size[1] - 1)) == (170, 187, 204)
 
 
 @requests_mock.Mocker(real_http=True, kw="requests_mock")

@@ -9,13 +9,8 @@ from PIL import Image
 from skimage import transform, util
 
 from wsi_service.image_utils import convert_int_to_rgba_array
-from wsi_service.models.slide import (
-    SlideChannel,
-    SlideColor,
-    SlideExtent,
-    SlideInfo,
-    SlidePixelSizeNm,
-)
+from wsi_service.models.slide import SlideChannel, SlideColor, SlideExtent, SlideInfo, SlidePixelSizeNm
+from wsi_service.singletons import settings
 from wsi_service.slide import Slide
 from wsi_service.slide_utils import get_original_levels
 
@@ -25,9 +20,10 @@ class OmeTiffSlide(Slide):
     format_kinds = ["OME"]  # what else is supported?
     loader_name = "OmeTiffSlide"
 
-    background_value = 0  # blackground is set to black
+    background_value = (255, 255, 255)
 
     def __init__(self, filepath, slide_id):
+        self.background_value = settings.padding_color
         self.locker = Lock()
         try:
             self.tif_slide = tifffile.TiffFile(filepath)
@@ -67,8 +63,8 @@ class OmeTiffSlide(Slide):
 
         result_array = []
         tif_level = self.__get_tif_level_for_slide_level(level_slide)
-        for page in tif_level.pages:
-            temp_channel = self.__read_region_of_page(page, start_y, start_x, size_y, size_x)
+        for i, page in enumerate(tif_level.pages):
+            temp_channel = self.__read_region_of_page(page, i, start_y, start_x, size_y, size_x)
             result_array.append(temp_channel)
 
         result = np.concatenate(result_array, axis=0)[:, :, :, 0]
@@ -113,20 +109,50 @@ class OmeTiffSlide(Slide):
 
     ## private members
 
+    def __get_color_for_channel(self, channel_index, channel_depth):
+        if channel_depth == 8:
+            rgb_color = settings.padding_color[channel_index if channel_index < 2 else 2]
+        else:
+            # when image depth is higher than 8bit we set default value to zero to make background black:
+            # currently channels with more than 8bits bitness are mapped to rgb by distributing color values
+            # depending on lowest and highest intensity. therefore mapping colors back and forth will
+            # result in undefined behaviour of the padding color
+            rgb_color = 0
+        return rgb_color
+
     def __get_tif_level_for_slide_level(self, slide_level):
         for level in self.tif_slide.series[0].levels:
             if level.shape[1] == slide_level.extent.y:
                 return level
 
-    def __read_region_of_page(self, page, start_x, start_y, size_x, size_y):
+    def __read_region_of_page(self, page, channel_index, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
 
         if not page_frame.is_tiled:
-            return self.__read_region_of_page_untiled(page, start_x, start_y, size_x, size_y)
+            result = self.__read_region_of_page_untiled(page, channel_index, start_x, start_y, size_x, size_y)
+            if result.size == 0:
+                result = np.full(
+                    (size_x, size_y),
+                    self.__get_color_for_channel(channel_index, self.slide_info.channel_depth),
+                    dtype=page_frame.dtype,
+                )
         else:
-            return self.__read_region_of_page_tiled(page, start_x, start_y, size_x, size_y)
+            result = self.__read_region_of_page_tiled(page, channel_index, start_x, start_y, size_x, size_y)
+            if result.size == 0:
+                result = np.full(
+                    (
+                        page_frame.imagedepth,
+                        size_x,
+                        size_y,
+                        page_frame.samplesperpixel,
+                    ),
+                    self.__get_color_for_channel(channel_index, self.slide_info.channel_depth),
+                    dtype=page_frame.dtype,
+                )
 
-    def __read_region_of_page_untiled(self, page, start_x, start_y, size_x, size_y):
+        return result
+
+    def __read_region_of_page_untiled(self, page, channel_index, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
         page_width, page_height = page_frame.imagewidth, page_frame.imagelength
         page_array = page.asarray()
@@ -134,12 +160,16 @@ class OmeTiffSlide(Slide):
         new_height = page_height - start_x if (start_x + size_x > page_height) else size_x
         new_width = page_width - start_y if (start_y + size_y > page_width) else size_y
 
-        out = np.full((size_x, size_y), self.background_value, dtype=page_frame.dtype)
+        out = np.full(
+            (size_x, size_y),
+            self.__get_color_for_channel(channel_index, self.slide_info.channel_depth),
+            dtype=page_frame.dtype,
+        )
 
         out[0:new_height, 0:new_width] = page_array[start_x : start_x + new_height, start_y : start_y + new_width]
         return np.expand_dims(np.expand_dims(out, axis=0), axis=3)
 
-    def __read_region_of_page_tiled(self, page, start_x, start_y, size_x, size_y):
+    def __read_region_of_page_tiled(self, page, channel_index, start_x, start_y, size_x, size_y):
         page_frame = page.keyframe
         image_width, image_height = page_frame.imagewidth, page_frame.imagelength
 
@@ -160,10 +190,9 @@ class OmeTiffSlide(Slide):
                 (end_tile_yn - start_tile_y0) * tile_width,
                 page_frame.samplesperpixel,
             ),
-            self.background_value,
+            self.__get_color_for_channel(channel_index, self.slide_info.channel_depth),
             dtype=page_frame.dtype,
         )
-
         fh = page.parent.filehandle
 
         if fh == None:

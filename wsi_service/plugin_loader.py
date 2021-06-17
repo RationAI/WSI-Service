@@ -1,9 +1,7 @@
 plugin_directory = {}
 
 try:
-    from wsi_service.loader_plugins.deformation_plugin.deformed_slide import (
-        DeformedSlide,
-    )
+    from wsi_service.loader_plugins.deformation_plugin.deformed_slide import DeformedSlide
 
     plugin_directory["sqreg"] = DeformedSlide
 except (ModuleNotFoundError, ImportError):

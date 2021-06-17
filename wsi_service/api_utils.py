@@ -1,3 +1,4 @@
+import re
 from io import BytesIO
 
 import numpy as np
@@ -13,6 +14,7 @@ from wsi_service.image_utils import (
     get_requested_channels_as_rgb_array,
     save_rgb_image,
 )
+from wsi_service.singletons import settings
 
 supported_image_formats = {
     "bmp": "image/bmp",
@@ -111,6 +113,17 @@ def validate_image_request(image_format, image_quality):
         raise HTTPException(status_code=400, detail="Provided image format parameter not supported")
     if image_quality < 0 or image_quality > 100:
         raise HTTPException(status_code=400, detail="Provided image quality parameter not supported")
+
+
+def validate_hex_color_string(padding_color):
+    if padding_color:
+        match = re.search(r"^#(?:[0-9a-fA-F]{3}){1,2}$", padding_color)
+        if match:
+            stripped_padding_color = padding_color.lstrip("#")
+            int_padding_color = tuple(int(stripped_padding_color[i : i + 2], 16) for i in (0, 2, 4))
+            settings.padding_color = int_padding_color
+        else:
+            settings.padding_color = (255, 255, 255)
 
 
 def validate_image_channels(slide, image_channels):

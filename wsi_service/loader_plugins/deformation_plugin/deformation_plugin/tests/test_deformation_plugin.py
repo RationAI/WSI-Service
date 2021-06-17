@@ -8,9 +8,7 @@ from PIL import Image
 
 try:
     import wsi_service.loader_plugins.deformation_plugin.deformation_plugin.tests.testdata as testdata
-    from wsi_service.loader_plugins.deformation_plugin.deformation_plugin import (
-        Deformation,
-    )
+    from wsi_service.loader_plugins.deformation_plugin.deformation_plugin import Deformation
 
     def setup_mock(kwargs):
         mock = kwargs["requests_mock"]

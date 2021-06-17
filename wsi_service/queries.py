@@ -13,4 +13,10 @@ ImageQualityQuery = Query(
 
 ImageChannelQuery = Query(None, description="List of requested image channels. By default all channels are returned.")
 
+ImagePaddingColorQuery = Query(
+    None,
+    example="#FFFFFF",
+    description="Background color as 24bit-hex-string with leading #, that is used when image tile contains whitespace when out of image extent. Default is white.",
+)
+
 ZStackQuery = Query(0, description="Z-Stack layer index z")

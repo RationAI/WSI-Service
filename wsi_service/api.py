@@ -5,22 +5,21 @@ from typing import List
 from fastapi import FastAPI, HTTPException, Path, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
+from PIL import Image
 
 from wsi_service.api_utils import (
     make_response,
+    validate_hex_color_string,
     validate_image_channels,
     validate_image_request,
 )
 from wsi_service.local_mapper import LocalMapper
-from wsi_service.local_mapper_models import (
-    CaseLocalMapper,
-    SlideLocalMapper,
-    SlideStorage,
-)
+from wsi_service.local_mapper_models import CaseLocalMapper, SlideLocalMapper, SlideStorage
 from wsi_service.models.slide import SlideInfo
 from wsi_service.queries import (
     ImageChannelQuery,
     ImageFormatsQuery,
+    ImagePaddingColorQuery,
     ImageQualityQuery,
     ZStackQuery,
 )
@@ -88,28 +87,48 @@ def get_slide_thumbnail(
 
 
 @api.get(
-    "/v1/slides/{slide_id}/label", responses=ImageResponses, response_class=StreamingResponse, tags=["Main Routes"]
+    "/v1/slides/{slide_id}/label/max_size/{max_x}/{max_y}",
+    responses=ImageResponses,
+    response_class=StreamingResponse,
+    tags=["Main Routes"],
 )
-def get_slide_label(slide_id: str, image_format: str = ImageFormatsQuery, image_quality: int = ImageQualityQuery):
+def get_slide_label(
+    slide_id: str,
+    max_x: int = Path(None, example=100, description="Maximum width of label image"),
+    max_y: int = Path(None, example=100, description="Maximum height of label image"),
+    image_format: str = ImageFormatsQuery,
+    image_quality: int = ImageQualityQuery,
+):
     """
     Label image of the slide
     """
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
     label = slide.get_label()
+    label.thumbnail((max_x, max_y), Image.ANTIALIAS)
     return make_response(slide, label, image_format, image_quality)
 
 
 @api.get(
-    "/v1/slides/{slide_id}/macro", responses=ImageResponses, response_class=StreamingResponse, tags=["Main Routes"]
+    "/v1/slides/{slide_id}/macro/max_size/{max_x}/{max_y}",
+    responses=ImageResponses,
+    response_class=StreamingResponse,
+    tags=["Main Routes"],
 )
-def get_slide_macro(slide_id: str, image_format: str = ImageFormatsQuery, image_quality: int = ImageQualityQuery):
+def get_slide_macro(
+    slide_id: str,
+    max_x: int = Path(None, example=100, description="Maximum width of macro image"),
+    max_y: int = Path(None, example=100, description="Maximum height of macro image"),
+    image_format: str = ImageFormatsQuery,
+    image_quality: int = ImageQualityQuery,
+):
     """
     Macro image of the slide
     """
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
     macro = slide.get_macro()
+    macro.thumbnail((max_x, max_y), Image.ANTIALIAS)
     return make_response(slide, macro, image_format, image_quality)
 
 
@@ -172,6 +191,7 @@ def get_slide_tile(
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery,
     image_channels: List[int] = ImageChannelQuery,
+    padding_color: str = ImagePaddingColorQuery,
     z: int = ZStackQuery,
 ):
     """
@@ -179,6 +199,7 @@ def get_slide_tile(
     (original) resolution. The available levels depend on the image. Coordinates are given
     with respect to tiles, i.e. tile coordinate n is the n-th tile in the respective dimension.
     """
+    validate_hex_color_string(padding_color)
     validate_image_request(image_format, image_quality)
     slide = slide_source.get_slide(slide_id)
     if z != 0:
