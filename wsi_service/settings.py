@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     max_returned_region_size: int = 4 * 6250000  # 5000 x 5000
     root_path: str = None
 
+    # default color for padding of image regions out of image extent
+    padding_color = (255, 255, 255)
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

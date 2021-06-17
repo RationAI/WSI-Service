@@ -4,10 +4,11 @@ import numpy as np
 from PIL import Image
 
 from wsi_service.models.slide import SlideColor
+from wsi_service.singletons import settings
 
 
-def rgba_to_rgb_with_background_color(image_rgba, background_color=(255, 255, 255)):
-    image_rgb = Image.new("RGB", image_rgba.size, background_color)
+def rgba_to_rgb_with_background_color(image_rgba):
+    image_rgb = Image.new("RGB", image_rgba.size, settings.padding_color)
     image_rgb.paste(image_rgba, mask=image_rgba.split()[3])
     return image_rgb
 

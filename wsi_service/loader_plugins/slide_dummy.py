@@ -1,11 +1,6 @@
 import PIL
 
-from wsi_service.models.slide import (
-    SlideExtent,
-    SlideInfo,
-    SlideLevel,
-    SlidePixelSizeNm,
-)
+from wsi_service.models.slide import SlideExtent, SlideInfo, SlideLevel, SlidePixelSizeNm
 from wsi_service.slide import Slide
 
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- Added max_x and max_y parameter to label and macro route to restrict image size
+- Added padding_color in tile route to enable setting background color for slide tiles in viewer
+
 ## 0.2.4
 
 - Populate settings from environment

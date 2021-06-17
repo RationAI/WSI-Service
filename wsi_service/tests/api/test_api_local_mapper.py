@@ -3,10 +3,7 @@ import os
 import requests
 
 from wsi_service.singletons import settings
-from wsi_service.tests.api.test_api_helpers import (
-    client_invalid_data_dir,
-    client_no_data,
-)
+from wsi_service.tests.api.test_api_helpers import client_invalid_data_dir, client_no_data
 
 from .singletons import test_settings
 
