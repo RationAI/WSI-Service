@@ -244,7 +244,7 @@ WS_DEBUG=true
 
 ### Run tests
 
-To run tests locally, make sure you have the latest [**testdata**](https://nextcloud.empaia.org/s/4fpdFEn69gqgrgK).
+To run tests locally, make sure you have the latest [**testdata**](https://nextcloud.empaia.org/f/188182) (For access contact project maintainer).
 
 After downloading the testdata, set the path of the `OpenSlide_adapted` folder as environment variable:
 
