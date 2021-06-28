@@ -216,13 +216,17 @@ def get_slide_tile(
 
 
 if settings.local_mode:
+    print("Discovering files for local mapper...")
+    localmapper = LocalMapper(settings.data_dir)
+    print("...done")
 
     @api.get("/v1/cases/", response_model=List[CaseLocalMapper], tags=["Additional Routes (Standalone WSI Service)"])
     def get_cases():
         """
         (Only in standalone mode) Browse the local directory and return case ids for each available directory.
         """
-        localmapper = LocalMapper(settings.data_dir)
+
+        global localmapper
         cases = localmapper.get_cases()
         return cases
 
@@ -235,7 +239,7 @@ if settings.local_mode:
         """
         (Only in standalone mode) Browse the local case directory and return slide ids for each available file.
         """
-        localmapper = LocalMapper(settings.data_dir)
+        global localmapper
         slides = localmapper.get_slides(case_id)
         return slides
 
@@ -246,7 +250,7 @@ if settings.local_mode:
         """
         (Only in standalone mode) Return slide data for a given slide_id.
         """
-        localmapper = LocalMapper(settings.data_dir)
+        global localmapper
         slide = localmapper.get_slide(slide_id)
         return slide
 
@@ -259,9 +263,20 @@ if settings.local_mode:
         """
         (Only in standalone mode) Return slide storage data for a given slide_id.
         """
-        localmapper = LocalMapper(settings.data_dir)
+        global localmapper
         slide = localmapper.get_slide(slide_id)
         return slide.slide_storage
+
+    @api.get(
+        "/v1/refresh_local_mapper",
+        tags=["Additional Routes (Standalone WSI Service)"],
+    )
+    def refresh_local_mapper():
+        """
+        (Only in standalone mode) Refresh available files by scanning for new files.
+        """
+        global localmapper
+        localmapper = LocalMapper(settings.data_dir)
 
     @api.get(
         "/v1/slides/{slide_id}/viewer",
