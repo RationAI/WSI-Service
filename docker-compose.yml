@@ -15,6 +15,7 @@ services:
       - ${COMPOSE_ISYNTAX_PORT}:5556
 
   wsi_service:
+    image: registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service
     build:
       context: "."
       network: ${COMPOSE_NETWORK}

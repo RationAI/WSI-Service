@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- added pre-loading of files for the local mapper
+- added support for philips tiff-files
+
 ## 0.3.0
 
 - Added max_x and max_y parameter to label and macro route to restrict image size

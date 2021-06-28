@@ -9,7 +9,7 @@ from wsi_service.slide_utils import get_original_levels, get_rgb_channel_list
 
 
 class OpenSlideSlide(Slide):
-    supported_vendors = ["aperio", "mirax", "hamamatsu", "ventana", "leica", "trestle"]
+    supported_vendors = ["aperio", "mirax", "hamamatsu", "ventana", "leica", "trestle", "philips"]
     loader_name = "OpenSlide"
 
     def __init__(self, filepath, slide_id):

@@ -18,6 +18,7 @@ def test_get_cases_no_data(client_no_data):
 def test_get_cases_two_empty_cases(client_no_data):
     os.mkdir(os.path.join(settings.data_dir, "case0"))
     os.mkdir(os.path.join(settings.data_dir, "case1"))
+    response = client_no_data.get("/v1/refresh_local_mapper/")
     response = client_no_data.get("/v1/cases/")
     assert response.status_code == 200
     cases = response.json()
@@ -26,6 +27,7 @@ def test_get_cases_two_empty_cases(client_no_data):
 
 def test_get_available_slides_empty_case(client_no_data):
     os.mkdir(os.path.join(settings.data_dir, "case0"))
+    response = client_no_data.get("/v1/refresh_local_mapper/")
     response = client_no_data.get("/v1/cases/")
     assert response.status_code == 200
     cases = response.json()
@@ -36,7 +38,8 @@ def test_get_available_slides_empty_case(client_no_data):
     assert len(slides) == 0
 
 
-def test_get_case_invalid_dir(client_invalid_data_dir):
-    response = client_invalid_data_dir.get("/v1/cases/")
-    assert response.status_code == 404
-    assert response.json()["detail"] == f"No such directory: {settings.data_dir}"
+# Error occurs now while loading and not on access, see #77
+# def test_get_case_invalid_dir(client_invalid_data_dir):
+#     response = client_invalid_data_dir.get("/v1/cases/")
+#     assert response.status_code == 404
+#     assert response.json()["detail"] == f"No such directory: {settings.data_dir}"
