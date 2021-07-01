@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>validation viewer</title>
+</head>
+
+<body>
+    <div id="app">
+        <v-app>
+            <v-navigation-drawer app left width=400>
+                <v-simple-table>
+                    <template v-slot:default>
+                        <thead>
+                            <tr>
+                                <th class="text-left">
+                                    Case
+                                </th>
+                                <th class="text-left">
+                                    Slide
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in slides" :key="item.slide_id" @click="selectedSlideId=item.slide_id"
+                                :style="getBackgroundColor(item.slide_id)">
+                                <td>{{ item.case }}</td>
+                                <td>{{ item.slide }}</td>
+                            </tr>
+                        </tbody>
+                    </template>
+                </v-simple-table>
+            </v-navigation-drawer>
+            <v-navigation-drawer app left width=400 v-if="selectedSlideInfo" style="margin-left: 400px;">
+                <v-subheader>
+                    <v-icon medium>mdi-information</v-icon>&nbsp; Slide Info
+                </v-subheader>
+                <v-treeview dense :items="selectedSlideInfoItems">
+                    <template v-slot:prepend="{ item, open }">
+                        <v-icon :color="getColor(item)">
+                            {{ getIconForItemName(item.name) }}
+                        </v-icon>
+                    </template>
+                </v-treeview>
+                <v-subheader class="pt-10">
+                    <v-icon medium>mdi-settings</v-icon>&nbsp; Viewer Settings
+                </v-subheader>
+                <v-container class="px-8 pt-8">
+                    <v-checkbox v-model="debugLayer" label="Show Debug Layer" class="pa-0 ma-0"></v-checkbox>
+                </v-container>
+            </v-navigation-drawer>
+            <v-main>
+                <v-container v-if="viewerUrl" fluid
+                    style="padding: 0; margin: 0; width: 100%; height: 100%; overflow:hidden;">
+                    <iframe frameBorder="0" :src="viewerUrl" name="viewer"
+                        style="padding: 0; margin: 0; padding-left: 400px; width: 100%; height: 100%; overflow:hidden;">
+                    </iframe>
+                </v-container>
+            </v-main>
+        </v-app>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script>
+
+        new Vue({
+            el: '#app',
+            vuetify: new Vuetify(),
+            data() {
+                return {
+                    slides: [],
+                    selectedSlideId: null,
+                    viewerUrl: null,
+                    selectedSlideInfo: null,
+                    selectedSlideInfoItems: [],
+                    debugLayer: false
+                }
+            },
+            watch: {
+                selectedSlideId() {
+                    axios.get(`slides/${this.selectedSlideId}/info`)
+                        .then(function (response) {
+                            this.selectedSlideInfo = response.data
+                        }.bind(this))
+                },
+                selectedSlideInfo() {
+                    this.selectedSlideInfoItems = []
+                    this.viewerUrl = null
+                    this.selectedSlideInfoItems = this.eachRecursive(this.selectedSlideInfo)
+                    this.viewerUrl = `slides/${this.selectedSlideId}/viewer?debug=${this.debugLayer}&z=0`
+                },
+                debugLayer() {
+                    this.viewerUrl = `slides/${this.selectedSlideId}/viewer?debug=${this.debugLayer}&z=0`
+                }
+            },
+            created() {
+                axios.get("cases")
+                    .then(function (response) {
+                        let slides = []
+                        for (let c of response.data) {
+                            for (let slide_id of c.slides) {
+                                axios.get(`slides/${slide_id}`).then(
+                                    function (response) {
+                                        local_slide_id = response.data.local_slide_id
+                                        this.slides.push({ case: c.local_case_id, slide: local_slide_id, slide_id: slide_id })
+                                        this.slides.sort(function (a, b) {
+                                            var nameA = a.case.toUpperCase();
+                                            var nameB = b.case.toUpperCase();
+                                            if (nameA < nameB) {
+                                                return -1;
+                                            }
+                                            if (nameA > nameB) {
+                                                return 1;
+                                            }
+                                            return 0;
+                                        });
+                                    }.bind(this))
+                            }
+                        }
+                    }.bind(this))
+            },
+            methods: {
+                eachRecursive: function (obj, id = 0) {
+                    let items = []
+                    for (var k in obj) {
+                        if (typeof obj[k] == "object" && obj[k] !== null) {
+                            children = this.eachRecursive(obj[k], id = id)
+                            items.push({
+                                id: id,
+                                name: k,
+                                children: children
+                            })
+                        } else {
+                            items.push({
+                                id: id,
+                                name: k + " : " + obj[k]
+                            })
+                        }
+                        id = id + 1
+                    }
+                    return items
+                },
+                getBackgroundColor(item_id) {
+                    if (item_id == this.selectedSlideId) {
+                        return "background-color: lightgray;"
+                    }
+                    return ""
+                },
+                getColor: function (item) {
+                    if (item.children &&
+                        item.children.length > 2 &&
+                        item.children[2].name == "color") {
+                        let color = item.children[2].children
+                        r = color[0].name.split(" : ")[1]
+                        g = color[1].name.split(" : ")[1]
+                        b = color[2].name.split(" : ")[1]
+                        return `rgb(${r},${g},${b})`
+                    }
+                    return `rgb(0,0,0)`
+                },
+                getIconForItemName: function (itemName) {
+                    if (itemName.startsWith("id"))
+                        return 'mdi-identifier'
+                    if (itemName.startsWith("channels"))
+                        return 'mdi-palette'
+                    if (itemName.startsWith("name"))
+                        return 'mdi-text'
+                    if (itemName.startsWith("level"))
+                        return 'mdi-layers'
+                    if (itemName.startsWith("num_level"))
+                        return 'mdi-layers'
+                    if (itemName.startsWith("extent"))
+                        return 'mdi-checkbox-blank-outline'
+                    if (itemName.startsWith("tile"))
+                        return 'mdi-grid-large'
+                    if (itemName.startsWith("pixel_size"))
+                        return 'mdi-ruler'
+                    if (itemName.startsWith("x : "))
+                        return 'mdi-alpha-x-box-outline'
+                    if (itemName.startsWith("y : "))
+                        return 'mdi-alpha-y-box-outline'
+                    if (itemName.startsWith("z : "))
+                        return 'mdi-alpha-z-box-outline'
+                    if (itemName.startsWith("color"))
+                        return 'mdi-format-color-fill'
+                    if (itemName.startsWith("downsample"))
+                        return 'mdi-transfer-down'
+                    if (itemName.startsWith("channel_"))
+                        return 'mdi-numeric'
+                    return 'mdi-label'
+                }
+            }
+        }
+        )
+    </script>
+</body>
+
+</html>

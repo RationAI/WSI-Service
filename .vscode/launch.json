@@ -1,0 +1,18 @@
+{
+    "configurations": [
+      {
+        "name": "Python: Remote Attach",
+        "type": "python",
+        "request": "attach",
+        "port": 5678,
+        "host": "localhost",
+        "justMyCode": false,
+        "pathMappings": [
+          {
+            "localRoot": "${workspaceFolder}/wsi_service",
+            "remoteRoot": "/wsi-service/wsi_service"
+          }
+        ]
+      }
+    ]
+  }

@@ -150,8 +150,3 @@ dmypy.json
 # Others
 data
 .DS_Store
-
-# WSI Service specific
-/wsi_service/loader_plugins/isyntax/*.zip
-
-.vscode

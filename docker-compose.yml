@@ -1,19 +1,6 @@
 version: "3.8"
 
 services:
-  isyntax-backend:
-    build:
-      context: "./wsi_service/loader_plugins/isyntax"
-      network: ${COMPOSE_NETWORK}
-    restart: ${COMPOSE_RESTART}
-    environment:
-      PYTHONUNBUFFERED: 1
-      WS_ISYNTAX_PORT: 5556
-    volumes:
-      - ${COMPOSE_DATA_DIR}:/data
-    ports:
-      - ${COMPOSE_ISYNTAX_PORT}:5556
-
   wsi_service:
     image: registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service
     build:
@@ -23,15 +10,11 @@ services:
       - uvicorn
       - --host=0.0.0.0
       - --port=8080
-      - --reload
       - wsi_service.api:api
     restart: ${COMPOSE_RESTART}
     environment:
       WS_CORS_ALLOW_ORIGINS: ${WS_CORS_ALLOW_ORIGINS}
       WS_DISABLE_OPENAPI: ${WS_DISABLE_OPENAPI}
-      WS_ISYNTAX_PORT: 5556
-      WS_DEBUG: ${WS_DEBUG}
-      WS_DATA_DIR: /data
       WS_MAPPER_ADDRESS: ${WS_MAPPER_ADDRESS}
       WS_LOCAL_MODE: ${WS_LOCAL_MODE}
       WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS: ${WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS}

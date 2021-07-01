@@ -3,11 +3,6 @@ import math
 from wsi_service.models.slide import SlideChannel, SlideColor, SlideExtent, SlideLevel
 
 
-def calc_num_levels(dimensions):
-    min_extent = min(dimensions)
-    return int(math.log2(min_extent) + 1)
-
-
 def get_original_levels(level_count, level_dimensions, level_downsamples):
     levels = []
     for level in range(level_count):

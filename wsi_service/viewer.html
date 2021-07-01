@@ -35,15 +35,60 @@
             text-align: center;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/build/ol.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        class LabeledTile extends ol.Tile {
+            constructor(tileCoord, tileSize, text) {
+                super(tileCoord, 2);
+                this.tileSize_ = tileSize;
+                this.text_ = text;
+                this.canvas_ = null;
+            }
+
+            getImage() {
+                if (this.canvas_) {
+                    return this.canvas_;
+                } else {
+                    const tileSize = this.tileSize_;
+                    const context = ol.dom.createCanvasContext2D(tileSize[0], tileSize[1]);
+
+                    context.strokeStyle = 'grey';
+                    context.strokeRect(0.5, 0.5, tileSize[0] + 0.5, tileSize[1] + 0.5);
+
+                    context.fillStyle = 'black';
+                    context.strokeStyle = 'white';
+                    context.textAlign = 'center';
+                    context.textBaseline = 'middle';
+                    context.font = '16px sans-serif';
+                    context.lineWidth = 2;
+                    context.strokeText(
+                        this.text_,
+                        tileSize[0] / 2,
+                        tileSize[1] / 2,
+                        tileSize[0]
+                    );
+                    context.fillText(
+                        this.text_,
+                        tileSize[0] / 2,
+                        tileSize[1] / 2,
+                        tileSize[0]
+                    );
+
+                    this.canvas_ = context.canvas;
+                    return context.canvas;
+                }
+            }
+            load() { }
+        }
+    </script>
     <title>viewer</title>
 </head>
 
 <body>
     <div id="map" class="map"></div>
     <script type="text/javascript">
-        function setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions, minZoom) {
+        function setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions, minZoom, z, useDebugLayer) {
             let projection = new ol.proj.Projection({
                 code: 'pixels',
                 units: 'pixels',
@@ -72,7 +117,7 @@
                 let level = numLevels - tileCoord[0] - 1
                 let x = tileCoord[1]
                 let y = tileCoord[2]
-                return `tile/level/${level}/tile/${x}/${y}?z=0`
+                return `tile/level/${level}/tile/${x}/${y}?z=${z}`
             }
             let source = new ol.source.XYZ({
                 tileUrlFunction: tileUrlFunction,
@@ -90,6 +135,50 @@
                 view: view,
                 controls: []
             })
+            if (useDebugLayer) {
+                function toSize(size, opt_size) {
+                    if (Array.isArray(size)) {
+                        return size;
+                    } else {
+                        if (opt_size === undefined) {
+                            opt_size = [size, size];
+                        } else {
+                            opt_size[0] = size;
+                            opt_size[1] = size;
+                        }
+                        return opt_size;
+                    }
+                }
+                let debugSource = new ol.source.TileDebug({
+                    tileGrid: tileGrid,
+                    projection: 'pixels',
+                    transition: 0,
+                })
+                debugSource.getTile = function (inverseLevel, x, y) {
+                    tileCoordKey = inverseLevel + '/' + x + '/' + y;
+                    if (debugSource.tileCache.containsKey(tileCoordKey)) {
+                        return (debugSource.tileCache.get(tileCoordKey));
+                    } else {
+                        const tileSize = toSize(tileGrid.getTileSize(z));
+                        const tileCoord = [inverseLevel, x, y];
+                        const textTileCoord = debugSource.getTileCoordForTileUrlFunction(tileCoord);
+                        let level = (numLevels - inverseLevel - 1).toString()
+                        let text;
+                        if (textTileCoord) {
+                            text = `level/${level}/tile/${x}/${x}?z=${z}`
+                        } else {
+                            text = '';
+                        }
+                        const tile = new LabeledTile(tileCoord, tileSize, text);
+                        debugSource.tileCache.set(tileCoordKey, tile);
+                        return tile;
+                    }
+                }
+                let debugLayer = new ol.layer.Tile({
+                    source: debugSource
+                })
+                map.addLayer(debugLayer)
+            }
             let scaleLineControl = new ol.control.ScaleLine({ minWidth: 100 })
             map.addControl(scaleLineControl)
             map.getView().fit(extent, map.getSize())
@@ -108,6 +197,12 @@
         }
 
         let globalSlideId = "REPLACE_SLIDE_ID"
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const useDebugLayer = urlParams.get("debug") == 'true'
+        const zString = urlParams.get("z") ? urlParams.get("z") : '0';
+        const z = parseInt(zString)
+
 
         axios.get(`info`)
             .then(function (response) {
@@ -120,7 +215,7 @@
                 let numLevels = resolutions.length
                 let minZoom = numLevels - wsiInfo.levels.length
 
-                setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions, minZoom)
+                setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions, minZoom, z, useDebugLayer)
             })
     </script>
 </body>

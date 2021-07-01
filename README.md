@@ -112,16 +112,20 @@ The region and the tile endpoint also offer the selection of a layer with the in
 
 ### Supported formats
 
-- Aperio (\*.svs)
-- Hamamatsu (\*.ndpi)
-- 3DHistech/Mirax (\*.mrxs)
-- Generic Tif (_.tif / _.tiff)
-- Fluorescence OME.tif (\*.ome.tif)
-- Philips Isyntax (\*.isyntax)
+Different formats are supported by plugins for accessing image data. Two base plugins are included and support the following formats:
 
-Partially supported:
+- [openslide](./wsi_service_base_plugins/openslide/)
+  - 3DHISTECH (\*.mrxs)
+  - APERIO (\*.svs)
+  - GENERIC TIF (\*.tif / \*.tiff)
+  - HAMAMATSU (\*.ndpi)
+  - Partially supported:
+    - LEICA (\*.scn)
+    - VENTANA (\*.bif)
 
-- Ventana (\*.bif)
+- [tiffile](./wsi_service_base_plugins/tifffile/)
+  - OME-TIFF (\*.ome.tif, \*.ome.tif, \*.ome.tiff, \*.ome.tf2, \*.ome.tf8, \*.ome.btf)
+
 
 ### Standalone version
 
@@ -132,15 +136,15 @@ The WSI Service relies on the [Storage Mapper Service](https://gitlab.cc-asp.fra
 - `GET /v1/slides/{slide_id}` - Get slide
 - `GET /v1/slides/{slide_id}/storage` - Get slide storage information
 
-There is also a simple viewer, which can be used by accessing: http://localhost:8080/slides/{slide_id}/viewer
+There is a validation viewer, which can be used by accessing: http://localhost:8080/v1/validation_viewer
+
+There is also a simple viewer, which can be used by accessing: http://localhost:8080/v1/slides/{slide_id}/viewer
 
 ## How to run
 
 WSI Service is a python module and has to be run via docker.
 
 ### Run locally
-
-Download `philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip` to `wsi_service/loader_plugins/isyntax/philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip`.
 
 Make sure [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) is installed.
 
@@ -149,9 +153,6 @@ Set environment variables in your shell or in a `.env` file:
 ```bash
 WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DISABLE_OPENAPI=False
-WS_ISYNTAX_PORT=5556
-WS_DEBUG=False
-WS_DATA_DIR=/data
 WS_MAPPER_ADDRESS=http://localhost:8080/v1/slides/{slide_id}/storage
 WS_LOCAL_MODE=True
 WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600
@@ -162,101 +163,57 @@ COMPOSE_RESTART=no
 COMPOSE_NETWORK=default
 COMPOSE_WS_PORT=8080
 COMPOSE_DATA_DIR=/data
-COMPOSE_ISYNTAX_PORT=5556
 ```
 
 Short explanation of the parameters used:
 
-- `WS_PORT` external port of the wsi-service
-- `WS_ISYNTAX_PORT` external port of the isyntax backend
-- `WS_DEBUG` optional, use debug config and activate reload
-- `WS_MAPPER_ADDRESS` mapper-service address
-- `WS_LOCAL_MODE` when set to true, WSI Service is started in local mode
+- `WS_CORS_ALLOW_ORIGINS` allow cors for different origins
+- `WS_DISABLE_OPENAPI` disable swagger api documentation (`/docs`)
+- `WS_MAPPER_ADDRESS` storage mapper service address
+- `WS_LOCAL_MODE` when set to true, wsi service is started in local mode
 - `WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS` set timeout for inactive histo images (default is 600 seconds)
 - `WS_MAX_RETURNED_REGION_SIZE` set maximum image region size for service (channels * width * height; default is 4 * 5000 * 5000)
-- `COMPOSE_DATA_DIR` mounted volume to the image data (e.g. `/home/user/Documents/data/OpenSlide_adapted`)
+  
+- `COMPOSE_RESTART` set to `no`, `always` to configure restart settings
+- `COMPOSE_NETWORK` set network used for wsi service
+- `COMPOSE_WS_PORT` set external port for wsi service
+- `COMPOSE_DATA_DIR` mounted volume to the image data (e.g. `/testdata/OpenSlide_adapted`)
 
-For `isyntax`-support register and download the SDK for free on the [Philips Pathology SDK Site](https://www.usa.philips.com/healthcare/sites/pathology/about/sdk) (Note: Make sure to download version for _Ubuntu 18.04_ and _Python 3.6.9_). 
+Then run
 
-**Note: Before building the docker images make sure to locate the zip-file under the following project directory: `/wsi-service/wsi_service/loader_plugins/isyntax` and add the filename to your environment variables.**
-
-To build and run the WSI Service **with** ISyntax-support run the following command:
-
-```
-docker-compose up
-```
-
-To build the WSI Service **without** ISyntax-support run the following command:
-
-```
-docker-compose up --build wsi_service
+```bash
+docker-compose up --build
 ```
 
-Afterwards, visit http://localhost:${WS_PORT}/docs (Note: Running on port that is defined as environment variable)
-
-### Run without docker
-
-To run the WSI Service without docker make sure [OpenSlide](https://openslide.org/download/) and [Poetry](https://python-poetry.org/) is installed and environment variables are set. Then run:
-
-```
-sudo apt update && apt install python3-venv python3-pip
-cd wsi_service
-python3 -m venv .venv
-source .venv/bin/activate
-poetry install
-[docker-compose up --build isyntax-backend] # to enable isyntax support
-uvicorn --host=0.0.0.0 --port=8080 wsi_service.api:api
-```
-
-Or without virtual environment:
-
-```
-cd wsi_service
-poetry install
-poetry shell
-uvicorn --host=0.0.0.0 --port=8080 wsi_service.api:api
-```
-
-Note: Make sure that libpixman is on version 0.40.0 or later to prevent broken MRXS files. (such as by defining (and installing) `LD_PRELOAD=/usr/local/lib/libpixman-1.so.0.40.0` on older os versions).
-
-### Pull from registry
-
-Download the turnkey ready docker image
-
-```
-docker pull registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service/isyntax
-docker pull registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service
-```
+It is not recommened to run the python package outside the specified docker image due to issues with library dependencies on different platforms.
 
 ## Development
 
-See section `Run without docker`. To enable reload after code changes, start uvicorn with -reload`-flag:
+Run
 
-```
-uvicorn --host=0.0.0.0 --port=8080 wsi_service.api:api --reload
-```
-
-Or when developing with docker container set env variable `WS_DEBUG`:
-
-```
-WS_DEBUG=true
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
 ### Run tests
 
+Run while development composition is up and running:
+
+```bash
+docker exec -it wsi-service_wsi_service_1 poetry run pytest --cov wsi_service
+```
+
 To run tests locally, make sure you have the latest [**testdata**](https://nextcloud.empaia.org/f/188182) (For access contact project maintainer).
 
-After downloading the testdata, set the path of the `OpenSlide_adapted` folder as environment variable:
+After downloading the testdata, set the path of the `OpenSlide_adapted` folder as environment variable in your `.env` file:
 
-```
-PYTEST_DATA_DIR=/home/user/pathto/testdata/OpenSlide_adapted
+```bash
+COMPOSE_DATA_DIR=/testdata/OpenSlide_adapted
 ```
 
-Then run tests with
+### Run debugging
 
-```
-poetry run pytest --pyargs wsi_service # --maxfail=1
-```
+Use VS Code to start `Python: Remote Attach` while development composition is up and running.
 
 ### Run static code analysis and fix issues
 
