@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0
+
+- Implemented plugins based on python packages
+- Added base plugins openslide, tifffile
+
 ## 0.3.1
 
 - added pre-loading of files for the local mapper

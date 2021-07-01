@@ -3,7 +3,6 @@ stages:
   - version
   - test
   - build_docker
-  - extend_docker_deformation_plugin
 
 run_static_analysis:
   stage: static_analysis
@@ -42,49 +41,14 @@ run_tests:
     - mevis-ubuntu-vm-wsi
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
-    PYTHONDONTWRITEBYTECODE: 1
-    WS_DATA_PATH: /data/OpenSlide_adapted
   before_script:
     - cp wsi_service/tests/integration/env_tests .env
-    - poetry install
-    - cd wsi_service/loader_plugins/deformation_plugin/
-    - wget $DEFORMATION_BINARY_URL -O deformation-plugin-linux.zip
-    - unzip deformation-plugin-linux.zip
-    - cp deformation_plugin/_interpolate.cpython-39-x86_64-linux-gnu.so deformation_plugin/_interpolate.cpython-38-x86_64-linux-gnu.so
-    - cd ../isyntax
-    - wget $ISX_PHILIPS_SDK_URL -O philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip
-    - cd ../../..
-    - docker-compose build
+    - docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
   script:
-    - poetry run pytest --pyargs wsi_service --cov .
+    - docker exec wsi-service_wsi_service_1 poetry run pytest --cov wsi_service
   after_script:
-    - docker-compose down
-
-run_build_isyntax:
-  stage: build_docker
-  only:
-    - master
-  tags:
-    - mevis-ubuntu-vm-wsi
-  variables:
-    GIT_SUBMODULE_STRATEGY: recursive
-  before_script:
-    - cd wsi_service/loader_plugins/isyntax
-    - wget $ISX_PHILIPS_SDK_URL -O philips-pathologysdk-2.0-ubuntu18_04_py36_research.zip
-    - cd ../../..
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-  script:
-    - cd wsi_service/loader_plugins/isyntax
-    - docker build -t $CI_REGISTRY_IMAGE/isyntax-backend .
-    - docker tag $CI_REGISTRY_IMAGE/isyntax-backend $CI_REGISTRY_IMAGE/isyntax-backend:$VERSION
-    - docker push $CI_REGISTRY_IMAGE/isyntax-backend
-    - docker push $CI_REGISTRY_IMAGE/isyntax-backend:$VERSION
-  after_script:
-    - docker logout $CI_REGISTRY
-  needs:
-    - job: run_tests
-    - job: version
-      artifacts: true
+    - docker exec wsi-service_wsi_service_1 rm -r .pytest_cache
+    - docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
 
 run_build_wsi_service:
   stage: build_docker
@@ -103,34 +67,5 @@ run_build_wsi_service:
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE --destination $CI_REGISTRY_IMAGE:$VERSION --label org.opencontainers.image.created=$BUILD_TIME --label org.opencontainers.image.authors="EMPAIA" --label org.opencontainers.image.version=$VERSION --label org.opencontainers.image.vendor="EMPAIA" --label org.opencontainers.image.version=$CI_COMMIT_TAG --label org.opencontainers.image.source=$CI_PROJECT_URL --label org.opencontainers.image.revision=$CI_COMMIT_SHA --label org.opencontainers.image.title="WSI Service" --label org.opencontainers.image.description="WSI-Service to stream whole slide images tile-based via HTTP"
   needs:
     - job: run_tests
-    - job: version
-      artifacts: true
-
-extend_docker_image_deformation:
-  stage: extend_docker_deformation_plugin
-  only:
-    - master
-  tags:
-    - mevis-ubuntu-vm-wsi
-  variables:
-    GIT_SUBMODULE_STRATEGY: recursive
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-    - wget $DEFORMATION_BINARY_URL -O deformation-plugin-linux.zip
-    - unzip deformation-plugin-linux.zip
-  script:
-    - docker pull $CI_REGISTRY_IMAGE
-    - docker run -d --name=wsi-deformation $CI_REGISTRY_IMAGE
-    - docker cp deformation_plugin/* wsi-deformation:/usr/local/lib/python3.9/site-packages/wsi_service/loader_plugins/deformation_plugin/deformation_plugin/
-    - docker stop wsi-deformation
-    - docker commit wsi-deformation $CI_REGISTRY_IMAGE:deformation
-    - docker tag $CI_REGISTRY_IMAGE:deformation $CI_REGISTRY_IMAGE:deformation-$VERSION
-    - docker push $CI_REGISTRY_IMAGE:deformation
-    - docker push $CI_REGISTRY_IMAGE:deformation-$VERSION
-  after_script:
-    - docker rm -f wsi-deformation
-    - docker logout $CI_REGISTRY
-  needs:
-    - job: run_build_wsi_service
     - job: version
       artifacts: true

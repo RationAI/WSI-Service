@@ -16,6 +16,7 @@ from wsi_service.api_utils import (
 from wsi_service.local_mapper import LocalMapper
 from wsi_service.local_mapper_models import CaseLocalMapper, SlideLocalMapper, SlideStorage
 from wsi_service.models.slide import SlideInfo
+from wsi_service.plugins import get_plugins_overview
 from wsi_service.queries import (
     ImageChannelQuery,
     ImageFormatsQuery,
@@ -25,13 +26,12 @@ from wsi_service.queries import (
 )
 from wsi_service.responses import ImageRegionResponse, ImageResponses
 from wsi_service.singletons import settings
-from wsi_service.slide_source import SlideSource
+from wsi_service.slide_manager import SlideManager
 
 api = FastAPI(
     title=settings.title,
     description=settings.description,
     version=settings.version,
-    debug=settings.debug,
     docs_url="/docs",
     redoc_url=None,
     openapi_url="/openapi.json" if not settings.disable_openapi else "",
@@ -47,12 +47,17 @@ if settings.cors_allow_origins:
         allow_headers=["*"],
     )
 
-slide_source = SlideSource(settings.mapper_address, settings.data_dir, settings.inactive_histo_image_timeout_seconds)
+slide_manager = SlideManager(settings.mapper_address, settings.data_dir, settings.inactive_histo_image_timeout_seconds)
 
 
 @api.get("/alive", status_code=status.HTTP_200_OK)
 def get_service_status():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "plugins": get_plugins_overview(),
+        "plugins_default": settings.plugins_default,
+        "version": settings.version,
+    }
 
 
 @api.get("/v1/slides/{slide_id}/info", response_model=SlideInfo, tags=["Main Routes"])
@@ -60,7 +65,7 @@ def get_slide_info(slide_id: str):
     """
     Metadata for slide with given id
     """
-    slide = slide_source.get_slide(slide_id)
+    slide = slide_manager.get_slide(slide_id)
     return slide.get_info()
 
 
@@ -81,7 +86,7 @@ def get_slide_thumbnail(
     Thumbnail of the slide
     """
     validate_image_request(image_format, image_quality)
-    slide = slide_source.get_slide(slide_id)
+    slide = slide_manager.get_slide(slide_id)
     thumbnail = slide.get_thumbnail(max_x, max_y)
     return make_response(slide, thumbnail, image_format, image_quality)
 
@@ -103,7 +108,7 @@ def get_slide_label(
     Label image of the slide
     """
     validate_image_request(image_format, image_quality)
-    slide = slide_source.get_slide(slide_id)
+    slide = slide_manager.get_slide(slide_id)
     label = slide.get_label()
     label.thumbnail((max_x, max_y), Image.ANTIALIAS)
     return make_response(slide, label, image_format, image_quality)
@@ -126,7 +131,7 @@ def get_slide_macro(
     Macro image of the slide
     """
     validate_image_request(image_format, image_quality)
-    slide = slide_source.get_slide(slide_id)
+    slide = slide_manager.get_slide(slide_id)
     macro = slide.get_macro()
     macro.thumbnail((max_x, max_y), Image.ANTIALIAS)
     return make_response(slide, macro, image_format, image_quality)
@@ -163,7 +168,7 @@ def get_slide_region(
     if size_x * size_y == 0:
         raise HTTPException(status_code=422, detail=f"Requested region must contain at least 1 pixel.")
 
-    slide = slide_source.get_slide(slide_id)
+    slide = slide_manager.get_slide(slide_id)
     if z != 0:
         try:
             image_region = slide.get_region(level, start_x, start_y, size_x, size_y, z=z)
@@ -201,7 +206,7 @@ def get_slide_tile(
     """
     validate_hex_color_string(padding_color)
     validate_image_request(image_format, image_quality)
-    slide = slide_source.get_slide(slide_id)
+    slide = slide_manager.get_slide(slide_id)
     if z != 0:
         try:
             image_tile = slide.get_tile(level, tile_x, tile_y, z=z)
@@ -215,10 +220,13 @@ def get_slide_tile(
     return make_response(slide, image_tile, image_format, image_quality, image_channels)
 
 
+@api.on_event("shutdown")
+def shutdown_event():
+    slide_manager.close()
+
+
 if settings.local_mode:
-    print("Discovering files for local mapper...")
     localmapper = LocalMapper(settings.data_dir)
-    print("...done")
 
     @api.get("/v1/cases/", response_model=List[CaseLocalMapper], tags=["Additional Routes (Standalone WSI Service)"])
     def get_cases():
@@ -284,9 +292,21 @@ if settings.local_mode:
         include_in_schema=False,
         tags=["Additional Routes (Standalone WSI Service)"],
     )
-    def view_slide(slide_id: str):
+    def viewer(slide_id: str):
         viewer_html = open(
             os.path.join(pathlib.Path(__file__).parent.absolute(), "viewer.html"), "r", encoding="utf-8"
         ).read()
         viewer_html = viewer_html.replace("REPLACE_SLIDE_ID", slide_id)
         return viewer_html
+
+    @api.get(
+        "/v1/validation_viewer",
+        response_class=HTMLResponse,
+        include_in_schema=False,
+        tags=["Additional Routes (Standalone WSI Service)"],
+    )
+    def validation_viewer():
+        validation_viewer_html = open(
+            os.path.join(pathlib.Path(__file__).parent.absolute(), "validation_viewer.html"), "r", encoding="utf-8"
+        ).read()
+        return validation_viewer_html

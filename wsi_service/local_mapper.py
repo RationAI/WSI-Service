@@ -2,9 +2,9 @@ import os
 from uuid import NAMESPACE_URL, uuid5
 
 from fastapi import HTTPException
-from openslide import OpenSlide
 
 from wsi_service.local_mapper_models import CaseLocalMapper, SlideLocalMapper, SlideStorage, StorageAddress
+from wsi_service.plugins import is_supported_format
 
 
 class LocalMapper:
@@ -32,7 +32,7 @@ class LocalMapper:
     def _collect_all_files_as_slides(self, data_dir, case_id, case_dir):
         for f in os.listdir(case_dir):
             absfile = os.path.join(case_dir, f)
-            if self._is_supported_format(absfile):
+            if is_supported_format(absfile):
                 raw_slide_id = f
                 slide_id = uuid5(NAMESPACE_URL, f).hex
                 if slide_id not in self.slide_map:
@@ -54,19 +54,6 @@ class LocalMapper:
                             ],
                         ),
                     )
-
-    def _is_supported_format(self, filepath):
-        if (
-            OpenSlide.detect_format(filepath)
-            or filepath.endswith(".tiff")
-            or filepath.endswith(".tif")
-            or filepath.endswith(".isyntax")
-        ):
-            return True
-        elif filepath.endswith(".sqreg"):
-            return True
-        else:
-            return False
 
     def get_cases(self):
         return list(self.case_map.values())

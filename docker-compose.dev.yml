@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  wsi_service:
+    build:
+      target: wsi_service_dev
+    command: [
+        "sh",
+        "-c",
+        "poetry run python -m debugpy --listen 0.0.0.0:5678
+        -m uvicorn wsi_service.api:api --reload --host 0.0.0.0 --port 8080",
+      ]
+    ports:
+      - 5678:5678
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/wsi-service
