@@ -9,34 +9,42 @@ from PIL import Image
 from skimage import transform, util
 
 from wsi_service.image_utils import convert_int_to_rgba_array
-from wsi_service.models.slide import SlideChannel, SlideColor, SlideExtent, SlideInfo, SlidePixelSizeNm
+from wsi_service.models.slide import (
+    SlideChannel,
+    SlideColor,
+    SlideExtent,
+    SlideInfo,
+    SlidePixelSizeNm,
+)
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
 from wsi_service.slide_utils import get_original_levels
 
 
 class Slide(BaseSlide):
-
     format_kinds = ["OME"]
-    background_value = (255, 255, 255)
 
     def __init__(self, filepath, slide_id):
-        self.background_value = settings.padding_color
         self.locker = Lock()
         try:
             self.tif_slide = tifffile.TiffFile(filepath)
             if self.tif_slide.series[0].kind not in self.format_kinds:
                 raise HTTPException(
-                    status_code=422, detail=f"Unsupported file format ({self.tif_slide.series[0].kind})"
+                    status_code=422,
+                    detail=f"Unsupported file format ({self.tif_slide.series[0].kind})",
                 )
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Failed to load tiff file. [{e}]")
+            raise HTTPException(
+                status_code=404, detail=f"Failed to load tiff file. [{e}]"
+            )
         # read pixel sizes from xml image description
         try:
             self.ome_metadata = self.tif_slide.ome_metadata
             self.parsed_metadata = xml.fromstring(self.ome_metadata)
         except Exception as ex:
-            raise HTTPException(status_code=422, detail=f"Could not obtain ome metadata ({ex})")
+            raise HTTPException(
+                status_code=422, detail=f"Could not obtain ome metadata ({ex})"
+            )
         # pixel_size = self.get_pixel_size(self.parsed_metadata[0][0])
         self.slide_info = self.__get_slide_info_ome_tif(slide_id, self.parsed_metadata)
 
@@ -46,7 +54,9 @@ class Slide(BaseSlide):
     def get_info(self):
         return self.slide_info
 
-    def get_region(self, level, start_x, start_y, size_x, size_y):
+    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color):
+        if padding_color is None:
+            padding_color = settings.padding_color
         try:
             level_slide = self.slide_info.levels[level]
         except IndexError:
@@ -57,12 +67,16 @@ class Slide(BaseSlide):
             )
 
         if size_x < 1 or size_y < 1 or start_x < 0 or start_y < 0:
-            raise HTTPException(status_code=422, detail="Requested image region invalid.")
+            raise HTTPException(
+                status_code=422, detail="Requested image region invalid."
+            )
 
         result_array = []
         tif_level = self.__get_tif_level_for_slide_level(level_slide)
         for i, page in enumerate(tif_level.pages):
-            temp_channel = self.__read_region_of_page(page, i, start_y, start_x, size_y, size_x)
+            temp_channel = self.__read_region_of_page(
+                page, i, start_y, start_x, size_y, size_x, padding_color
+            )
             result_array.append(temp_channel)
 
         result = np.concatenate(result_array, axis=0)[:, :, :, 0]
@@ -82,12 +96,19 @@ class Slide(BaseSlide):
         else:
             max_x = max_x * (level_extent_x / level_extent_y)
 
-        thumbnail_org = self.get_region(thumb_level, 0, 0, level_extent_x, level_extent_y)
-        thumbnail_resized = util.img_as_uint(transform.resize(thumbnail_org, (thumbnail_org.shape[0], max_y, max_x)))
+        thumbnail_org = self.get_region(
+            thumb_level, 0, 0, level_extent_x, level_extent_y, settings.padding_color
+        )
+        thumbnail_resized = util.img_as_uint(
+            transform.resize(thumbnail_org, (thumbnail_org.shape[0], max_y, max_x))
+        )
         return thumbnail_resized
 
     def _get_associated_image(self, associated_image_name):
-        raise HTTPException(status_code=404, detail=f"Associated image {associated_image_name} does not exist.")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Associated image {associated_image_name} does not exist.",
+        )
 
     def get_label(self):
         self._get_associated_image("label")
@@ -95,7 +116,7 @@ class Slide(BaseSlide):
     def get_macro(self):
         self._get_associated_image("macro")
 
-    def get_tile(self, level, tile_x, tile_y):
+    def get_tile(self, level, tile_x, tile_y, padding_color):
         # todo: implement extracting of tile without de/encoding of tile data
         return self.get_region(
             level,
@@ -103,13 +124,16 @@ class Slide(BaseSlide):
             tile_y * self.slide_info.tile_extent.y,
             self.slide_info.tile_extent.x,
             self.slide_info.tile_extent.y,
+            padding_color,
         )
 
     ## private members
 
-    def __get_color_for_channel(self, channel_index, channel_depth):
+    def __get_color_for_channel(self, channel_index, channel_depth, padding_color):
         if channel_depth == 8:
-            rgb_color = settings.padding_color[channel_index if channel_index < 2 else 2]
+            if padding_color is None:
+                padding_color = settings.padding_color
+            rgb_color = padding_color[channel_index if channel_index < 2 else 2]
         else:
             # when image depth is higher than 8bit we set default value to zero to make background black:
             # currently channels with more than 8bits bitness are mapped to rgb by distributing color values
@@ -123,60 +147,79 @@ class Slide(BaseSlide):
             if level.shape[1] == slide_level.extent.y:
                 return level
 
-    def __read_region_of_page(self, page, channel_index, start_x, start_y, size_x, size_y):
+    def __read_region_of_page(
+        self, page, channel_index, start_x, start_y, size_x, size_y, padding_color
+    ):
         page_frame = page.keyframe
 
         if not page_frame.is_tiled:
-            result = self.__read_region_of_page_untiled(page, channel_index, start_x, start_y, size_x, size_y)
+            result = self.__read_region_of_page_untiled(
+                page, channel_index, start_x, start_y, size_x, size_y, padding_color
+            )
             if result.size == 0:
                 result = np.full(
                     (size_x, size_y),
-                    self.__get_color_for_channel(channel_index, self.slide_info.channel_depth),
+                    self.__get_color_for_channel(
+                        channel_index, self.slide_info.channel_depth, padding_color
+                    ),
                     dtype=page_frame.dtype,
                 )
         else:
-            result = self.__read_region_of_page_tiled(page, channel_index, start_x, start_y, size_x, size_y)
+            result = self.__read_region_of_page_tiled(
+                page, channel_index, start_x, start_y, size_x, size_y, padding_color
+            )
             if result.size == 0:
                 result = np.full(
-                    (
-                        page_frame.imagedepth,
-                        size_x,
-                        size_y,
-                        page_frame.samplesperpixel,
+                    (page_frame.imagedepth, size_x, size_y, page_frame.samplesperpixel),
+                    self.__get_color_for_channel(
+                        channel_index, self.slide_info.channel_depth, padding_color
                     ),
-                    self.__get_color_for_channel(channel_index, self.slide_info.channel_depth),
                     dtype=page_frame.dtype,
                 )
 
         return result
 
-    def __read_region_of_page_untiled(self, page, channel_index, start_x, start_y, size_x, size_y):
+    def __read_region_of_page_untiled(
+        self, page, channel_index, start_x, start_y, size_x, size_y, padding_color
+    ):
         page_frame = page.keyframe
         page_width, page_height = page_frame.imagewidth, page_frame.imagelength
         page_array = page.asarray()
 
-        new_height = page_height - start_x if (start_x + size_x > page_height) else size_x
+        new_height = (
+            page_height - start_x if (start_x + size_x > page_height) else size_x
+        )
         new_width = page_width - start_y if (start_y + size_y > page_width) else size_y
 
         out = np.full(
             (size_x, size_y),
-            self.__get_color_for_channel(channel_index, self.slide_info.channel_depth),
+            self.__get_color_for_channel(
+                channel_index, self.slide_info.channel_depth, padding_color
+            ),
             dtype=page_frame.dtype,
         )
 
-        out[0:new_height, 0:new_width] = page_array[start_x : start_x + new_height, start_y : start_y + new_width]
+        out[0:new_height, 0:new_width] = page_array[
+            start_x : start_x + new_height, start_y : start_y + new_width
+        ]
         return np.expand_dims(np.expand_dims(out, axis=0), axis=3)
 
-    def __read_region_of_page_tiled(self, page, channel_index, start_x, start_y, size_x, size_y):
+    def __read_region_of_page_tiled(
+        self, page, channel_index, start_x, start_y, size_x, size_y, padding_color
+    ):
         page_frame = page.keyframe
         image_width, image_height = page_frame.imagewidth, page_frame.imagelength
 
         tile_width, tile_height = page_frame.tilewidth, page_frame.tilelength
-        end_x = (start_x + size_x) if (start_x + size_x) < image_height else image_height
+        end_x = (
+            (start_x + size_x) if (start_x + size_x) < image_height else image_height
+        )
         end_y = (start_y + size_y) if (start_y + size_y) < image_width else image_width
 
         start_tile_x0, start_tile_y0 = start_x // tile_height, start_y // tile_width
-        end_tile_xn, end_tile_yn = np.ceil([end_x / tile_height, end_y / tile_width]).astype(int)
+        end_tile_xn, end_tile_yn = np.ceil(
+            [end_x / tile_height, end_y / tile_width]
+        ).astype(int)
 
         tile_per_line = int(np.ceil(image_width / tile_width))
 
@@ -188,13 +231,18 @@ class Slide(BaseSlide):
                 (end_tile_yn - start_tile_y0) * tile_width,
                 page_frame.samplesperpixel,
             ),
-            self.__get_color_for_channel(channel_index, self.slide_info.channel_depth),
+            self.__get_color_for_channel(
+                channel_index, self.slide_info.channel_depth, padding_color
+            ),
             dtype=page_frame.dtype,
         )
         fh = page.parent.filehandle
 
         if fh == None:
-            raise HTTPException(status_code=422, detail="Could not read from tiff file. File handle is null")
+            raise HTTPException(
+                status_code=422,
+                detail="Could not read from tiff file. File handle is null",
+            )
 
         jpegtables = page.jpegtables
         if jpegtables is not None:
@@ -221,7 +269,9 @@ class Slide(BaseSlide):
                     # search to tile offset and read image tile
                     fh.seek(offset)
                     if fh.tell() != offset:
-                        raise HTTPException(status_code=422, detail="Failed reading to tile offset")
+                        raise HTTPException(
+                            status_code=422, detail="Failed reading to tile offset"
+                        )
                     data = fh.read(bytecount)
                     tile, _indices, _shape = page.decode(data, index, jpegtables)
 
@@ -240,7 +290,9 @@ class Slide(BaseSlide):
         new_start_y = start_y - start_tile_y0 * tile_width
 
         # restrict the output array to the requested region
-        result = out[:, new_start_x : new_start_x + size_x, new_start_y : new_start_y + size_y :]
+        result = out[
+            :, new_start_x : new_start_x + size_x, new_start_y : new_start_y + size_y :
+        ]
         return result
 
     def __get_levels_ome_tif(self, tif_slide):
@@ -250,13 +302,19 @@ class Slide(BaseSlide):
         level_downsamples = []
 
         for i, item in enumerate(levels):
-            level_dimensions.append([item.keyframe.imagewidth, item.keyframe.imagelength])
+            level_dimensions.append(
+                [item.keyframe.imagewidth, item.keyframe.imagelength]
+            )
             if i > 0:
-                level_downsamples.append(level_dimensions[0][0] / item.keyframe.imagewidth)
+                level_downsamples.append(
+                    level_dimensions[0][0] / item.keyframe.imagewidth
+                )
             else:
                 level_downsamples.append(1)
 
-        original_levels = get_original_levels(level_count, level_dimensions, level_downsamples)
+        original_levels = get_original_levels(
+            level_count, level_dimensions, level_downsamples
+        )
         return original_levels
 
     def __get_xml_namespace(self):
@@ -276,7 +334,9 @@ class Slide(BaseSlide):
             temp_channel = SlideChannel(
                 id=i,
                 name=xmlc.get("Name"),
-                color=SlideColor(r=color_int[0], g=color_int[1], b=color_int[2], a=color_int[3]),
+                color=SlideColor(
+                    r=color_int[0], g=color_int[1], b=color_int[2], a=color_int[3]
+                ),
             )
             channels.append(temp_channel)
         return channels
@@ -284,20 +344,29 @@ class Slide(BaseSlide):
     def __get_pixel_size_ome_tif(self):
         namespace = self.__get_xml_namespace()
         pixel_unit_x = (
-            self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").get("PhysicalSizeXUnit")
+            self.parsed_metadata.find(f"{ namespace }Image")
+            .find(f"{ namespace }Pixels")
+            .get("PhysicalSizeXUnit")
         )
         pixel_unit_y = (
-            self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").get("PhysicalSizeYUnit")
+            self.parsed_metadata.find(f"{ namespace }Image")
+            .find(f"{ namespace }Pixels")
+            .get("PhysicalSizeYUnit")
         )
         if pixel_unit_x != pixel_unit_y:
             raise HTTPException(
-                status_code=422, detail="Different pixel size unit in x- and y-direction not supported."
+                status_code=422,
+                detail="Different pixel size unit in x- and y-direction not supported.",
             )
         pixel_size_x = (
-            self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").get("PhysicalSizeX")
+            self.parsed_metadata.find(f"{ namespace }Image")
+            .find(f"{ namespace }Pixels")
+            .get("PhysicalSizeX")
         )
         pixel_size_y = (
-            self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").get("PhysicalSizeY")
+            self.parsed_metadata.find(f"{ namespace }Image")
+            .find(f"{ namespace }Pixels")
+            .get("PhysicalSizeY")
         )
         if pixel_unit_x == "nm":
             return SlidePixelSizeNm(x=float(pixel_size_x), y=float(pixel_size_y))
@@ -310,7 +379,9 @@ class Slide(BaseSlide):
             y = float(pixel_size_y) * 1e6
             return SlidePixelSizeNm(x=x, y=y)
         else:
-            raise HTTPException(status_code=422, detail=f"Invalid pixel size unit ({pixel_unit_x})")
+            raise HTTPException(
+                status_code=422, detail=f"Invalid pixel size unit ({pixel_unit_x})"
+            )
 
     def __get_slide_info_ome_tif(self, slide_id, parsed_metadata):
         serie = self.tif_slide.series[0]
@@ -323,31 +394,43 @@ class Slide(BaseSlide):
                 channels=channels,
                 channel_depth=serie.keyframe.bitspersample,
                 extent=SlideExtent(
-                    x=serie.keyframe.imagewidth, y=serie.keyframe.imagelength, z=serie.keyframe.imagedepth
+                    x=serie.keyframe.imagewidth,
+                    y=serie.keyframe.imagelength,
+                    z=serie.keyframe.imagedepth,
                 ),
                 pixel_size_nm=pixel_size,
                 tile_extent=SlideExtent(
-                    x=serie.keyframe.tilewidth, y=serie.keyframe.tilelength, z=serie.keyframe.tiledepth
+                    x=serie.keyframe.tilewidth,
+                    y=serie.keyframe.tilelength,
+                    z=serie.keyframe.tiledepth,
                 ),
                 num_levels=len(levels),
                 levels=levels,
             )
             return slide_info
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
+            raise HTTPException(
+                status_code=404, detail=f"Failed to gather slide infos. [{e}]"
+            )
 
     # currently unused
     def __manipulate_metadata(self, dim_order, p_size_x, p_size_y, size_x, size_y):
         namespace = self.__get_xml_namespace()
-        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("DimensionOrder", dim_order)
-        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("SizeX", str(size_x))
-        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("SizeY", str(size_y))
-        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set(
-            "PhysicalSizeX", str(p_size_x)
-        )
-        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set(
-            "PhysicalSizeY", str(p_size_y)
-        )
+        self.parsed_metadata.find(f"{ namespace }Image").find(
+            f"{ namespace }Pixels"
+        ).set("DimensionOrder", dim_order)
+        self.parsed_metadata.find(f"{ namespace }Image").find(
+            f"{ namespace }Pixels"
+        ).set("SizeX", str(size_x))
+        self.parsed_metadata.find(f"{ namespace }Image").find(
+            f"{ namespace }Pixels"
+        ).set("SizeY", str(size_y))
+        self.parsed_metadata.find(f"{ namespace }Image").find(
+            f"{ namespace }Pixels"
+        ).set("PhysicalSizeX", str(p_size_x))
+        self.parsed_metadata.find(f"{ namespace }Image").find(
+            f"{ namespace }Pixels"
+        ).set("PhysicalSizeY", str(p_size_y))
         metadata = xml.tostring(self.parsed_metadata).decode("utf-8")
         # add xml decoding
         self.ome_metadata = f'<?xml version="1.0" encoding="UTF-8"?>\n{metadata}'

@@ -32,7 +32,9 @@ class Slide(BaseSlide):
     def get_info(self):
         return self.slide_info
 
-    def get_region(self, level, start_x, start_y, size_x, size_y):
+    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None):
+        if padding_color is None:
+            padding_color = settings.padding_color
         try:
             downsample_factor = int(self.slide_info.levels[level].downsample_factor)
         except IndexError:
@@ -56,8 +58,10 @@ class Slide(BaseSlide):
                     {settings.max_returned_region_size}, your request is for {base_size[0] * base_size[1]} pixels.""",
             )
         try:
-            base_img = self.openslide_slide.read_region(level_0_location, base_level, base_size)
-            rgb_img = rgba_to_rgb_with_background_color(base_img)
+            base_img = self.openslide_slide.read_region(
+                level_0_location, base_level, base_size
+            )
+            rgb_img = rgba_to_rgb_with_background_color(base_img, padding_color)
         except openslide.OpenSlideError as e:
             raise HTTPException(status_code=422, detail=f"OpenSlideError: {e}")
 
@@ -72,7 +76,9 @@ class Slide(BaseSlide):
                 status_code=404,
                 detail=f"Associated image {associated_image_name} does not exist.",
             )
-        associated_image_rgba = self.openslide_slide.associated_images[associated_image_name]
+        associated_image_rgba = self.openslide_slide.associated_images[
+            associated_image_name
+        ]
         return associated_image_rgba.convert("RGB")
 
     def get_label(self):
@@ -81,13 +87,14 @@ class Slide(BaseSlide):
     def get_macro(self):
         return self._get_associated_image("macro")
 
-    def get_tile(self, level, tile_x, tile_y):
+    def get_tile(self, level, tile_x, tile_y, padding_color):
         return self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
             tile_y * self.slide_info.tile_extent.y,
             self.slide_info.tile_extent.x,
             self.slide_info.tile_extent.y,
+            padding_color,
         )
 
     # private members
@@ -101,17 +108,31 @@ class Slide(BaseSlide):
         return original_levels
 
     def __get_pixel_size(self):
-        if self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "generic-tiff":
+        if (
+            self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR]
+            == "generic-tiff"
+        ):
             if self.openslide_slide.properties["tiff.ResolutionUnit"] == "centimeter":
-                pixel_per_cm_x = float(self.openslide_slide.properties["tiff.XResolution"])
-                pixel_per_cm_y = float(self.openslide_slide.properties["tiff.YResolution"])
+                pixel_per_cm_x = float(
+                    self.openslide_slide.properties["tiff.XResolution"]
+                )
+                pixel_per_cm_y = float(
+                    self.openslide_slide.properties["tiff.YResolution"]
+                )
                 pixel_size_nm_x = 1e7 / pixel_per_cm_x
                 pixel_size_nm_y = 1e7 / pixel_per_cm_y
             else:
                 raise ("Unable to extract pixel size from metadata.")
-        elif self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] in self.supported_vendors:
-            pixel_size_nm_x = 1000.0 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X])
-            pixel_size_nm_y = 1000.0 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_Y])
+        elif (
+            self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR]
+            in self.supported_vendors
+        ):
+            pixel_size_nm_x = 1000.0 * float(
+                self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X]
+            )
+            pixel_size_nm_y = 1000.0 * float(
+                self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_Y]
+            )
         else:
             raise ("Unable to extract pixel size from metadata.")
         return SlidePixelSizeNm(x=pixel_size_nm_x, y=pixel_size_nm_y)
@@ -125,8 +146,12 @@ class Slide(BaseSlide):
         ):
             # some tiles can have an unequal tile height and width that can cause problems in the slide viewer
             # since the tile route is soley used for viewing, we provide the default tile width and height
-            temp_height = self.openslide_slide.properties["openslide.level[0].tile-height"]
-            temp_width = self.openslide_slide.properties["openslide.level[0].tile-width"]
+            temp_height = self.openslide_slide.properties[
+                "openslide.level[0].tile-height"
+            ]
+            temp_width = self.openslide_slide.properties[
+                "openslide.level[0].tile-width"
+            ]
             if temp_height == temp_width:
                 tile_height = temp_height
                 tile_width = temp_width
@@ -137,7 +162,9 @@ class Slide(BaseSlide):
         try:
             levels = self.__get_levels_openslide()
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Failed to retrieve slide level data. [{e}]")
+            raise HTTPException(
+                status_code=404, detail=f"Failed to retrieve slide level data. [{e}]"
+            )
         try:
             slide_info = SlideInfo(
                 id=slide_id,
@@ -155,4 +182,6 @@ class Slide(BaseSlide):
             )
             return slide_info
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
+            raise HTTPException(
+                status_code=404, detail=f"Failed to gather slide infos. [{e}]"
+            )
