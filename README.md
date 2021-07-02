@@ -238,3 +238,33 @@ pylint wsi_service --disable=all --enable=F,E,unreachable,duplicate-key,unnecess
 ```
 
 following [VS Code](https://code.visualstudio.com/docs/python/linting#_default-pylint-rules).
+
+
+## Plugin development
+
+Plugins are python packages following the naming scheme `wsi-service-plugin-PLUGINNAME` that need to implement a Slide class following the base class in [`slide.py`](wsi_service/slide.py). Additionally, there needs to be an `__init__.py` file like this:
+
+```python
+from .slide import Slide
+
+supported_file_extensions = [
+    ".tif"
+]
+
+def open(filepath, slide_id=0):
+    return Slide(filepath, slide_id)
+```
+
+Once these minimal requirements are taken care of, the python package can be installed on top of an existing  WSI Service docker image by simple running a Dockerfile along these lines:
+
+```Dockerfile
+FROM registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service
+
+COPY wsi-service-plugin-PLUGINNAME.whl /tmp/wsi-service-plugin-PLUGINNAME.whl
+
+RUN pip3 install /tmp/wsi-service-plugin-PLUGINNAME.whl
+```
+
+There are two base plugins ([openslide](./wsi_service_base_plugins/openslide/), [tiffile](./wsi_service_base_plugins/tifffile/)) that can be used as templates for new plugins. Additionally to the mentioned minimal requirements these plugins use poetry to manage and create the python package. This is highly recommended when creating a plugin. Furthermore, these plugins implement tests based on pytest by defining a number of parameters on top of example integration test functions defined as part of the WSI Service ([plugin_example_tests](./wsi_service/tests/integration/plugin_example_tests)). 
+
+A more complete example of an external plugin integration can be found in the iSyntax integration repository ([wsi-service-plugin-isyntax](https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/wsi-service-plugins/wsi-service-plugin-isyntax)). That example includes the usage of an external service that is run in an additional docker container due to runtime limitations.
