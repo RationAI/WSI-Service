@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+
+- Added info about plugin versions to /alive endpoint
+
 ## 0.4.1
 
 - Automatically set fastapi version
