@@ -4,6 +4,8 @@ import pytest
 import requests
 from PIL import Image
 
+from wsi_service.tests.integration.plugin_example_tests.helpers import get_image
+
 
 def test_alive():
     response = requests.get(f"http://localhost:8080/alive")
@@ -67,27 +69,21 @@ def test_get_slide_invalid_slide_id():
     assert response.json()["detail"] == "Slide with slide_id invalid_id does not exist"
 
 
-"""
 @pytest.mark.parametrize("slide_id", ["4b0ec5e0ec5e5e05ae9e500857314f20"])
-@pytest.mark.parametrize(
-    "tile_x, tile_y, level, expected_response, size",
-    [
-        (0, 0, 9, 200, (128, 128)),  # ok
-    ],
-)
+@pytest.mark.parametrize("tile_x, tile_y, level, expected_response, size", [(0, 0, 9, 200, (128, 128))])  # ok
 def test_get_slide_tile_padding_color(slide_id, tile_x, tile_y, level, expected_response, size):
 
     response = requests.get(
         f"http://localhost:8080/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}?image_format=png&padding_color=%23AABBCC",
+        stream=True,
     )
     assert response.status_code == expected_response
     assert response.headers["content-type"] == f"image/png"
 
-    image = Image.open(io.BytesIO(response.raw.data))
+    image = get_image(response)
     x, y = image.size
     assert (x == size[0]) and (y == size[1])
     assert image.getpixel((size[0] - 1, size[1] - 1)) == (170, 187, 204)
-"""
 
 
 @pytest.mark.parametrize("slide_id", ["4b0ec5e0ec5e5e05ae9e500857314f20"])

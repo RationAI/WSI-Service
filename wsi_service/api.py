@@ -171,13 +171,13 @@ def get_slide_region(
     slide = slide_manager.get_slide(slide_id)
     if z != 0:
         try:
-            image_region = slide.get_region(level, start_x, start_y, size_x, size_y, z=z)
+            image_region = slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None, z=z)
         except TypeError:
             raise HTTPException(
                 status_code=422, detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers."""
             )
     else:
-        image_region = slide.get_region(level, start_x, start_y, size_x, size_y)
+        image_region = slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None)
     validate_image_channels(slide, image_channels)
     return make_response(slide, image_region, image_format, image_quality, image_channels)
 
@@ -204,18 +204,18 @@ def get_slide_tile(
     (original) resolution. The available levels depend on the image. Coordinates are given
     with respect to tiles, i.e. tile coordinate n is the n-th tile in the respective dimension.
     """
-    validate_hex_color_string(padding_color)
+    vp_color = validate_hex_color_string(padding_color)
     validate_image_request(image_format, image_quality)
     slide = slide_manager.get_slide(slide_id)
     if z != 0:
         try:
-            image_tile = slide.get_tile(level, tile_x, tile_y, z=z)
+            image_tile = slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
         except TypeError:
             raise HTTPException(
                 status_code=422, detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers."""
             )
     else:
-        image_tile = slide.get_tile(level, tile_x, tile_y)
+        image_tile = slide.get_tile(level, tile_x, tile_y, padding_color=vp_color)
     validate_image_channels(slide, image_channels)
     return make_response(slide, image_tile, image_format, image_quality, image_channels)
 
@@ -275,10 +275,7 @@ if settings.local_mode:
         slide = localmapper.get_slide(slide_id)
         return slide.slide_storage
 
-    @api.get(
-        "/v1/refresh_local_mapper",
-        tags=["Additional Routes (Standalone WSI Service)"],
-    )
+    @api.get("/v1/refresh_local_mapper", tags=["Additional Routes (Standalone WSI Service)"])
     def refresh_local_mapper():
         """
         (Only in standalone mode) Refresh available files by scanning for new files.

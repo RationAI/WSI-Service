@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1
+
+- Automatically set fastapi version
+- Fix for padding color in global settings
+
 ## 0.4.0
 
 - Implemented plugins based on python packages
@@ -7,8 +12,8 @@
 
 ## 0.3.1
 
-- added pre-loading of files for the local mapper
-- added support for philips tiff-files
+- Added pre-loading of files for the local mapper
+- Added support for philips tiff-files
 
 ## 0.3.0
 

@@ -121,9 +121,8 @@ def validate_hex_color_string(padding_color):
         if match:
             stripped_padding_color = padding_color.lstrip("#")
             int_padding_color = tuple(int(stripped_padding_color[i : i + 2], 16) for i in (0, 2, 4))
-            settings.padding_color = int_padding_color
-        else:
-            settings.padding_color = (255, 255, 255)
+            return int_padding_color
+    return settings.padding_color
 
 
 def validate_image_channels(slide, image_channels):

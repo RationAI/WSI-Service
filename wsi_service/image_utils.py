@@ -7,8 +7,8 @@ from wsi_service.models.slide import SlideColor
 from wsi_service.singletons import settings
 
 
-def rgba_to_rgb_with_background_color(image_rgba):
-    image_rgb = Image.new("RGB", image_rgba.size, settings.padding_color)
+def rgba_to_rgb_with_background_color(image_rgba, padding_color):
+    image_rgb = Image.new("RGB", image_rgba.size, padding_color)
     image_rgb.paste(image_rgba, mask=image_rgba.split()[3])
     return image_rgb
 

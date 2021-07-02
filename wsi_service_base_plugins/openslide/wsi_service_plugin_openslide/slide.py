@@ -32,7 +32,9 @@ class Slide(BaseSlide):
     def get_info(self):
         return self.slide_info
 
-    def get_region(self, level, start_x, start_y, size_x, size_y):
+    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None):
+        if padding_color is None:
+            padding_color = settings.padding_color
         try:
             downsample_factor = int(self.slide_info.levels[level].downsample_factor)
         except IndexError:
@@ -57,7 +59,7 @@ class Slide(BaseSlide):
             )
         try:
             base_img = self.openslide_slide.read_region(level_0_location, base_level, base_size)
-            rgb_img = rgba_to_rgb_with_background_color(base_img)
+            rgb_img = rgba_to_rgb_with_background_color(base_img, padding_color)
         except openslide.OpenSlideError as e:
             raise HTTPException(status_code=422, detail=f"OpenSlideError: {e}")
 
@@ -81,13 +83,14 @@ class Slide(BaseSlide):
     def get_macro(self):
         return self._get_associated_image("macro")
 
-    def get_tile(self, level, tile_x, tile_y):
+    def get_tile(self, level, tile_x, tile_y, padding_color):
         return self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
             tile_y * self.slide_info.tile_extent.y,
             self.slide_info.tile_extent.x,
             self.slide_info.tile_extent.y,
+            padding_color,
         )
 
     # private members
