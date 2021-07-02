@@ -80,7 +80,6 @@ def test_get_slide_tile_padding_color(slide_id, tile_x, tile_y, level, expected_
     assert response.status_code == expected_response
     assert response.headers["content-type"] == f"image/png"
 
-    # image = Image.open(io.BytesIO(response.raw.data))
     image = get_image(response)
     x, y = image.size
     assert (x == size[0]) and (y == size[1])
