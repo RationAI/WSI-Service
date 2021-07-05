@@ -3,6 +3,7 @@ import importlib
 import os
 import pathlib
 import pkgutil
+from importlib.metadata import version as version_from_name
 
 from wsi_service.singletons import settings
 
@@ -51,7 +52,12 @@ def is_supported_format(filepath):
 def get_plugins_overview():
     plugins_overview = []
     for plugin_name, plugin_item in plugins.items():
-        plugin = {"name": plugin_name, "supported_file_extensions": plugin_item.supported_file_extensions}
+        version = version_from_name("wsi_service_plugin_" + plugin_name)
+        plugin = {
+            "name": plugin_name,
+            "version": version,
+            "supported_file_extensions": plugin_item.supported_file_extensions,
+        }
         plugins_overview.append(plugin)
     return plugins_overview
 
