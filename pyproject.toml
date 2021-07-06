@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "wsi-service"
-version = "0.4.2"
-description = "The WSI Service enables users to stream Whole Slide Images (WSI) tile-based via HTTP. It is based on a FastAPI webserver and OpenSlide to access whole slide image data."
+version = "0.4.3"
+description = "EMPAIA WSI Service to stream whole slide images"
 authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
 
