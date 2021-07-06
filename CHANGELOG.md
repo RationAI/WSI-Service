@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.3
+
+- Improved OpenAPI docs and README
+
 ## 0.4.2
 
 - Added info about plugin versions to /alive endpoint
