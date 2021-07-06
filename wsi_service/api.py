@@ -63,7 +63,7 @@ def get_service_status():
 @api.get("/v1/slides/{slide_id}/info", response_model=SlideInfo, tags=["Main Routes"])
 def get_slide_info(slide_id: str):
     """
-    Metadata for slide with given id
+    Get metadata information for a slide given its ID
     """
     slide = slide_manager.get_slide(slide_id)
     return slide.get_info()
@@ -83,7 +83,13 @@ def get_slide_thumbnail(
     image_quality: int = ImageQualityQuery,
 ):
     """
-    Thumbnail of the slide
+    Get slide thumbnail image  given its ID.
+    You additionally need to set a maximum width and height for the thumbnail.
+    Images will be scaled to match these requirements while keeping the aspect ratio.
+
+    Optionally, the image format and its quality (e.g. for jpeg) can be selected.
+    Formats include jpeg, png, tiff, bmp, gif.
+    When tiff is specified as output format the raw data of the image is returned
     """
     validate_image_request(image_format, image_quality)
     slide = slide_manager.get_slide(slide_id)
@@ -105,7 +111,13 @@ def get_slide_label(
     image_quality: int = ImageQualityQuery,
 ):
     """
-    Label image of the slide
+    Get the label image of a slide given its ID.
+    You additionally need to set a maximum width and height for the label image.
+    Images will be scaled to match these requirements while keeping the aspect ratio.
+
+    Optionally, the image format and its quality (e.g. for jpeg) can be selected.
+    Formats include jpeg, png, tiff, bmp, gif.
+    When tiff is specified as output format the raw data of the image is returned
     """
     validate_image_request(image_format, image_quality)
     slide = slide_manager.get_slide(slide_id)
@@ -128,7 +140,13 @@ def get_slide_macro(
     image_quality: int = ImageQualityQuery,
 ):
     """
-    Macro image of the slide
+    Get the macro image of a slide given its ID.
+    You additionally need to set a maximum width and height for the macro image.
+    Images will be scaled to match these requirements while keeping the aspect ratio.
+
+    Optionally, the image format and its quality (e.g. for jpeg) can be selected.
+    Formats include jpeg, png, tiff, bmp, gif.
+    When tiff is specified as output format the raw data of the image is returned
     """
     validate_image_request(image_format, image_quality)
     slide = slide_manager.get_slide(slide_id)
@@ -150,14 +168,29 @@ def get_slide_region(
     start_y: int = Path(None, example=0, description="y component of start coordinate of requested region"),
     size_x: int = Path(None, example=1024, description="Width of requested region"),
     size_y: int = Path(None, example=1024, description="Height of requested region"),
-    image_format: str = ImageFormatsQuery,
-    image_quality: int = ImageQualityQuery,
     image_channels: List[int] = ImageChannelQuery,
     z: int = ZStackQuery,
+    image_format: str = ImageFormatsQuery,
+    image_quality: int = ImageQualityQuery,
 ):
     """
-    Get region of the slide. Level 0 is highest (original) resolution. The available levels
-    depend on the image. Coordinates are given with respect to the requested level.
+    Get a region of a slide given its ID and by providing the following parameters:
+
+    * `level` - Pyramid level of the region. Level 0 is highest (original) resolution. The available levels depend on the image.
+
+    * `start_x`, `start_y` - Start coordinates of the requested region. Coordinates are given with respect to the requested level. Coordinates define the upper left corner of the region with respect to the image origin (0, 0) at the upper left corner of the image.
+
+    * `size_x`, `size_y` - Width and height of requested region. Size needs to be given with respect to the requested level.
+
+    There are a number of addtional query parameters:
+
+    * `image_channels` - Single channels (or multiple channels) can be retrieved through the optional parameter image_channels as an integer array referencing the channel IDs. This is paricularly important for images with abitrary image channels and channels with a higher color depth than 8bit (e.g. fluorescence images). The channel composition of the image can be obtained through the slide info endpoint, where the dedicated channels are listed along with its color, name and bitness. By default all channels are returned.
+
+    * `z` - The region endpoint also offers the selection of a layer in a Z-Stack by setting the index z. Default is z=0.
+
+    * `image_format` - The image format can be selected. Formats include jpeg, png, tiff, bmp, gif. When tiff is specified as output format the raw data of the image is returned. Default is jpeg. Multi-channel images can also be represented as RGB-images (mostly for displaying reasons in the viewer). Note that the mapping of all color channels to RGB values is currently restricted to the first three channels.
+
+    * `image_quality` - The image quality can be set for specific formats, e.g. for the jpeg format a value between 0 and 100 can be selected. Default is 90.
     """
     validate_image_request(image_format, image_quality)
     if size_x * size_y > settings.max_returned_region_size:
@@ -193,16 +226,30 @@ def get_slide_tile(
     level: int = Path(None, ge=0, example=0, description="Pyramid level of region"),
     tile_x: int = Path(None, example=0, description="Request the tile_x-th tile in x dimension"),
     tile_y: int = Path(None, example=0, description="Request the tile_y-th tile in y dimension"),
+    image_channels: List[int] = ImageChannelQuery,
+    z: int = ZStackQuery,
+    padding_color: str = ImagePaddingColorQuery,
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery,
-    image_channels: List[int] = ImageChannelQuery,
-    padding_color: str = ImagePaddingColorQuery,
-    z: int = ZStackQuery,
 ):
     """
-    Get tile of the slide. Extent of the tile is given in slide metadata. Level 0 is highest
-    (original) resolution. The available levels depend on the image. Coordinates are given
-    with respect to tiles, i.e. tile coordinate n is the n-th tile in the respective dimension.
+    Get a tile of a slide given its ID and by providing the following parameters:
+
+    * `level` - Pyramid level of the region. Level 0 is highest (original) resolution. The available levels depend on the image.
+
+    * `tile_x`, `tile_y` - Coordinates are given with respect to tiles, i.e. tile coordinate n is the n-th tile in the respective dimension. Coordinates are also given with respect to the requested level. Coordinates (0,0) select the tile at the upper left corner of the image.
+
+    There are a number of addtional query parameters:
+
+    * `image_channels` - Single channels (or multiple channels) can be retrieved through the optional parameter image_channels as an integer array referencing the channel IDs. This is paricularly important for images with abitrary image channels and channels with a higher color depth than 8bit (e.g. fluorescence images). The channel composition of the image can be obtained through the slide info endpoint, where the dedicated channels are listed along with its color, name and bitness. By default all channels are returned.
+
+    * `z` - The region endpoint also offers the selection of a layer in a Z-Stack by setting the index z. Default is z=0.
+
+    * `padding_color` - Background color as 24bit-hex-string with leading #, that is used when image tile contains whitespace when out of image extent. Default is white.
+
+    * `image_format` - The image format can be selected. Formats include jpeg, png, tiff, bmp, gif. When tiff is specified as output format the raw data of the image is returned. Multi-channel images can also be represented as RGB-images (mostly for displaying reasons in the viewer). Note that the mapping of all color channels to RGB values is currently restricted to the first three channels.
+
+    * `image_quality` - The image quality can be set for specific formats, e.g. for the jpeg format a value between 0 and 100 can be selected. Default is 90.
     """
     vp_color = validate_hex_color_string(padding_color)
     validate_image_request(image_format, image_quality)
@@ -256,7 +303,7 @@ if settings.local_mode:
     )
     def get_slide(slide_id: str):
         """
-        (Only in standalone mode) Return slide data for a given slide_id.
+        (Only in standalone mode) Return slide data for a given slide ID.
         """
         global localmapper
         slide = localmapper.get_slide(slide_id)
@@ -269,7 +316,7 @@ if settings.local_mode:
     )
     def get_slide_storage(slide_id: str):
         """
-        (Only in standalone mode) Return slide storage data for a given slide_id.
+        (Only in standalone mode) Return slide storage data for a given slide ID.
         """
         global localmapper
         slide = localmapper.get_slide(slide_id)

@@ -4,7 +4,7 @@ EMPAIA WSI Service to stream whole slide images
 
 ## Overview
 
-The *WSI Service* enables users to stream Whole Slide Images (WSI) tile-based via HTTP. It is based on a FastAPI webserver and a number of [plugins]([plugin-development](plugin-development)) to access whole slide image data.
+The *WSI Service* enables users to stream Whole Slide Images (WSI) tile-based via HTTP. It is based on a FastAPI webserver and a number of plugins to access whole slide image data.
 
 Regarding the slide's metadata, it provides the extent of the base level (original image, level=0), its pixel size in nm (level=0), general tile extent, the total count of levels and a list of levels with information about its extent, downsampling factor in relation to the base level. Furthermore, the channel depth is given along with a list of all available channels.
 
@@ -25,9 +25,11 @@ When tiff is specified as output format for the region and tile endpoint the raw
 
 The region and the tile endpoint also offer the selection of a layer with the index z in a Z-Stack.
 
+Get a detailed description of each endpoint by running the WSI Service (see *Getting started* section) and accessing the included Swagger UI [http://localhost:8080/docs](http://localhost:8080/docs).
+
 ### Standalone version
 
-The WSI Service relies on the [Storage Mapper Service](https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/storage-mapper-service) to get storage information for a certain slide ID. If the mapper-address is not provided (see [How to run](how-to-run)), the WSI Service will be run in standalone mode using a local mapper. This local mapper fulfills the function of the storage mapper service, the id mapper service and part of the clinical data service by creating case ids for folders found in the data folder and slide ids for images within these case folders. In the standalone mode there are few additional endpoints, which can be accessed:
+The WSI Service relies on the [Storage Mapper Service](https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/storage-mapper-service) to get storage information for a certain slide id. If the mapper-address is not provided (see *Getting started* section), the WSI Service will be run in standalone mode using a local mapper. This local mapper fulfills the function of the storage mapper service, the id mapper service and part of the clinical data service by creating case ids for folders found in the data folder and slide ids for images within these case folders. In the standalone mode there are few additional endpoints, which can be accessed:
 
 - `GET /v1/cases/` - Get cases
 - `GET /v1/cases/{case_id}/slides/` - Get available slides
@@ -56,13 +58,11 @@ Different formats are supported by plugins for accessing image data. Two base pl
 - [tiffile](./wsi_service_base_plugins/tifffile/)
   - OME-TIFF (\*.ome.tif, \*.ome.tif, \*.ome.tiff, \*.ome.tf2, \*.ome.tf8, \*.ome.btf)
 
-## How to run
+## Getting started
 
 WSI Service is a python module and has to be run via docker.
 
-### Run locally
-
-Make sure [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) is installed.
+Make sure [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) are installed.
 
 Set environment variables in your shell or in a `.env` file:
 
@@ -89,7 +89,6 @@ Short explanation of the parameters used:
 - `WS_LOCAL_MODE` when set to true, wsi service is started in local mode
 - `WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS` set timeout for inactive histo images (default is 600 seconds)
 - `WS_MAX_RETURNED_REGION_SIZE` set maximum image region size for service (channels * width * height; default is 4 * 5000 * 5000)
-  
 - `COMPOSE_RESTART` set to `no`, `always` to configure restart settings
 - `COMPOSE_NETWORK` set network used for wsi service
 - `COMPOSE_WS_PORT` set external port for wsi service
@@ -180,6 +179,6 @@ COPY wsi-service-plugin-PLUGINNAME.whl /tmp/wsi-service-plugin-PLUGINNAME.whl
 RUN pip3 install /tmp/wsi-service-plugin-PLUGINNAME.whl
 ```
 
-There are two base plugins ([openslide](./wsi_service_base_plugins/openslide/), [tiffile](./wsi_service_base_plugins/tifffile/)) that can be used as templates for new plugins. Additionally to the mentioned minimal requirements these plugins use poetry to manage and create the python package. This is highly recommended when creating a plugin. Furthermore, these plugins implement tests based on pytest by defining a number of parameters on top of example integration test functions defined as part of the WSI Service ([plugin_example_tests](./wsi_service/tests/integration/plugin_example_tests)). 
+There are two base plugins ([openslide](./wsi_service_base_plugins/openslide/), [tiffile](./wsi_service_base_plugins/tifffile/)) that can be used as templates for new plugins. Additionally to the mentioned minimal requirements these plugins use poetry to manage and create the python package. This is highly recommended when creating a plugin. Furthermore, these plugins implement tests based on pytest by defining a number of parameters on top of example integration test functions defined as part of the WSI Service ([plugin_example_tests](./wsi_service/tests/integration/plugin_example_tests)).
 
 A more complete example of an external plugin integration can be found in the iSyntax integration repository ([wsi-service-plugin-isyntax](https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/wsi-service-plugins/wsi-service-plugin-isyntax)). That example includes the usage of an external service that is run in an additional docker container due to runtime limitations.
