@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.4
+
+- Updated outdated python packages
+
 ## 0.4.3
 
 - Improved OpenAPI docs and README
