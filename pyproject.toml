@@ -10,7 +10,7 @@ python = "^3.8"
 pydantic = {extras = ["dotenv"], version = "^1.8.2"}
 fastapi = "^0.66.0"
 requests = "^2.25.0"
-uvicorn = "^0.12.3"
+uvicorn = "^0.14.0"
 numpy = "^1.21.0"
 Pillow = "^8.3.1"
 imagecodecs = "^2021.1.11"
