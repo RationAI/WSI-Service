@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   wsi_service:
-    image: registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service
+    image: registry.gitlab.com/empaia/services/wsi-service
     build:
       context: "."
       network: "${COMPOSE_NETWORK}"

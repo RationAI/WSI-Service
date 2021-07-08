@@ -1,13 +1,13 @@
 stages:
-  - static_analysis
+  - codecheck
   - version
   - test
-  - build_docker
+  - build
 
-run_static_analysis:
-  stage: static_analysis
+codecheck:
+  stage: codecheck
   tags:
-    - mevis-ubuntu-vm-wsi
+    - empaia
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   before_script:
@@ -20,7 +20,7 @@ run_static_analysis:
 version:
   stage: version
   tags:
-    - mevis-ubuntu-vm-wsi
+    - empaia
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   before_script:
@@ -35,10 +35,10 @@ version:
     reports:
       dotenv: version.env
 
-run_tests:
+test:
   stage: test
   tags:
-    - mevis-ubuntu-vm-wsi
+    - empaia
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   before_script:
@@ -50,22 +50,22 @@ run_tests:
     - docker exec wsi-service_wsi_service_1 rm -r .pytest_cache
     - docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
 
-run_build_wsi_service:
-  stage: build_docker
+build:
+  stage: build
   only:
-    - master
-  image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
+    - main
   tags:
-    - asprunner
-  variables:
-    GIT_SUBMODULE_STRATEGY: recursive
+    - empaia
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"gitlab-ci-token\",\"password\":\"$CI_JOB_TOKEN\"}}}" > /kaniko/.docker/config.json
     - export BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE --destination $CI_REGISTRY_IMAGE:$VERSION --label org.opencontainers.image.created=$BUILD_TIME --label org.opencontainers.image.authors="EMPAIA" --label org.opencontainers.image.version=$VERSION --label org.opencontainers.image.vendor="EMPAIA" --label org.opencontainers.image.version=$CI_COMMIT_TAG --label org.opencontainers.image.source=$CI_PROJECT_URL --label org.opencontainers.image.revision=$CI_COMMIT_SHA --label org.opencontainers.image.title="WSI Service" --label org.opencontainers.image.description="WSI-Service to stream whole slide images tile-based via HTTP"
+    - docker build --no-cache . -t $CI_REGISTRY_IMAGE:$VERSION -t $CI_REGISTRY_IMAGE --label org.opencontainers.image.created=$BUILD_TIME --label org.opencontainers.image.authors="EMPAIA" --label org.opencontainers.image.vendor="EMPAIA" --label org.opencontainers.image.version=$VERSION --label org.opencontainers.image.source=$CI_PROJECT_URL --label org.opencontainers.image.revision=$CI_COMMIT_SHA --label org.opencontainers.image.title="WSIS" --label org.opencontainers.image.description="Whole Slide Image Service (WSIS)"
+    - docker push $CI_REGISTRY_IMAGE:$VERSION
+    - docker push $CI_REGISTRY_IMAGE
+  after_script:
+    - docker logout $CI_REGISTRY
   needs:
-    - job: run_tests
     - job: version
       artifacts: true
+    - job: test

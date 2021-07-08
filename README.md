@@ -29,7 +29,7 @@ Get a detailed description of each endpoint by running the WSI Service (see *Get
 
 ### Standalone version
 
-The WSI Service relies on the [Storage Mapper Service](https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/storage-mapper-service) to get storage information for a certain slide id. If activated (see *Getting started* section), the WSI Service will be run in standalone mode using a local mapper. This local mapper fulfills the function of the storage mapper service, the id mapper service and part of the clinical data service by creating case ids for folders found in the data folder and slide ids for images within these case folders. In the standalone mode there are few additional endpoints, which can be accessed:
+The WSI Service relies on the [Storage Mapper Service](https://www.gitlab.com/empaia/services/storage-mapper-service) to get storage information for a certain slide id. If activated (see *Getting started* section), the WSI Service will be run in standalone mode using a local mapper. This local mapper fulfills the function of the storage mapper service, the id mapper service and part of the clinical data service by creating case ids for folders found in the data folder and slide ids for images within these case folders. In the standalone mode there are few additional endpoints, which can be accessed:
 
 - `GET /v1/cases/` - Get cases
 - `GET /v1/cases/{case_id}/slides/` - Get available slides
@@ -132,7 +132,7 @@ Use VS Code to start `Python: Remote Attach` while development composition is up
 
 ### Run static code analysis and fix issues
 
-If you are using VS Code there are already default [settings](https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/wsi-service/-/blob/master/.vscode/settings.json) that will sort your imports and reformat the code on save. Furthermore, there will be standard pylint warnings from VS Code that should be fixed manually.
+If you are using VS Code there are already default [settings](https://www.gitlab.com/empaia/services/wsi-service/-/blob/main/.vscode/settings.json) that will sort your imports and reformat the code on save. Furthermore, there will be standard pylint warnings from VS Code that should be fixed manually.
 
 To start the automatic formatter from console run
 
@@ -172,7 +172,7 @@ def open(filepath, slide_id=0):
 Once these minimal requirements are taken care of, the python package can be installed on top of an existing  WSI Service docker image by simple running a Dockerfile along these lines:
 
 ```Dockerfile
-FROM registry.gitlab.cc-asp.fraunhofer.de:4567/empaia/platform/data/wsi-service
+FROM registry.gitlab.com/empaia/services/wsi-service
 
 COPY wsi-service-plugin-PLUGINNAME.whl /tmp/wsi-service-plugin-PLUGINNAME.whl
 
@@ -181,4 +181,4 @@ RUN pip3 install /tmp/wsi-service-plugin-PLUGINNAME.whl
 
 There are two base plugins ([openslide](./wsi_service_base_plugins/openslide/), [tiffile](./wsi_service_base_plugins/tifffile/)) that can be used as templates for new plugins. Additionally to the mentioned minimal requirements these plugins use poetry to manage and create the python package. This is highly recommended when creating a plugin. Furthermore, these plugins implement tests based on pytest by defining a number of parameters on top of example integration test functions defined as part of the WSI Service ([plugin_example_tests](./wsi_service/tests/integration/plugin_example_tests)).
 
-A more complete example of an external plugin integration can be found in the iSyntax integration repository ([wsi-service-plugin-isyntax](https://gitlab.cc-asp.fraunhofer.de/empaia/platform/data/wsi-service-plugins/wsi-service-plugin-isyntax)). That example includes the usage of an external service that is run in an additional docker container due to runtime limitations.
+A more complete example of an external plugin integration can be found in the iSyntax integration repository ([wsi-service-plugin-isyntax](https://registry.gitlab.com/empaia/services/wsi-service-plugins/wsi-service-plugin-isyntax)). That example includes the usage of an external service that is run in an additional docker container due to runtime limitations.
