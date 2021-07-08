@@ -565,7 +565,7 @@ full = ["aiofiles", "graphene", "itsdangerous", "jinja2", "python-multipart", "p
 
 [[package]]
 name = "tifffile"
-version = "2021.6.14"
+version = "2021.7.2"
 description = "Read and write TIFF files"
 category = "main"
 optional = false
@@ -1229,8 +1229,8 @@ starlette = [
     {file = "starlette-0.14.2.tar.gz", hash = "sha256:7d49f4a27f8742262ef1470608c59ddbc66baf37c148e938c7038e6bc7a998aa"},
 ]
 tifffile = [
-    {file = "tifffile-2021.6.14-py3-none-any.whl", hash = "sha256:3201f5ba297b94328954724bd48dbf1b36ec14c4ee4cd5a2ec1aa3f83c486200"},
-    {file = "tifffile-2021.6.14.tar.gz", hash = "sha256:a2f83d82800a8d83cbd04340f9d65a6873a970874947a6b823b1b1238e84cba6"},
+    {file = "tifffile-2021.7.2-py3-none-any.whl", hash = "sha256:3025eaecf3c188ebb9c82e6476da9d8e712630e972f00ea38e054351928e56cc"},
+    {file = "tifffile-2021.7.2.tar.gz", hash = "sha256:17fc5ca901f7d7b827a16e4695668e6120319324efe6d1333258397d8a71dedb"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},

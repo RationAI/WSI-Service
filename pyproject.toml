@@ -9,7 +9,7 @@ license = "MIT"
 python = "^3.8"
 pydantic = {extras = ["dotenv"], version = "^1.8.2"}
 fastapi = "^0.66.0"
-starlette = "^0.15.0"
+starlette = "^0.14.2"
 requests = "^2.25.0"
 uvicorn = "^0.12.3"
 numpy = "^1.21.0"
