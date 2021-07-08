@@ -667,7 +667,7 @@ url = "wsi_service_base_plugins/tifffile"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "2201d06455db32e2ded35e83be7455cae3cca7307b5fd992ec974d3aca2d0503"
+content-hash = "3c37fcde56a355602ffc79e4ee69e52184727fc1aa3c0db6eff2d1de1ebbbf3d"
 
 [metadata.files]
 appdirs = [
