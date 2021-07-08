@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wsi-service"
-version = "0.4.3"
+version = "0.4.4"
 description = "EMPAIA WSI Service to stream whole slide images"
 authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
@@ -8,12 +8,11 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.8"
 pydantic = {extras = ["dotenv"], version = "^1.8.2"}
-fastapi = "^0.65.2"
-starlette = "^0.14.2"
+fastapi = "^0.66.0"
 requests = "^2.25.0"
-uvicorn = "^0.12.3"
+uvicorn = "^0.14.0"
 numpy = "^1.21.0"
-Pillow = "^8.0.1"
+Pillow = "^8.3.1"
 imagecodecs = "^2021.1.11"
 tifffile = "^2021.1.14"
 
@@ -21,7 +20,7 @@ tifffile = "^2021.1.14"
 black = "^21.5b2"
 debugpy = "^1.3.0"
 isort = "^5.6.4"
-pylint = "^2.6.0"
+pylint = "^2.9.3"
 pytest-cov = "^2.10.1"
 pytest = "^6.1.2"
 requests-mock = "^1.8.0"
