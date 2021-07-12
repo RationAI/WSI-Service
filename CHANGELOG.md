@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.5
+
+- Added max_thumbnail_size setting for thumbnail endpoint
+
 ## 0.4.4
 
 - Updated outdated python packages

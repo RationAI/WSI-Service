@@ -77,8 +77,12 @@ def get_slide_info(slide_id: str):
 )
 def get_slide_thumbnail(
     slide_id: str,
-    max_x: int = Path(None, example=100, description="Maximum width of thumbnail"),
-    max_y: int = Path(None, example=100, description="Maximum height of thumbnail"),
+    max_x: int = Path(
+        None, example=100, ge=1, le=settings.max_thumbnail_size, description="Maximum width of thumbnail"
+    ),
+    max_y: int = Path(
+        None, example=100, ge=1, le=settings.max_thumbnail_size, description="Maximum height of thumbnail"
+    ),
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery,
 ):
