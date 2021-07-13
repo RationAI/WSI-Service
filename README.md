@@ -134,22 +134,12 @@ Use VS Code to start `Python: Remote Attach` while development composition is up
 
 If you are using VS Code there are already default [settings](https://www.gitlab.com/empaia/services/wsi-service/-/blob/main/.vscode/settings.json) that will sort your imports and reformat the code on save. Furthermore, there will be standard pylint warnings from VS Code that should be fixed manually.
 
-To start the automatic formatter from console run
+Check your code by running the following statements
 
 ```bash
-black .
-```
-
-To start the automatic import sorter from console run
-
-```bash
-isort . --profile black
-```
-
-To start pylint from console run
-
-```bash
-pylint wsi_service --disable=all --enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode --extension-pkg-whitelist=pydantic
+poetry run black .
+poetry run isort .
+poetry run pylint wsi_service wsi_service_base_plugins
 ```
 
 following [VS Code](https://code.visualstudio.com/docs/python/linting#_default-pylint-rules).

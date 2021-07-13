@@ -43,3 +43,10 @@ line_length = 120
 profile = "black"
 multi_line_output = 3
 include_trailing_comma = true
+
+[tool.pylint."MASTER"]
+ignored-modules = ["pydantic"]
+
+[tool.pylint."MESSAGES CONTROL"]
+max-line-length = 120
+disable = "R,C,W0613,E0213,W0603,W0231,E1136,W0707,W0622"

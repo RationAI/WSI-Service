@@ -40,8 +40,8 @@ class SlideManager:
                     raise HTTPException(status_code=404, detail="No appropriate file format reader")
                 try:
                     self.opened_slides[slide_id] = ExpiringSlide(slide, None)
-                except KeyError:
-                    raise HTTPException(status_code=404)
+                except KeyError as e:
+                    raise HTTPException(status_code=404) from e
             self._reset_slide_expiration(slide_id)
             return self.opened_slides[slide_id].slide
 

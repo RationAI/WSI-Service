@@ -1,20 +1,17 @@
-import io
-
 import pytest
 import requests
-from PIL import Image
 
 from wsi_service.tests.integration.plugin_example_tests.helpers import get_image
 
 
 def test_alive():
-    response = requests.get(f"http://localhost:8080/alive")
+    response = requests.get("http://localhost:8080/alive")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
 
 
 def test_get_cases_valid():
-    response = requests.get(f"http://localhost:8080/v1/cases/")
+    response = requests.get("http://localhost:8080/v1/cases/")
     assert response.status_code == 200
     cases = response.json()
     assert len(cases) > 10
@@ -24,7 +21,7 @@ def test_get_cases_valid():
 
 
 def test_get_available_slides_valid():
-    response = requests.get(f"http://localhost:8080/v1/cases/4593f30c39d75d2385c6c8811c4ae7e0/slides/")
+    response = requests.get("http://localhost:8080/v1/cases/4593f30c39d75d2385c6c8811c4ae7e0/slides/")
     assert response.status_code == 200
     slides = response.json()
     slide = list(
@@ -43,7 +40,7 @@ def test_get_available_slides_valid():
 
 
 def test_get_slide_valid():
-    response = requests.get(f"http://localhost:8080/v1/slides/4b0ec5e0ec5e5e05ae9e500857314f20")
+    response = requests.get("http://localhost:8080/v1/slides/4b0ec5e0ec5e5e05ae9e500857314f20")
     assert response.status_code == 200
     slide = response.json()
     assert len(slide.keys()) == 3
@@ -58,13 +55,13 @@ def test_get_slide_valid():
 
 
 def test_get_available_slides_invalid_case_id():
-    response = requests.get(f"http://localhost:8080/v1/cases/invalid_id/slides/")
+    response = requests.get("http://localhost:8080/v1/cases/invalid_id/slides/")
     assert response.status_code == 400
     assert response.json()["detail"] == "Case with case_id invalid_id does not exist"
 
 
 def test_get_slide_invalid_slide_id():
-    response = requests.get(f"http://localhost:8080/v1/slides/invalid_id")
+    response = requests.get("http://localhost:8080/v1/slides/invalid_id")
     assert response.status_code == 400
     assert response.json()["detail"] == "Slide with slide_id invalid_id does not exist"
 
@@ -78,7 +75,7 @@ def test_get_slide_tile_padding_color(slide_id, tile_x, tile_y, level, expected_
         stream=True,
     )
     assert response.status_code == expected_response
-    assert response.headers["content-type"] == f"image/png"
+    assert response.headers["content-type"] == "image/png"
 
     image = get_image(response)
     x, y = image.size

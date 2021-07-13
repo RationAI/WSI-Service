@@ -39,7 +39,7 @@ class Slide(BaseSlide):
     def get_info(self):
         return self.slide_info
 
-    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None):
+    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
         try:
@@ -92,7 +92,7 @@ class Slide(BaseSlide):
     def get_macro(self):
         return self._get_associated_image("macro")
 
-    def get_tile(self, level, tile_x, tile_y, padding_color):
+    def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
         return self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,

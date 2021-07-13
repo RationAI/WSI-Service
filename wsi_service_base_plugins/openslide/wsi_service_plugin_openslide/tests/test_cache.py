@@ -33,11 +33,11 @@ def test_thumbnail_cache_no_additional_memory_usage_after_first_thumbnail_reques
 def test_thumbnail_cache_speedup_test():
     time.sleep(6)  # make sure slide is closed
     start = time.time()
-    r = requests.get(f"http://localhost:8080/v1/slides/f863c2ef155654b1af0387acc7ebdb60/thumbnail/max_size/500/500")
+    r = requests.get("http://localhost:8080/v1/slides/f863c2ef155654b1af0387acc7ebdb60/thumbnail/max_size/500/500")
     time_first = time.time() - start
     assert r.status_code == 200
     start = time.time()
-    r = requests.get(f"http://localhost:8080/v1/slides/f863c2ef155654b1af0387acc7ebdb60/thumbnail/max_size/500/500")
+    r = requests.get("http://localhost:8080/v1/slides/f863c2ef155654b1af0387acc7ebdb60/thumbnail/max_size/500/500")
     time_second = time.time() - start
     assert r.status_code == 200
     speedup = time_first / time_second

@@ -5,9 +5,9 @@ import tifffile
 from PIL import Image
 
 
-def make_dir_if_not_exists(dir):
-    if not os.path.exists(dir):
-        os.mkdir(dir)
+def make_dir_if_not_exists(dirpath):
+    if not os.path.exists(dirpath):
+        os.mkdir(dirpath)
 
 
 def get_image(response):

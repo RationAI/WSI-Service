@@ -203,16 +203,16 @@ def get_slide_region(
             detail=f"Requested region may not contain more than {settings.max_returned_region_size} pixels.",
         )
     if size_x * size_y == 0:
-        raise HTTPException(status_code=422, detail=f"Requested region must contain at least 1 pixel.")
+        raise HTTPException(status_code=422, detail="Requested region must contain at least 1 pixel.")
 
     slide = slide_manager.get_slide(slide_id)
     if z != 0:
         try:
             image_region = slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None, z=z)
-        except TypeError:
+        except TypeError as e:
             raise HTTPException(
                 status_code=422, detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers."""
-            )
+            ) from e
     else:
         image_region = slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None)
     validate_image_channels(slide, image_channels)
@@ -261,10 +261,10 @@ def get_slide_tile(
     if z != 0:
         try:
             image_tile = slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
-        except TypeError:
+        except TypeError as e:
             raise HTTPException(
                 status_code=422, detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers."""
-            )
+            ) from e
     else:
         image_tile = slide.get_tile(level, tile_x, tile_y, padding_color=vp_color)
     validate_image_channels(slide, image_channels)
@@ -284,6 +284,7 @@ if settings.local_mode:
         """
         (Only in standalone mode) Browse the local directory and return case ids for each available directory.
         """
+        global localmapper
         cases = localmapper.get_cases()
         return cases
 
@@ -296,6 +297,7 @@ if settings.local_mode:
         """
         (Only in standalone mode) Browse the local case directory and return slide ids for each available file.
         """
+        global localmapper
         slides = localmapper.get_slides(case_id)
         return slides
 
@@ -306,6 +308,7 @@ if settings.local_mode:
         """
         (Only in standalone mode) Return slide data for a given slide ID.
         """
+        global localmapper
         slide = localmapper.get_slide(slide_id)
         return slide
 
@@ -318,6 +321,7 @@ if settings.local_mode:
         """
         (Only in standalone mode) Return slide storage data for a given slide ID.
         """
+        global localmapper
         slide = localmapper.get_slide(slide_id)
         return slide.slide_storage
 
