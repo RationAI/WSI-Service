@@ -43,7 +43,7 @@ class SlideManager:
                 except KeyError:
                     raise HTTPException(status_code=404)
             self._reset_slide_expiration(slide_id)
-        return self.opened_slides[slide_id].slide
+            return self.opened_slides[slide_id].slide
 
     def _reset_slide_expiration(self, slide_id):
         expiring_slide = self.opened_slides[slide_id]
@@ -72,7 +72,7 @@ class SlideManager:
 
     def _close_slide(self, slide_id):
         with self.lock:
-            if slide_id in self.opened_slides:
+            if slide_id in self.opened_slides and slide_id in self.slide_map:
                 if self._get_reference_count_slide(slide_id) == 1:
                     self.opened_slides[slide_id].slide.close()
                     del self.opened_slides[slide_id]
