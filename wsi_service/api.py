@@ -280,12 +280,10 @@ if settings.local_mode:
     localmapper = LocalMapper(settings.data_dir)
 
     @api.get("/v1/cases/", response_model=List[CaseLocalMapper], tags=["Additional Routes (Standalone WSI Service)"])
-    def get_cases():
+    async def get_cases():
         """
         (Only in standalone mode) Browse the local directory and return case ids for each available directory.
         """
-
-        global localmapper
         cases = localmapper.get_cases()
         return cases
 
@@ -294,22 +292,20 @@ if settings.local_mode:
         response_model=List[SlideLocalMapper],
         tags=["Additional Routes (Standalone WSI Service)"],
     )
-    def get_available_slides(case_id: str):
+    async def get_available_slides(case_id: str):
         """
         (Only in standalone mode) Browse the local case directory and return slide ids for each available file.
         """
-        global localmapper
         slides = localmapper.get_slides(case_id)
         return slides
 
     @api.get(
         "/v1/slides/{slide_id}", response_model=SlideLocalMapper, tags=["Additional Routes (Standalone WSI Service)"]
     )
-    def get_slide(slide_id: str):
+    async def get_slide(slide_id: str):
         """
         (Only in standalone mode) Return slide data for a given slide ID.
         """
-        global localmapper
         slide = localmapper.get_slide(slide_id)
         return slide
 
@@ -318,16 +314,15 @@ if settings.local_mode:
         response_model=SlideStorage,
         tags=["Additional Routes (Standalone WSI Service)"],
     )
-    def get_slide_storage(slide_id: str):
+    async def get_slide_storage(slide_id: str):
         """
         (Only in standalone mode) Return slide storage data for a given slide ID.
         """
-        global localmapper
         slide = localmapper.get_slide(slide_id)
         return slide.slide_storage
 
     @api.get("/v1/refresh_local_mapper", tags=["Additional Routes (Standalone WSI Service)"])
-    def refresh_local_mapper():
+    async def refresh_local_mapper():
         """
         (Only in standalone mode) Refresh available files by scanning for new files.
         """
@@ -340,7 +335,7 @@ if settings.local_mode:
         include_in_schema=False,
         tags=["Additional Routes (Standalone WSI Service)"],
     )
-    def viewer(slide_id: str):
+    async def viewer(slide_id: str):
         viewer_html = open(
             os.path.join(pathlib.Path(__file__).parent.absolute(), "viewer.html"), "r", encoding="utf-8"
         ).read()
@@ -353,7 +348,7 @@ if settings.local_mode:
         include_in_schema=False,
         tags=["Additional Routes (Standalone WSI Service)"],
     )
-    def validation_viewer():
+    async def validation_viewer():
         validation_viewer_html = open(
             os.path.join(pathlib.Path(__file__).parent.absolute(), "validation_viewer.html"), "r", encoding="utf-8"
         ).read()
