@@ -1,4 +1,5 @@
 import atexit
+import ctypes
 import os
 from threading import Lock, Timer
 
@@ -66,9 +67,13 @@ class SlideManager:
                 return storage_address
         return slide["storage_addresses"][0]
 
+    def _get_reference_count_slide(self, slide_id):
+        return ctypes.c_long.from_address(id(self.opened_slides[slide_id].slide)).value
+
     def _close_slide(self, slide_id):
         with self.lock:
             if slide_id in self.opened_slides:
-                self.opened_slides[slide_id].slide.close()
-                del self.opened_slides[slide_id]
-                del self.slide_map[slide_id]
+                if self._get_reference_count_slide(slide_id) == 1:
+                    self.opened_slides[slide_id].slide.close()
+                    del self.opened_slides[slide_id]
+                    del self.slide_map[slide_id]
