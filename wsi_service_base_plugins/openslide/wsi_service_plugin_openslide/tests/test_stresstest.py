@@ -22,7 +22,7 @@ async def fetch(client, url):
         return await response.read()
 
 
-# @pytest.mark.skip(reason="stresstest skipped due to long runtime")
+@pytest.mark.skip(reason="stresstest skipped due to long runtime")
 @pytest.mark.asyncio
 async def test_stresstest(event_loop):
     event_loop.set_debug(True)
