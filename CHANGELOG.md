@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.5
+
+- Added max_thumbnail_size setting for thumbnail endpoint
+- Added locking to slide manager
+
 ## 0.4.4
 
 - Updated outdated python packages

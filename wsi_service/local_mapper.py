@@ -16,8 +16,8 @@ class LocalMapper:
         self.slide_map = {}
         try:
             self._collect_all_folders_as_cases(data_dir)
-        except FileNotFoundError:
-            raise HTTPException(status_code=404, detail=f"No such directory: {data_dir}")
+        except FileNotFoundError as e:
+            raise HTTPException(status_code=404, detail=f"No such directory: {data_dir}") from e
         for case_id, case in self.case_map.items():
             case_dir = os.path.join(data_dir, case.local_case_id)
             self._collect_all_files_as_slides(data_dir, case_id, case_dir)

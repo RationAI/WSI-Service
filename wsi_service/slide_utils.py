@@ -1,5 +1,3 @@
-import math
-
 from wsi_service.models.slide import SlideChannel, SlideColor, SlideExtent, SlideLevel
 
 

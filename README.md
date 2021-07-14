@@ -134,22 +134,12 @@ Use VS Code to start `Python: Remote Attach` while development composition is up
 
 If you are using VS Code there are already default [settings](https://www.gitlab.com/empaia/services/wsi-service/-/blob/main/.vscode/settings.json) that will sort your imports and reformat the code on save. Furthermore, there will be standard pylint warnings from VS Code that should be fixed manually.
 
-To start the automatic formatter from console run
+Check your code by running the following statements
 
 ```bash
-black .
-```
-
-To start the automatic import sorter from console run
-
-```bash
-isort . --profile black
-```
-
-To start pylint from console run
-
-```bash
-pylint wsi_service --disable=all --enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode --extension-pkg-whitelist=pydantic
+poetry run black .
+poetry run isort .
+poetry run pylint wsi_service wsi_service_base_plugins
 ```
 
 following [VS Code](https://code.visualstudio.com/docs/python/linting#_default-pylint-rules).
@@ -181,4 +171,4 @@ RUN pip3 install /tmp/wsi-service-plugin-PLUGINNAME.whl
 
 There are two base plugins ([openslide](./wsi_service_base_plugins/openslide/), [tiffile](./wsi_service_base_plugins/tifffile/)) that can be used as templates for new plugins. Additionally to the mentioned minimal requirements these plugins use poetry to manage and create the python package. This is highly recommended when creating a plugin. Furthermore, these plugins implement tests based on pytest by defining a number of parameters on top of example integration test functions defined as part of the WSI Service ([plugin_example_tests](./wsi_service/tests/integration/plugin_example_tests)).
 
-A more complete example of an external plugin integration can be found in the iSyntax integration repository ([wsi-service-plugin-isyntax](https://registry.gitlab.com/empaia/services/wsi-service-plugins/wsi-service-plugin-isyntax)). That example includes the usage of an external service that is run in an additional docker container due to runtime limitations.
+A more complete example of an external plugin integration can be found in the iSyntax integration repository ([wsi-service-plugin-isyntax](https://www.gitlab.com/empaia/services/wsi-service-plugin-isyntax)). That example includes the usage of an external service that is run in an additional docker container due to runtime limitations.

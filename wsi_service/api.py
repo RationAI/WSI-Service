@@ -77,8 +77,12 @@ def get_slide_info(slide_id: str):
 )
 def get_slide_thumbnail(
     slide_id: str,
-    max_x: int = Path(None, example=100, description="Maximum width of thumbnail"),
-    max_y: int = Path(None, example=100, description="Maximum height of thumbnail"),
+    max_x: int = Path(
+        None, example=100, ge=1, le=settings.max_thumbnail_size, description="Maximum width of thumbnail"
+    ),
+    max_y: int = Path(
+        None, example=100, ge=1, le=settings.max_thumbnail_size, description="Maximum height of thumbnail"
+    ),
     image_format: str = ImageFormatsQuery,
     image_quality: int = ImageQualityQuery,
 ):
@@ -199,16 +203,16 @@ def get_slide_region(
             detail=f"Requested region may not contain more than {settings.max_returned_region_size} pixels.",
         )
     if size_x * size_y == 0:
-        raise HTTPException(status_code=422, detail=f"Requested region must contain at least 1 pixel.")
+        raise HTTPException(status_code=422, detail="Requested region must contain at least 1 pixel.")
 
     slide = slide_manager.get_slide(slide_id)
     if z != 0:
         try:
             image_region = slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None, z=z)
-        except TypeError:
+        except TypeError as e:
             raise HTTPException(
                 status_code=422, detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers."""
-            )
+            ) from e
     else:
         image_region = slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None)
     validate_image_channels(slide, image_channels)
@@ -257,10 +261,10 @@ def get_slide_tile(
     if z != 0:
         try:
             image_tile = slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
-        except TypeError:
+        except TypeError as e:
             raise HTTPException(
                 status_code=422, detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers."""
-            )
+            ) from e
     else:
         image_tile = slide.get_tile(level, tile_x, tile_y, padding_color=vp_color)
     validate_image_channels(slide, image_channels)
@@ -276,11 +280,10 @@ if settings.local_mode:
     localmapper = LocalMapper(settings.data_dir)
 
     @api.get("/v1/cases/", response_model=List[CaseLocalMapper], tags=["Additional Routes (Standalone WSI Service)"])
-    def get_cases():
+    async def get_cases():
         """
         (Only in standalone mode) Browse the local directory and return case ids for each available directory.
         """
-
         global localmapper
         cases = localmapper.get_cases()
         return cases
@@ -290,7 +293,7 @@ if settings.local_mode:
         response_model=List[SlideLocalMapper],
         tags=["Additional Routes (Standalone WSI Service)"],
     )
-    def get_available_slides(case_id: str):
+    async def get_available_slides(case_id: str):
         """
         (Only in standalone mode) Browse the local case directory and return slide ids for each available file.
         """
@@ -301,7 +304,7 @@ if settings.local_mode:
     @api.get(
         "/v1/slides/{slide_id}", response_model=SlideLocalMapper, tags=["Additional Routes (Standalone WSI Service)"]
     )
-    def get_slide(slide_id: str):
+    async def get_slide(slide_id: str):
         """
         (Only in standalone mode) Return slide data for a given slide ID.
         """
@@ -314,7 +317,7 @@ if settings.local_mode:
         response_model=SlideStorage,
         tags=["Additional Routes (Standalone WSI Service)"],
     )
-    def get_slide_storage(slide_id: str):
+    async def get_slide_storage(slide_id: str):
         """
         (Only in standalone mode) Return slide storage data for a given slide ID.
         """
@@ -323,7 +326,7 @@ if settings.local_mode:
         return slide.slide_storage
 
     @api.get("/v1/refresh_local_mapper", tags=["Additional Routes (Standalone WSI Service)"])
-    def refresh_local_mapper():
+    async def refresh_local_mapper():
         """
         (Only in standalone mode) Refresh available files by scanning for new files.
         """
@@ -336,7 +339,7 @@ if settings.local_mode:
         include_in_schema=False,
         tags=["Additional Routes (Standalone WSI Service)"],
     )
-    def viewer(slide_id: str):
+    async def viewer(slide_id: str):
         viewer_html = open(
             os.path.join(pathlib.Path(__file__).parent.absolute(), "viewer.html"), "r", encoding="utf-8"
         ).read()
@@ -349,7 +352,7 @@ if settings.local_mode:
         include_in_schema=False,
         tags=["Additional Routes (Standalone WSI Service)"],
     )
-    def validation_viewer():
+    async def validation_viewer():
         validation_viewer_html = open(
             os.path.join(pathlib.Path(__file__).parent.absolute(), "validation_viewer.html"), "r", encoding="utf-8"
         ).read()

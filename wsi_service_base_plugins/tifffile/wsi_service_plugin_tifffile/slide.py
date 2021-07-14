@@ -5,7 +5,6 @@ from threading import Lock
 import numpy as np
 import tifffile
 from fastapi import HTTPException
-from PIL import Image
 from skimage import transform, util
 
 from wsi_service.image_utils import convert_int_to_rgba_array
@@ -44,7 +43,7 @@ class Slide(BaseSlide):
     def get_info(self):
         return self.slide_info
 
-    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color):
+    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
         try:
@@ -98,8 +97,8 @@ class Slide(BaseSlide):
     def get_macro(self):
         self._get_associated_image("macro")
 
-    def get_tile(self, level, tile_x, tile_y, padding_color):
-        # todo: implement extracting of tile without de/encoding of tile data
+    def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+        # implement extracting of tile without de/encoding of tile data
         return self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
@@ -348,19 +347,3 @@ class Slide(BaseSlide):
             return slide_info
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
-
-    # currently unused
-    def __manipulate_metadata(self, dim_order, p_size_x, p_size_y, size_x, size_y):
-        namespace = self.__get_xml_namespace()
-        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("DimensionOrder", dim_order)
-        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("SizeX", str(size_x))
-        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set("SizeY", str(size_y))
-        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set(
-            "PhysicalSizeX", str(p_size_x)
-        )
-        self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").set(
-            "PhysicalSizeY", str(p_size_y)
-        )
-        metadata = xml.tostring(self.parsed_metadata).decode("utf-8")
-        # add xml decoding
-        self.ome_metadata = f'<?xml version="1.0" encoding="UTF-8"?>\n{metadata}'

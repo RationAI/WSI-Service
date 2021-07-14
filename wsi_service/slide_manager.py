@@ -1,6 +1,7 @@
 import atexit
+import ctypes
 import os
-from threading import Timer
+from threading import Lock, Timer
 
 import requests
 from fastapi import HTTPException
@@ -17,6 +18,7 @@ class ExpiringSlide:
 class SlideManager:
     def __init__(self, mapper_address, data_dir, timeout):
         atexit.register(self.close)
+        self.lock = Lock()
         self.slide_map = {}  # maps from slide_id to storage
         self.opened_slides = {}
         self.mapper_address = mapper_address
@@ -29,18 +31,19 @@ class SlideManager:
             self._close_slide(slide_id)
 
     def get_slide(self, slide_id):
-        if slide_id not in self.opened_slides:
-            self._map_slide(slide_id)
-            filepath = os.path.join(self.data_dir, self.slide_map[slide_id]["address"])
-            slide = load_slide(filepath, slide_id)
-            if slide == None:
-                raise HTTPException(status_code=404, detail="No appropriate file format reader")
-            try:
-                self.opened_slides[slide_id] = ExpiringSlide(slide, None)
-            except KeyError:
-                raise HTTPException(status_code=404)
-        self._reset_slide_expiration(slide_id)
-        return self.opened_slides[slide_id].slide
+        with self.lock:
+            if slide_id not in self.opened_slides:
+                self._map_slide(slide_id)
+                filepath = os.path.join(self.data_dir, self.slide_map[slide_id]["address"])
+                slide = load_slide(filepath, slide_id)
+                if slide == None:
+                    raise HTTPException(status_code=404, detail="No appropriate file format reader")
+                try:
+                    self.opened_slides[slide_id] = ExpiringSlide(slide, None)
+                except KeyError as e:
+                    raise HTTPException(status_code=404) from e
+            self._reset_slide_expiration(slide_id)
+            return self.opened_slides[slide_id].slide
 
     def _reset_slide_expiration(self, slide_id):
         expiring_slide = self.opened_slides[slide_id]
@@ -64,8 +67,13 @@ class SlideManager:
                 return storage_address
         return slide["storage_addresses"][0]
 
+    def _get_reference_count_slide(self, slide_id):
+        return ctypes.c_long.from_address(id(self.opened_slides[slide_id].slide)).value
+
     def _close_slide(self, slide_id):
-        if slide_id in self.opened_slides:
-            self.opened_slides[slide_id].slide.close()
-            del self.opened_slides[slide_id]
-            del self.slide_map[slide_id]
+        with self.lock:
+            if slide_id in self.opened_slides and slide_id in self.slide_map:
+                if self._get_reference_count_slide(slide_id) == 1:
+                    self.opened_slides[slide_id].slide.close()
+                    del self.opened_slides[slide_id]
+                    del self.slide_map[slide_id]

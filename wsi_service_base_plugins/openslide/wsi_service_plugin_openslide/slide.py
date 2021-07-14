@@ -20,11 +20,18 @@ class Slide(BaseSlide):
     ]
 
     def __init__(self, filepath, slide_id):
+        self.filepath = filepath
+        self.open()
+        self.slide_info = self.__get_slide_info_openslide(slide_id)
+        self.thumbnail = self.__get_thumbnail_openslide(settings.max_thumbnail_size, settings.max_thumbnail_size)
+        self.close()
+        self.open()
+
+    def open(self):
         try:
-            self.openslide_slide = openslide.OpenSlide(filepath)
+            self.openslide_slide = openslide.OpenSlide(self.filepath)
         except openslide.OpenSlideError as e:
             raise HTTPException(status_code=422, detail=f"OpenSlideError: {e}")
-        self.slide_info = self.__get_slide_info_openslide(slide_id)
 
     def close(self):
         self.openslide_slide.close()
@@ -32,7 +39,7 @@ class Slide(BaseSlide):
     def get_info(self):
         return self.slide_info
 
-    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None):
+    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
         try:
@@ -66,7 +73,9 @@ class Slide(BaseSlide):
         return rgb_img
 
     def get_thumbnail(self, max_x, max_y):
-        return self.openslide_slide.get_thumbnail((max_x, max_y))
+        thumbnail = self.thumbnail.copy()
+        thumbnail.thumbnail((max_x, max_y))
+        return thumbnail
 
     def _get_associated_image(self, associated_image_name):
         if associated_image_name not in self.openslide_slide.associated_images:
@@ -83,7 +92,7 @@ class Slide(BaseSlide):
     def get_macro(self):
         return self._get_associated_image("macro")
 
-    def get_tile(self, level, tile_x, tile_y, padding_color):
+    def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
         return self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
@@ -159,3 +168,23 @@ class Slide(BaseSlide):
             return slide_info
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
+
+    def __get_thumbnail_openslide(self, max_x, max_y):
+        level = self.__get_best_level_for_thumbnail(max_x, max_y)
+        thumbnail = self.get_region(
+            level,
+            0,
+            0,
+            self.slide_info.levels[level].extent.x,
+            self.slide_info.levels[level].extent.y,
+        )
+        thumbnail.thumbnail((max_x, max_y))
+        return thumbnail
+
+    def __get_best_level_for_thumbnail(self, max_x, max_y):
+        best_level = 0
+        for level in self.slide_info.levels:
+            if level.extent.x < max_x and level.extent.y < max_y:
+                return best_level - 1
+            best_level += 1
+        return best_level - 1

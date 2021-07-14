@@ -4,7 +4,6 @@ import numpy as np
 from PIL import Image
 
 from wsi_service.models.slide import SlideColor
-from wsi_service.singletons import settings
 
 
 def rgba_to_rgb_with_background_color(image_rgba, padding_color):
@@ -116,7 +115,7 @@ def get_requested_channels_as_rgb_array(narray, image_channels, slide):
 
 
 def get_multi_channel_as_rgb(separate_channels):
-    # todo: right now only three channels are considered
+    # right now only three channels are considered
     temp_array = []
     for channel in separate_channels:
         if len(temp_array) == 3:
