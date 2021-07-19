@@ -27,7 +27,7 @@ def test_get_available_slides_empty_case():
     os.mkdir(os.path.join(tmp_dir, "case0"))
     localmapper = LocalMapper(tmp_dir)
     cases = localmapper.get_cases()
-    case_id = cases[0].case_id
+    case_id = cases[0].id
     slides = localmapper.get_slides(case_id)
     assert len(slides) == 0
 
@@ -42,11 +42,11 @@ def test_get_cases_get_slides_valid():
     localmapper = LocalMapper(test_data_dir)
     cases = localmapper.get_cases()
     assert len(cases) == 1
-    case_id = cases[0].case_id
+    case_id = cases[0].id
     slides = localmapper.get_slides(case_id)
     assert len(slides) == 1
-    assert slides[0].slide_id == "fc1ef3789eac548883e9923455608e13"
-    assert slides[0].local_slide_id == "CMU-1-small.tiff"
-    slide = localmapper.get_slide(slides[0].slide_id)
-    assert slide.slide_id == slides[0].slide_id
-    assert slide.local_slide_id == slides[0].local_slide_id
+    assert slides[0].id == "fc1ef3789eac548883e9923455608e13"
+    assert slides[0].local_id == "CMU-1-small.tiff"
+    slide = localmapper.get_slide(slides[0].id)
+    assert slide.id == slides[0].id
+    assert slide.local_id == slides[0].local_id

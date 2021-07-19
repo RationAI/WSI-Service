@@ -16,8 +16,8 @@ def test_get_cases_valid():
     cases = response.json()
     assert len(cases) > 10
     assert len(cases[0].keys()) == 3
-    case = list(filter(lambda case: case["local_case_id"] == "Olympus", cases))[0]
-    assert case["case_id"] == "7a32e2c36ca756d9b7df0b627ace4c12"
+    case = list(filter(lambda case: case["local_id"] == "Olympus", cases))[0]
+    assert case["id"] == "7a32e2c36ca756d9b7df0b627ace4c12"
 
 
 def test_get_available_slides_valid():
@@ -29,8 +29,8 @@ def test_get_available_slides_valid():
     )[0]
     assert len(slides) == 1
     assert len(slides[0].keys()) == 3
-    assert slide["slide_id"] == "f863c2ef155654b1af0387acc7ebdb60"
-    assert slide["local_slide_id"] == "CMU-1.svs"
+    assert slide["id"] == "f863c2ef155654b1af0387acc7ebdb60"
+    assert slide["local_id"] == "CMU-1.svs"
     assert slide["slide_storage"]["slide_id"] == "f863c2ef155654b1af0387acc7ebdb60"
     assert slide["slide_storage"]["storage_type"] == "fs"
     assert slide["slide_storage"]["storage_addresses"][0]["main_address"] == True
@@ -44,8 +44,8 @@ def test_get_slide_valid():
     assert response.status_code == 200
     slide = response.json()
     assert len(slide.keys()) == 3
-    assert slide["slide_id"] == "4b0ec5e0ec5e5e05ae9e500857314f20"
-    assert slide["local_slide_id"] == "CMU-1.tiff"
+    assert slide["id"] == "4b0ec5e0ec5e5e05ae9e500857314f20"
+    assert slide["local_id"] == "CMU-1.tiff"
     assert slide["slide_storage"]["slide_id"] == "4b0ec5e0ec5e5e05ae9e500857314f20"
     assert slide["slide_storage"]["storage_type"] == "fs"
     assert slide["slide_storage"]["storage_addresses"][0]["main_address"] == True
@@ -56,13 +56,13 @@ def test_get_slide_valid():
 
 def test_get_available_slides_invalid_case_id():
     response = requests.get("http://localhost:8080/v1/cases/invalid_id/slides/")
-    assert response.status_code == 400
+    assert response.status_code == 404
     assert response.json()["detail"] == "Case with case_id invalid_id does not exist"
 
 
 def test_get_slide_invalid_slide_id():
     response = requests.get("http://localhost:8080/v1/slides/invalid_id")
-    assert response.status_code == 400
+    assert response.status_code == 404
     assert response.json()["detail"] == "Slide with slide_id invalid_id does not exist"
 
 
