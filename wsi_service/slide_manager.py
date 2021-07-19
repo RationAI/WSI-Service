@@ -64,9 +64,9 @@ class SlideManager:
                 raise HTTPException(
                     status_code=404, detail=f"Could not find a storage address for slide id {slide_id}."
                 )
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError:
             raise HTTPException(
-                status_code=503, detail=f"WSI Service is unable to connect to the Storage Mapper Service."
+                status_code=503, detail="WSI Service is unable to connect to the Storage Mapper Service."
             )
         slide = r.json()
         for storage_address in slide["storage_addresses"]:
