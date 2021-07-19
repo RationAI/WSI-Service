@@ -58,10 +58,17 @@ class SlideManager:
             self.slide_map[slide_id] = storage_address
 
     def _get_slide_main_storage_address(self, slide_id):
-        r = requests.get(self.mapper_address.format(slide_id=slide_id))
+        try:
+            r = requests.get(self.mapper_address.format(slide_id=slide_id))
+            if r.status_code == 404:
+                raise HTTPException(
+                    status_code=404, detail=f"Could not find a storage address for slide id {slide_id}."
+                )
+        except requests.exceptions.ConnectionError as e:
+            raise HTTPException(
+                status_code=400, detail=f"Unable to connect to the storage mapper service at {self.mapper_address}"
+            )
         slide = r.json()
-        if "storage_addresses" not in slide:
-            raise HTTPException(status_code=400, detail=f"Could not find storage addresses ({slide}).")
         for storage_address in slide["storage_addresses"]:
             if storage_address["main_address"]:
                 return storage_address
