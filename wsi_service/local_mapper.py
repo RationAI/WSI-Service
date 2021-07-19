@@ -3,7 +3,8 @@ from uuid import NAMESPACE_URL, uuid5
 
 from fastapi import HTTPException
 
-from wsi_service.local_mapper_models import CaseLocalMapper, SlideLocalMapper, SlideStorage, StorageAddress
+from wsi_service.local_mapper_models import CaseLocalMapper, SlideLocalMapper
+from wsi_service.models.storage import SlideStorage, StorageAddress
 from wsi_service.plugins import is_supported_format
 
 
@@ -19,28 +20,27 @@ class LocalMapper:
         except FileNotFoundError as e:
             raise HTTPException(status_code=404, detail=f"No such directory: {data_dir}") from e
         for case_id, case in self.case_map.items():
-            case_dir = os.path.join(data_dir, case.local_case_id)
+            case_dir = os.path.join(data_dir, case.local_id)
             self._collect_all_files_as_slides(data_dir, case_id, case_dir)
 
     def _collect_all_folders_as_cases(self, data_dir):
-        for d in os.listdir(data_dir):
-            absdir = os.path.join(data_dir, d)
+        for sub_data_dir in os.listdir(data_dir):
+            absdir = os.path.join(data_dir, sub_data_dir)
             if os.path.isdir(absdir):
-                case_id = uuid5(NAMESPACE_URL, d).hex
-                self.case_map[case_id] = CaseLocalMapper(case_id=case_id, local_case_id=d, slides=[])
+                case_id = uuid5(NAMESPACE_URL, sub_data_dir).hex
+                self.case_map[case_id] = CaseLocalMapper(id=case_id, local_id=sub_data_dir, slides=[])
 
     def _collect_all_files_as_slides(self, data_dir, case_id, case_dir):
-        for f in os.listdir(case_dir):
-            absfile = os.path.join(case_dir, f)
+        for case_file in os.listdir(case_dir):
+            absfile = os.path.join(case_dir, case_file)
             if is_supported_format(absfile):
-                raw_slide_id = f
-                slide_id = uuid5(NAMESPACE_URL, f).hex
+                slide_id = uuid5(NAMESPACE_URL, case_file).hex
                 if slide_id not in self.slide_map:
                     self.case_map[case_id].slides.append(slide_id)
                     address = absfile.replace(data_dir + "/", "")
                     self.slide_map[slide_id] = SlideLocalMapper(
-                        slide_id=slide_id,
-                        local_slide_id=raw_slide_id,
+                        id=slide_id,
+                        local_id=case_file,
                         slide_storage=SlideStorage(
                             slide_id=slide_id,
                             storage_type="fs",
@@ -60,7 +60,7 @@ class LocalMapper:
 
     def get_slides(self, case_id):
         if case_id not in self.case_map:
-            raise HTTPException(status_code=400, detail=f"Case with case_id {case_id} does not exist")
+            raise HTTPException(status_code=404, detail=f"Case with case_id {case_id} does not exist")
         slide_data = []
         for slide_id in sorted(self.case_map[case_id].slides):
             slide_data.append(self.slide_map[slide_id])
@@ -68,5 +68,5 @@ class LocalMapper:
 
     def get_slide(self, slide_id):
         if slide_id not in self.slide_map:
-            raise HTTPException(status_code=400, detail=f"Slide with slide_id {slide_id} does not exist")
+            raise HTTPException(status_code=404, detail=f"Slide with slide_id {slide_id} does not exist")
         return self.slide_map[slide_id]
