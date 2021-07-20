@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.6
+
+- Added flag to activate viewer routes
+- Improved error handling for storage mapper requests
+
 ## 0.4.5
 
 - Added max_thumbnail_size setting for thumbnail endpoint

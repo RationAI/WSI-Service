@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     data_dir: str = "/data"
     mapper_address: str = None
     local_mode: bool = False
+    enable_viewer_routes: bool = False
     inactive_histo_image_timeout_seconds: int = 600
     max_returned_region_size: int = 4 * 6250000  # 5000 x 5000
     max_thumbnail_size: int = 500

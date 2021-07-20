@@ -36,12 +36,6 @@ The WSI Service relies on the [Storage Mapper Service](https://www.gitlab.com/em
 - `GET /v1/slides/{slide_id}` - Get slide
 - `GET /v1/slides/{slide_id}/storage` - Get slide storage information
 
-Two viewer endpoints are also made available by the standalone version:
-
-- Validation Viewer: [http://localhost:8080/v1/validation_viewer](http://localhost:8080/v1/validation_viewer)
-
-- Simple Viewer: [http://localhost:8080/v1/slides/{slide_id}/viewer](http://localhost:8080/v1/slides/{slide_id}/viewer)
-
 ### Supported formats
 
 Different formats are supported by plugins for accessing image data. Two base plugins are included and support the following formats:
@@ -71,6 +65,7 @@ WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DISABLE_OPENAPI=False
 WS_MAPPER_ADDRESS=http://localhost:8080/v1/slides/{slide_id}/storage
 WS_LOCAL_MODE=True
+WS_ENABLE_VIEWER_ROUTES=True
 WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600
 WS_MAX_RETURNED_REGION_SIZE=25000000
 WS_ROOT_PATH=
@@ -84,9 +79,12 @@ COMPOSE_DATA_DIR=/data
 Short explanation of the parameters used:
 
 - `WS_CORS_ALLOW_ORIGINS` allow cors for different origins
-- `WS_DISABLE_OPENAPI` disable swagger api documentation (`/docs`)
+- `WS_DISABLE_OPENAPI` disable swagger api documentation (/docs`)
 - `WS_MAPPER_ADDRESS` storage mapper service address
 - `WS_LOCAL_MODE` when set to true, wsi service is started in local mode
+- `WS_ENABLE_VIEWER_ROUTES` when set to true, there are additional routes available for viewing images:  
+  - Simple Viewer `/slides/{slide_id/}/viewer`
+  - Validation Viewer `/validation_viewer` (only local mode)
 - `WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS` set timeout for inactive histo images (default is 600 seconds)
 - `WS_MAX_RETURNED_REGION_SIZE` set maximum image region size for service (channels * width * height; default is 4 * 5000 * 5000)
 - `COMPOSE_RESTART` set to `no`, `always` to configure restart settings

@@ -333,11 +333,13 @@ if settings.local_mode:
         global localmapper
         localmapper = LocalMapper(settings.data_dir)
 
+
+if settings.enable_viewer_routes:
+
     @api.get(
         "/v1/slides/{slide_id}/viewer",
         response_class=HTMLResponse,
         include_in_schema=False,
-        tags=["Additional Routes (Standalone WSI Service)"],
     )
     async def viewer(slide_id: str):
         viewer_html = open(
@@ -346,11 +348,13 @@ if settings.local_mode:
         viewer_html = viewer_html.replace("REPLACE_SLIDE_ID", slide_id)
         return viewer_html
 
+
+if settings.enable_viewer_routes and settings.local_mode:
+
     @api.get(
         "/v1/validation_viewer",
         response_class=HTMLResponse,
         include_in_schema=False,
-        tags=["Additional Routes (Standalone WSI Service)"],
     )
     async def validation_viewer():
         validation_viewer_html = open(
