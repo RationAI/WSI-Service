@@ -13,8 +13,8 @@ codecheck:
   before_script:
     - poetry install
   script:
-    - poetry run black .
-    - poetry run isort .
+    - poetry run black . --check
+    - poetry run isort . --check
     - poetry run pylint wsi_service wsi_service_base_plugins
 
 version:
