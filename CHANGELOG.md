@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- Added PIL base plugin to support image formats like jpg, png
+
 ## 0.4.6
 
 - Added flag to activate viewer routes
