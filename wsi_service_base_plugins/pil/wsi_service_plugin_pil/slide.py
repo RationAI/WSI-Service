@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from PIL import Image, UnidentifiedImageError
 
 from wsi_service.models.slide import SlideChannel, SlideColor, SlideExtent, SlideInfo, SlideLevel, SlidePixelSizeNm
+from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
 
 
@@ -11,7 +12,7 @@ class Slide(BaseSlide):
             self.slide_image = Image.open(filepath)
         except UnidentifiedImageError:
             raise HTTPException(status_code=422, detail="PIL Unidentified Image Error")
-        self.slide_image = Image.open(filepath)
+        self.slide_image = Image.open(filepath).convert("RGB")
         width, height = self.slide_image.size
         channels = []
         channels.append(SlideChannel(id=0, name="Red", color=SlideColor(r=255, g=0, b=0, a=0)))
@@ -23,7 +24,7 @@ class Slide(BaseSlide):
             channel_depth=8,
             extent=SlideExtent(x=width, y=height, z=1),
             num_levels=1,
-            pixel_size_nm=SlidePixelSizeNm(x=0, y=0),  # pixel size unknown
+            pixel_size_nm=SlidePixelSizeNm(x=-1, y=-1),  # pixel size unknown
             tile_extent=SlideExtent(x=width, y=height, z=1),
             levels=[SlideLevel(extent=SlideExtent(x=width, y=height, z=1), downsample_factor=1.0)],
         )
@@ -34,14 +35,32 @@ class Slide(BaseSlide):
     def get_info(self):
         return self.slide_info
 
-    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    def get_region(
+        self,
+        level,
+        start_x,
+        start_y,
+        size_x,
+        size_y,
+        padding_color=None,
+        z=0,
+    ):
+        if padding_color is None:
+            padding_color = settings.padding_color
         if level != 0:
             raise HTTPException(
                 status_code=422,
                 detail=f"""The requested pyramid level is not available. 
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
-        return self.slide_image.crop((start_x, start_y, size_x, size_y))
+        region = Image.new("RGB", (size_x, size_y), padding_color)
+        if start_x + size_x >= self.slide_info.extent.x:
+            size_x = self.slide_info.extent.x - start_x
+        if start_y + size_y >= self.slide_info.extent.y:
+            size_y = self.slide_info.extent.y - start_y
+        cropped_image = self.slide_image.crop((start_x, start_y, size_x, size_y))
+        region.paste(cropped_image)
+        return region
 
     def get_thumbnail(self, max_x, max_y):
         thumbnail = self.slide_image.copy()
@@ -55,6 +74,7 @@ class Slide(BaseSlide):
             tile_y * self.slide_info.tile_extent.y,
             self.slide_info.tile_extent.x,
             self.slide_info.tile_extent.y,
+            padding_color=padding_color,
             z=z,
         )
 
