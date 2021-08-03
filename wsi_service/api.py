@@ -25,6 +25,7 @@ from wsi_service.queries import (
     ZStackQuery,
 )
 from wsi_service.responses import ImageRegionResponse, ImageResponses
+from wsi_service.service_status import WSIServiceStatus
 from wsi_service.singletons import settings
 from wsi_service.slide_manager import SlideManager
 
@@ -50,14 +51,11 @@ if settings.cors_allow_origins:
 slide_manager = SlideManager(settings.mapper_address, settings.data_dir, settings.inactive_histo_image_timeout_seconds)
 
 
-@api.get("/alive", status_code=status.HTTP_200_OK)
+@api.get("/alive", response_model=WSIServiceStatus, status_code=status.HTTP_200_OK)
 def get_service_status():
-    return {
-        "status": "ok",
-        "plugins": get_plugins_overview(),
-        "plugins_default": settings.plugins_default,
-        "version": settings.version,
-    }
+    return WSIServiceStatus(
+        status="ok", version=settings.version, plugins=get_plugins_overview(), plugins_default=settings.plugins_default
+    )
 
 
 @api.get("/v1/slides/{slide_id}/info", response_model=SlideInfo, tags=["Main Routes"])
