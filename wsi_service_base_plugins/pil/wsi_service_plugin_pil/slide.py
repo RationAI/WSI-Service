@@ -1,0 +1,89 @@
+from fastapi import HTTPException
+from PIL import Image, UnidentifiedImageError
+
+from wsi_service.models.slide import SlideExtent, SlideInfo, SlideLevel, SlidePixelSizeNm
+from wsi_service.singletons import settings
+from wsi_service.slide import Slide as BaseSlide
+from wsi_service.slide_utils import get_rgb_channel_list
+
+
+class Slide(BaseSlide):
+    def __init__(self, filepath, slide_id):
+        try:
+            self.slide_image = Image.open(filepath)
+        except UnidentifiedImageError:
+            raise HTTPException(status_code=422, detail="PIL Unidentified Image Error")
+        self.slide_image = Image.open(filepath).convert("RGB")
+        width, height = self.slide_image.size
+        channels = get_rgb_channel_list()
+        self.slide_info = SlideInfo(
+            id=slide_id,
+            channels=channels,
+            channel_depth=8,
+            extent=SlideExtent(x=width, y=height, z=1),
+            num_levels=1,
+            pixel_size_nm=SlidePixelSizeNm(x=-1, y=-1),  # pixel size unknown
+            tile_extent=SlideExtent(x=width, y=height, z=1),
+            levels=[SlideLevel(extent=SlideExtent(x=width, y=height, z=1), downsample_factor=1.0)],
+        )
+
+    def close(self):
+        self.slide_image.close()
+
+    def get_info(self):
+        return self.slide_info
+
+    def get_region(
+        self,
+        level,
+        start_x,
+        start_y,
+        size_x,
+        size_y,
+        padding_color=None,
+        z=0,
+    ):
+        if padding_color is None:
+            padding_color = settings.padding_color
+        if level != 0:
+            raise HTTPException(
+                status_code=422,
+                detail=f"""The requested pyramid level is not available. 
+                    The coarsest available level is {len(self.slide_info.levels) - 1}.""",
+            )
+        region = Image.new("RGB", (size_x, size_y), padding_color)
+        if start_x + size_x >= self.slide_info.extent.x:
+            size_x = self.slide_info.extent.x - start_x
+        if start_y + size_y >= self.slide_info.extent.y:
+            size_y = self.slide_info.extent.y - start_y
+        cropped_image = self.slide_image.crop((start_x, start_y, size_x, size_y))
+        region.paste(cropped_image)
+        return region
+
+    def get_thumbnail(self, max_x, max_y):
+        thumbnail = self.slide_image.copy()
+        thumbnail.thumbnail((max_x, max_y))
+        return thumbnail
+
+    def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+        return self.get_region(
+            level,
+            tile_x * self.slide_info.tile_extent.x,
+            tile_y * self.slide_info.tile_extent.y,
+            self.slide_info.tile_extent.x,
+            self.slide_info.tile_extent.y,
+            padding_color=padding_color,
+            z=z,
+        )
+
+    def _get_associated_image(self, associated_image_name):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Associated image {associated_image_name} does not exist.",
+        )
+
+    def get_label(self):
+        self._get_associated_image("label")
+
+    def get_macro(self):
+        self._get_associated_image("macro")

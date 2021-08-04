@@ -28,6 +28,9 @@ RUN poetry build
 WORKDIR /wsi-service/wsi_service_base_plugins/openslide
 RUN poetry build
 
+WORKDIR /wsi-service/wsi_service_base_plugins/pil
+RUN poetry build
+
 WORKDIR /wsi-service
 RUN poetry install
 
@@ -36,6 +39,7 @@ FROM python:3.9 AS wsi_service_intermediate
 
 COPY --from=wsi_service_dev /wsi-service/dist/ /wsi-service/dist/
 COPY --from=wsi_service_dev /wsi-service/wsi_service_base_plugins/openslide/dist/ /wsi-service/dist/
+COPY --from=wsi_service_dev /wsi-service/wsi_service_base_plugins/pil/dist/ /wsi-service/dist/
 COPY --from=wsi_service_dev /wsi-service/wsi_service_base_plugins/tifffile/dist/ /wsi-service/dist/
 
 RUN pip3 install /wsi-service/dist/*.whl

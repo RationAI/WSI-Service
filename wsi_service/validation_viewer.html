@@ -107,8 +107,8 @@
                             for (let slide_id of c.slides) {
                                 axios.get(`slides/${slide_id}`).then(
                                     function (response) {
-                                        local_slide_id = response.data.local_slide_id
-                                        this.slides.push({ case: c.local_case_id, slide: local_slide_id, slide_id: slide_id })
+                                        local_slide_id = response.data.local_id
+                                        this.slides.push({ case: c.local_id, slide: local_slide_id, slide_id: slide_id })
                                         this.slides.sort(function (a, b) {
                                             var nameA = a.case.toUpperCase();
                                             var nameB = b.case.toUpperCase();
