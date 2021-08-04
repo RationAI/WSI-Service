@@ -4,6 +4,7 @@ from PIL import Image, UnidentifiedImageError
 from wsi_service.models.slide import SlideChannel, SlideColor, SlideExtent, SlideInfo, SlideLevel, SlidePixelSizeNm
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
+from wsi_service.slide_utils import get_rgb_channel_list
 
 
 class Slide(BaseSlide):
@@ -14,10 +15,7 @@ class Slide(BaseSlide):
             raise HTTPException(status_code=422, detail="PIL Unidentified Image Error")
         self.slide_image = Image.open(filepath).convert("RGB")
         width, height = self.slide_image.size
-        channels = []
-        channels.append(SlideChannel(id=0, name="Red", color=SlideColor(r=255, g=0, b=0, a=0)))
-        channels.append(SlideChannel(id=1, name="Green", color=SlideColor(r=0, g=255, b=0, a=0)))
-        channels.append(SlideChannel(id=2, name="Blue", color=SlideColor(r=0, g=0, b=255, a=0)))
+        channels = get_rgb_channel_list()
         self.slide_info = SlideInfo(
             id=slide_id,
             channels=channels,
