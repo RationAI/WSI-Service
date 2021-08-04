@@ -5,6 +5,7 @@ import pathlib
 import pkgutil
 from importlib.metadata import version as version_from_name
 
+from wsi_service.service_status import PluginInfo
 from wsi_service.singletons import settings
 
 # check for plugins
@@ -53,11 +54,9 @@ def get_plugins_overview():
     plugins_overview = []
     for plugin_name, plugin_item in plugins.items():
         version = version_from_name("wsi_service_plugin_" + plugin_name)
-        plugin = {
-            "name": plugin_name,
-            "version": version,
-            "supported_file_extensions": plugin_item.supported_file_extensions,
-        }
+        plugin = PluginInfo(
+            name=plugin_name, version=version, supported_file_extensions=sorted(plugin_item.supported_file_extensions)
+        )
         plugins_overview.append(plugin)
     return plugins_overview
 

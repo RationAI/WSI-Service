@@ -4,6 +4,10 @@
 
 - Added PIL base plugin to support image formats like jpg, png
 
+## 0.4.7
+
+- Added service status model
+
 ## 0.4.6
 
 - Added flag to activate viewer routes
