@@ -52,18 +52,18 @@ slide_manager = SlideManager(settings.mapper_address, settings.data_dir, setting
 
 
 @api.get("/alive", response_model=WSIServiceStatus, status_code=status.HTTP_200_OK)
-def get_service_status():
+async def get_service_status():
     return WSIServiceStatus(
         status="ok", version=settings.version, plugins=get_plugins_overview(), plugins_default=settings.plugins_default
     )
 
 
 @api.get("/v1/slides/{slide_id}/info", response_model=SlideInfo, tags=["Main Routes"])
-def get_slide_info(slide_id: str):
+async def get_slide_info(slide_id: str):
     """
     Get metadata information for a slide given its ID
     """
-    slide = slide_manager.get_slide(slide_id)
+    slide = await slide_manager.get_slide(slide_id)
     return slide.get_info()
 
 
@@ -73,7 +73,7 @@ def get_slide_info(slide_id: str):
     response_class=StreamingResponse,
     tags=["Main Routes"],
 )
-def get_slide_thumbnail(
+async def get_slide_thumbnail(
     slide_id: str,
     max_x: int = Path(
         None, example=100, ge=1, le=settings.max_thumbnail_size, description="Maximum width of thumbnail"
@@ -94,7 +94,7 @@ def get_slide_thumbnail(
     When tiff is specified as output format the raw data of the image is returned.
     """
     validate_image_request(image_format, image_quality)
-    slide = slide_manager.get_slide(slide_id)
+    slide = await slide_manager.get_slide(slide_id)
     thumbnail = slide.get_thumbnail(max_x, max_y)
     return make_response(slide, thumbnail, image_format, image_quality)
 
@@ -105,7 +105,7 @@ def get_slide_thumbnail(
     response_class=StreamingResponse,
     tags=["Main Routes"],
 )
-def get_slide_label(
+async def get_slide_label(
     slide_id: str,
     max_x: int = Path(None, example=100, description="Maximum width of label image"),
     max_y: int = Path(None, example=100, description="Maximum height of label image"),
@@ -122,7 +122,7 @@ def get_slide_label(
     When tiff is specified as output format the raw data of the image is returned.
     """
     validate_image_request(image_format, image_quality)
-    slide = slide_manager.get_slide(slide_id)
+    slide = await slide_manager.get_slide(slide_id)
     label = slide.get_label()
     label.thumbnail((max_x, max_y), Image.ANTIALIAS)
     return make_response(slide, label, image_format, image_quality)
@@ -134,7 +134,7 @@ def get_slide_label(
     response_class=StreamingResponse,
     tags=["Main Routes"],
 )
-def get_slide_macro(
+async def get_slide_macro(
     slide_id: str,
     max_x: int = Path(None, example=100, description="Maximum width of macro image"),
     max_y: int = Path(None, example=100, description="Maximum height of macro image"),
@@ -151,7 +151,7 @@ def get_slide_macro(
     When tiff is specified as output format the raw data of the image is returned.
     """
     validate_image_request(image_format, image_quality)
-    slide = slide_manager.get_slide(slide_id)
+    slide = await slide_manager.get_slide(slide_id)
     macro = slide.get_macro()
     macro.thumbnail((max_x, max_y), Image.ANTIALIAS)
     return make_response(slide, macro, image_format, image_quality)
@@ -163,7 +163,7 @@ def get_slide_macro(
     response_class=StreamingResponse,
     tags=["Main Routes"],
 )
-def get_slide_region(
+async def get_slide_region(
     slide_id: str,
     level: int = Path(None, ge=0, example=0, description="Pyramid level of region"),
     start_x: int = Path(None, example=0, description="x component of start coordinate of requested region"),
@@ -203,7 +203,7 @@ def get_slide_region(
     if size_x * size_y == 0:
         raise HTTPException(status_code=422, detail="Requested region must contain at least 1 pixel.")
 
-    slide = slide_manager.get_slide(slide_id)
+    slide = await slide_manager.get_slide(slide_id)
     if z != 0:
         try:
             image_region = slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None, z=z)
@@ -223,7 +223,7 @@ def get_slide_region(
     response_class=StreamingResponse,
     tags=["Main Routes"],
 )
-def get_slide_tile(
+async def get_slide_tile(
     slide_id: str,
     level: int = Path(None, ge=0, example=0, description="Pyramid level of region"),
     tile_x: int = Path(None, example=0, description="Request the tile_x-th tile in x dimension"),
@@ -255,7 +255,7 @@ def get_slide_tile(
     """
     vp_color = validate_hex_color_string(padding_color)
     validate_image_request(image_format, image_quality)
-    slide = slide_manager.get_slide(slide_id)
+    slide = await slide_manager.get_slide(slide_id)
     if z != 0:
         try:
             image_tile = slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
@@ -270,8 +270,8 @@ def get_slide_tile(
 
 
 @api.on_event("shutdown")
-def shutdown_event():
-    slide_manager.close()
+async def shutdown_event():
+    await slide_manager.close()
 
 
 if settings.local_mode:
@@ -282,7 +282,6 @@ if settings.local_mode:
         """
         (Only in standalone mode) Browse the local directory and return case ids for each available directory.
         """
-        global localmapper
         cases = localmapper.get_cases()
         return cases
 
@@ -295,7 +294,6 @@ if settings.local_mode:
         """
         (Only in standalone mode) Browse the local case directory and return slide ids for each available file.
         """
-        global localmapper
         slides = localmapper.get_slides(case_id)
         return slides
 
@@ -306,7 +304,6 @@ if settings.local_mode:
         """
         (Only in standalone mode) Return slide data for a given slide ID.
         """
-        global localmapper
         slide = localmapper.get_slide(slide_id)
         return slide
 
@@ -319,7 +316,6 @@ if settings.local_mode:
         """
         (Only in standalone mode) Return slide storage data for a given slide ID.
         """
-        global localmapper
         slide = localmapper.get_slide(slide_id)
         return slide.slide_storage
 
@@ -328,8 +324,7 @@ if settings.local_mode:
         """
         (Only in standalone mode) Refresh available files by scanning for new files.
         """
-        global localmapper
-        localmapper = LocalMapper(settings.data_dir)
+        localmapper.refresh()
 
 
 if settings.enable_viewer_routes:

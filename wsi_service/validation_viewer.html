@@ -12,7 +12,7 @@
 <body>
     <div id="app">
         <v-app>
-            <v-navigation-drawer app left width=400>
+            <v-navigation-drawer app left permanent width=400>
                 <v-simple-table>
                     <template v-slot:default>
                         <thead>
@@ -35,7 +35,7 @@
                     </template>
                 </v-simple-table>
             </v-navigation-drawer>
-            <v-navigation-drawer app left width=400 v-if="selectedSlideInfo" style="margin-left: 400px;">
+            <v-navigation-drawer app left permanent width=400 v-if="selectedSlideInfo" style="margin-left: 400px;">
                 <v-subheader>
                     <v-icon medium>mdi-information</v-icon>&nbsp; Slide Info
                 </v-subheader>
