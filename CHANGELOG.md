@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1
+
+- Enabled local mapper to work with multiple workers
+- Made all endpoints async
+
 ## 0.5.0
 
 - Added PIL base plugin to support image formats like jpg, png

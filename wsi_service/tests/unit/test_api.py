@@ -1,7 +1,6 @@
 import pytest
-import requests_mock
 
-from wsi_service.tests.unit.test_client import get_client_and_slide_manager, setup_storage_mapper_mock
+from wsi_service.tests.unit.test_client import get_client_and_slide_manager
 
 
 @pytest.mark.parametrize(
@@ -24,10 +23,23 @@ from wsi_service.tests.unit.test_client import get_client_and_slide_manager, set
         ("/v1/validation_viewer", 200),
     ],
 )
-@requests_mock.Mocker(real_http=True, kw="requests_mock")
-def test_endpoints(url, status_code, **kwargs):
-    setup_storage_mapper_mock(kwargs)
-    client, slide_manager = get_client_and_slide_manager()
+def test_endpoints(aioresponses, url, status_code):
+    aioresponses.get(
+        "http://testserver/slides/fc1ef3789eac548883e9923455608e13",
+        status=200,
+        payload={
+            "slide_id": "fc1ef3789eac548883e9923455608e13",
+            "storage_type": "fs",
+            "storage_addresses": [
+                {
+                    "address": "testcase/CMU-1-small.tiff",
+                    "main_address": True,
+                    "storage_address_id": "f863c2ef155654b1af0387acc7ebdb60",
+                    "slide_id": "fc1ef3789eac548883e9923455608e13",
+                }
+            ],
+        },
+    )
+    client, _ = get_client_and_slide_manager()
     r = client.get(url)
-    slide_manager.close()
     assert r.status_code == status_code
