@@ -1,3 +1,5 @@
+import asyncio
+
 from .slide import Slide
 
 supported_file_extensions = [
@@ -11,5 +13,5 @@ supported_file_extensions = [
 ]
 
 
-def open(filepath, slide_id=0):
+async def open(filepath, slide_id=0):
     return Slide(filepath, slide_id)

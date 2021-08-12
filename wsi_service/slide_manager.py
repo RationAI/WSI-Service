@@ -49,7 +49,7 @@ class SlideManager:
         if slide_id not in self.opened_slides:
             await self._map_slide(slide_id)
             filepath = os.path.join(self.data_dir, self.slide_map[slide_id]["address"])
-            slide = load_slide(filepath, slide_id)
+            slide = await load_slide(filepath, slide_id)
             self.opened_slides[slide_id] = ExpiringSlide(slide)
 
     def _reset_slide_expiration(self, slide_id):

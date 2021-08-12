@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.2
+
+- plugin call is now async for compatibility with the deformation plugin
+
 ## 0.5.1
 
 - Enabled local mapper to work with multiple workers
