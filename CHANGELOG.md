@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.3
+
+- Added a refresh-method that is called in supporting plugins
+
 ## 0.5.2
 
 - plugin call is now async for compatibility with the deformation plugin
