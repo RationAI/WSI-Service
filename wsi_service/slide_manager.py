@@ -38,6 +38,10 @@ class SlideManager:
             async with self.slide_locks[slide_id]:
                 await self._open_slide(slide_id)
         self._reset_slide_expiration(slide_id)
+        try:  # check if slide is up-to-date (and update) if supported
+            await self.opened_slides[slide_id].slide.refresh()
+        except AttributeError:
+            pass
         return self.opened_slides[slide_id].slide
 
     async def _set_slide_lock(self, slide_id):
