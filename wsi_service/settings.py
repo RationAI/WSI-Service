@@ -13,9 +13,9 @@ class Settings(BaseSettings):
     disable_openapi: bool = False
     cors_allow_origins: Set[str] = None
     data_dir: str = "/data"
-    mapper_address: str = None
-    local_mode: bool = False
-    enable_viewer_routes: bool = False
+    mapper_address: str = "http://localhost:8080/v1/slides/{slide_id}/storage"
+    local_mode: bool = True
+    enable_viewer_routes: bool = True
     inactive_histo_image_timeout_seconds: int = 600
     max_returned_region_size: int = 4 * 6250000  # 5000 x 5000
     max_thumbnail_size: int = 500

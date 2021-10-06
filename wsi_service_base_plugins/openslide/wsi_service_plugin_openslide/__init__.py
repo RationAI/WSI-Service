@@ -1,5 +1,3 @@
-import asyncio
-
 from .slide import Slide
 
 supported_file_extensions = [

@@ -1,6 +1,18 @@
 # WSI Service
 
-EMPAIA WSI Service to stream whole slide images
+## Quickstart
+
+```bash
+docker run -v <local-data-folder>:/data -p 8080:8080 --rm -d registry.gitlab.com/empaia/services/wsi-service
+```
+
+The `<local-data-folder>` should contain the following structure:
+
+- some_case/image.tif
+- another_case/img.tif
+- etc.
+
+Visit [http://localhost:8080/docs](http://localhost:8080/docs) to checkout the available endpoints. There is also a simple viewer, which can be accessed via [http://localhost:8080/v1/validation_viewer](http://localhost:8080/v1/validation_viewer).
 
 ## Overview
 
@@ -38,7 +50,7 @@ The WSI Service relies on the [Storage Mapper Service](https://www.gitlab.com/em
 
 ### Supported formats
 
-Different formats are supported by plugins for accessing image data. Two base plugins are included and support the following formats:
+Different formats are supported by plugins for accessing image data. Three base plugins are included and support the following formats:
 
 - [openslide](./wsi_service_base_plugins/openslide/)
   - 3DHISTECH (\*.mrxs)
@@ -56,7 +68,9 @@ Different formats are supported by plugins for accessing image data. Two base pl
 - [tiffile](./wsi_service_base_plugins/tifffile/)
   - OME-TIFF (\*.ome.tif, \*.ome.tif, \*.ome.tiff, \*.ome.tf2, \*.ome.tf8, \*.ome.btf)
 
-## Getting started
+## Setup
+
+*This section shows how to run and create the WSI Service after checking out this repository. Based on a docker compose file and environment variables, it shows how to properly set up the WSI Service for different deployment scenarios. If you just want to get a first impression of the WSI service, go to [Quickstart](#quickstart).*
 
 WSI Service is a python module and has to be run via docker.
 
@@ -157,7 +171,7 @@ supported_file_extensions = [
     ".tif"
 ]
 
-def open(filepath, slide_id=0):
+async def open(filepath, slide_id=0):
     return Slide(filepath, slide_id)
 ```
 
