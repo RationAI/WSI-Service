@@ -6,6 +6,7 @@
 - Added default command to docker image
 - Changed default settings to local mode with enabled viewer
 - Updated models
+- Removed performance tests
 
 ## 0.5.3
 
