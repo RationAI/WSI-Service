@@ -62,3 +62,5 @@ WORKDIR /usr/local/lib/python3.9/site-packages/wsi_service/
 ENV WEB_CONCURRENCY=8
 
 EXPOSE 8080/tcp
+
+CMD uvicorn --host=0.0.0.0 --port=8080 --loop=uvloop --http=httptools wsi_service.api:api
