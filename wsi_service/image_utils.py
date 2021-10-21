@@ -1,9 +1,8 @@
 from io import BytesIO
 
 import numpy as np
+from fastapi import HTTPException
 from PIL import Image
-
-from wsi_service.models.slide import SlideColor
 
 
 def rgba_to_rgb_with_background_color(image_rgba, padding_color):
@@ -58,7 +57,7 @@ def convert_rgb_image_by_color(image_tile, rgba):
     return converted_image
 
 
-def convert_narray_to_pil_image(narray, lower=None, upper=None):
+def convert_narray_to_pil_image(narray, lower=None, upper=None, mode="RGB"):
     if narray.dtype == np.uint8:
         narray_uint8 = narray
     elif narray.dtype == np.uint16:
@@ -68,12 +67,20 @@ def convert_narray_to_pil_image(narray, lower=None, upper=None):
     elif narray.dtype in [np.uint64, np.float64]:
         narray_uint8 = convert_narray_uintX_to_uint8(narray, 64, lower, upper)
     else:
-        raise NotImplementedError("Array conversion not supported")
+        raise HTTPException(status_code=405, detail="Array conversion not supported")
 
-    # we need to transpose the array here to make it readable for pillow (width, height, channel)
-    narray_uint8 = np.ascontiguousarray(narray_uint8.transpose(1, 2, 0))
-    pil_image = Image.fromarray(narray_uint8, mode="RGB")
-    return pil_image
+    try:
+        if mode == "L":
+            # convert to grayscale for single channel
+            new_array = narray_uint8[0, :, :]
+            pil_image = Image.fromarray(new_array, mode="L")
+        else:
+            # we need to transpose the array here to make it readable for pillow (width, height, channel
+            narray_uint8 = np.ascontiguousarray(narray_uint8.transpose(1, 2, 0))
+            pil_image = Image.fromarray(narray_uint8, mode="RGB")
+        return pil_image
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=f"Image conversion to Pillow failed: {err}")
 
 
 def save_rgb_image(pil_image, image_format, image_quality):
@@ -89,19 +96,12 @@ def save_rgb_image(pil_image, image_format, image_quality):
 def get_requested_channels_as_rgb_array(narray, image_channels, slide):
     separate_channels = np.vsplit(narray, narray.shape[0])
 
-    if image_channels == None:
-        # image_channels is None
-        temp_array = get_multi_channel_as_rgb(separate_channels)
-    elif len(image_channels) == 1:
-        # return a single channel image
-        try:
-            color = slide.slide_info.channels[image_channels[0]].color
-        except IndexError:
-            # if there is no color defined we set channel to red by default
-            color = SlideColor(r=255, g=0, b=0, a=0)
-        temp_array = get_single_channel(separate_channels, image_channels[0], color)
-    elif len(image_channels) == 2:
-        temp_array = []
+    temp_array = []
+    if not image_channels is None and len(image_channels) == 1:
+        # edge case 1: single channel will be converted to a grayscale image
+        return separate_channels[image_channels[0]]
+    elif not image_channels is None and len(image_channels) == 2:
+        # edge case 2: we cast two dedicated image to an rgb image if requested
         temp_array.append(separate_channels[image_channels[0]])
         temp_array.append(separate_channels[image_channels[1]])
         temp_array.append(np.zeros(separate_channels[image_channels[0]].shape))

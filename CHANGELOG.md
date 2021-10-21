@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.5
+
+- Return requested single channel tiles as grayscale images
+
 ## 0.5.4
 
 - Added quickstart section to README
