@@ -67,7 +67,7 @@ def convert_narray_to_pil_image(narray, lower=None, upper=None, mode="RGB"):
     elif narray.dtype in [np.uint64, np.float64]:
         narray_uint8 = convert_narray_uintX_to_uint8(narray, 64, lower, upper)
     else:
-        raise HTTPException(status_code=405, detail="Array conversion not supported")
+        raise HTTPException(status_code=400, detail="Array conversion not supported")
 
     try:
         if mode == "L":
@@ -75,7 +75,7 @@ def convert_narray_to_pil_image(narray, lower=None, upper=None, mode="RGB"):
             new_array = narray_uint8[0, :, :]
             pil_image = Image.fromarray(new_array, mode="L")
         else:
-            # we need to transpose the array here to make it readable for pillow (width, height, channel
+            # we need to transpose the array here to make it readable for pillow (width, height, channel)
             narray_uint8 = np.ascontiguousarray(narray_uint8.transpose(1, 2, 0))
             pil_image = Image.fromarray(narray_uint8, mode="RGB")
         return pil_image
