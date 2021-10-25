@@ -160,9 +160,7 @@ def test_get_slide_region_valid_fluorescence(
 @pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
 @pytest.mark.parametrize(
     "slide_id, testpixel, tile_x, tile_y, tile_size",
-    [
-        ("56ed11a2a9e95f87a1e466cf720ceffa", (30, 7, 6), 21, 22, (512, 512)),
-    ],
+    [("56ed11a2a9e95f87a1e466cf720ceffa", (30, 7, 6), 21, 22, (512, 512))],
 )
 def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size):
     check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size)
@@ -180,7 +178,7 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
             (256, 256),
             (128, 128),
             [740],
-            (13, 6, 0),
+            13,
         ),
         (
             "46061cfc30a65acab7a1ed644771a340",
@@ -200,7 +198,7 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
             (256, 256),
             (128, 128),
             [36],
-            (0, 0, 70),
+            36,
         ),
         (
             "56ed11a2a9e95f87a1e466cf720ceffa",
