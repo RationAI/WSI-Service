@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.6
+
+- Use storage address to cache open slides
+- Added logger
+
 ## 0.5.5
 
 - Return requested single channel tiles as grayscale images
