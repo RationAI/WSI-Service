@@ -16,7 +16,7 @@ async def test_slide_manager_timeout(aioresponses):
             "storage_type": "fs",
             "storage_addresses": [
                 {
-                    "address": "/wsi-service/wsi_service/tests/unit/data/testcase/CMU-1-small.tiff",
+                    "address": "testcase/CMU-1-small.tiff",
                     "main_address": True,
                     "storage_address_id": "f863c2ef155654b1af0387acc7ebdb60",
                     "slide_id": "fc1ef3789eac548883e9923455608e13",
