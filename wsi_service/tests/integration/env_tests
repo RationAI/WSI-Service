@@ -1,5 +1,6 @@
 WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DISABLE_OPENAPI=False
+WS_DEBUG=False
 WS_MAPPER_ADDRESS=http://localhost:8080/v1/slides/{slide_id}/storage
 WS_LOCAL_MODE=True
 WS_ENABLE_VIEWER_ROUTES=True
