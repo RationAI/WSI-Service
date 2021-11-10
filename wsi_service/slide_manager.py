@@ -40,11 +40,11 @@ class SlideManager:
         await self._set_storage_lock(storage_address)
 
         if storage_address not in self.opened_slide_storages:
-            logger.debug("Open new slide for ID: %s and storage address: %s.", slide_id, storage_address)
             async with self.storage_locks[storage_address]:
                 await self._open_slide(storage_address, slide_id)
+            logger.debug("Slide %s was opened", slide_id)
         else:
-            logger.debug("Slide %s is already open.", slide_id)
+            logger.debug("Slide %s is already open", slide_id)
 
         self._reset_slide_expiration(storage_address)
 
