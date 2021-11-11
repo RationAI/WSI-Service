@@ -108,7 +108,7 @@ Short explanation of the parameters used:
   - Simple Viewer `/slides/{slide_id/}/viewer`
   - Validation Viewer `/validation_viewer` (only local mode)
 - `WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS` set timeout for inactive histo images (default is 600 seconds)
-- `WS_MAX_RETURNED_REGION_SIZE` set maximum image region size for service (channels _ width _ height; default is 4 _ 5000 _ 5000)
+- `WS_MAX_RETURNED_REGION_SIZE` set maximum image region size for service (channels x width x height; default is 4 x 5000 x 5000)
 - `COMPOSE_RESTART` set to `no`, `always` to configure restart settings
 - `COMPOSE_NETWORK` set network used for wsi service
 - `COMPOSE_WS_PORT` set external port for wsi service
