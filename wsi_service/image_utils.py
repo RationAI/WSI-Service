@@ -97,10 +97,10 @@ def get_requested_channels_as_rgb_array(narray, image_channels, slide):
     separate_channels = np.vsplit(narray, narray.shape[0])
 
     temp_array = []
-    if not image_channels is None and len(image_channels) == 1:
+    if image_channels is not None and len(image_channels) == 1:
         # edge case 1: single channel will be converted to a grayscale image
         return separate_channels[image_channels[0]]
-    elif not image_channels is None and len(image_channels) == 2:
+    elif image_channels is not None and len(image_channels) == 2:
         # edge case 2: we cast two dedicated image to an rgb image if requested
         temp_array.append(separate_channels[image_channels[0]])
         temp_array.append(separate_channels[image_channels[1]])

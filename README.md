@@ -16,7 +16,7 @@ Visit [http://localhost:8080/docs](http://localhost:8080/docs) to checkout the a
 
 ## Overview
 
-The *WSI Service* enables users to stream Whole Slide Images (WSI) tile-based via HTTP. It is based on a FastAPI webserver and a number of plugins to access whole slide image data.
+The _WSI Service_ enables users to stream Whole Slide Images (WSI) tile-based via HTTP. It is based on a FastAPI webserver and a number of plugins to access whole slide image data.
 
 Regarding the slide's metadata, it provides the extent of the base level (original image, level=0), its pixel size in nm (level=0), general tile extent, the total count of levels and a list of levels with information about its extent, downsampling factor in relation to the base level. Furthermore, the channel depth is given along with a list of all available channels.
 
@@ -37,11 +37,11 @@ When tiff is specified as output format for the region and tile endpoint the raw
 
 The region and the tile endpoint also offer the selection of a layer with the index z in a Z-Stack.
 
-Get a detailed description of each endpoint by running the WSI Service (see *Getting started* section) and accessing the included Swagger UI [http://localhost:8080/docs](http://localhost:8080/docs).
+Get a detailed description of each endpoint by running the WSI Service (see _Getting started_ section) and accessing the included Swagger UI [http://localhost:8080/docs](http://localhost:8080/docs).
 
 ### Standalone version
 
-The WSI Service relies on the [Storage Mapper Service](https://www.gitlab.com/empaia/services/storage-mapper-service) to get storage information for a certain slide id. If activated (see *Getting started* section), the WSI Service will be run in standalone mode using a local mapper. This local mapper fulfills the function of the storage mapper service, the id mapper service and part of the clinical data service by creating case ids for folders found in the data folder and slide ids for images within these case folders. In the standalone mode there are few additional endpoints, which can be accessed:
+The WSI Service relies on the [Storage Mapper Service](https://www.gitlab.com/empaia/services/storage-mapper-service) to get storage information for a certain slide id. If activated (see _Getting started_ section), the WSI Service will be run in standalone mode using a local mapper. This local mapper fulfills the function of the storage mapper service, the id mapper service and part of the clinical data service by creating case ids for folders found in the data folder and slide ids for images within these case folders. In the standalone mode there are few additional endpoints, which can be accessed:
 
 - `GET /v1/cases/` - Get cases
 - `GET /v1/cases/{case_id}/slides/` - Get available slides
@@ -53,6 +53,7 @@ The WSI Service relies on the [Storage Mapper Service](https://www.gitlab.com/em
 Different formats are supported by plugins for accessing image data. Three base plugins are included and support the following formats:
 
 - [openslide](./wsi_service_base_plugins/openslide/)
+
   - 3DHISTECH (\*.mrxs)
   - APERIO (\*.svs)
   - GENERIC TIF (\*.tif / \*.tiff)
@@ -62,6 +63,7 @@ Different formats are supported by plugins for accessing image data. Three base 
     - VENTANA (\*.bif)
 
 - [pil](./wsi_service_base_plugins/pil/)
+
   - JPEG (\*.jpeg, \*.jpg)
   - PNG (\*.png)
 
@@ -70,7 +72,7 @@ Different formats are supported by plugins for accessing image data. Three base 
 
 ## Setup
 
-*This section shows how to run and create the WSI Service after checking out this repository. Based on a docker compose file and environment variables, it shows how to properly set up the WSI Service for different deployment scenarios. If you just want to get a first impression of the WSI service, go to [Quickstart](#quickstart).*
+_This section shows how to run and create the WSI Service after checking out this repository. Based on a docker compose file and environment variables, it shows how to properly set up the WSI Service for different deployment scenarios. If you just want to get a first impression of the WSI service, go to [Quickstart](#quickstart)._
 
 WSI Service is a python module and has to be run via docker.
 
@@ -81,6 +83,7 @@ Set environment variables in your shell or in a `.env` file:
 ```bash
 WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DISABLE_OPENAPI=False
+WS_DEBUG=False
 WS_MAPPER_ADDRESS=http://localhost:8080/v1/slides/{slide_id}/storage
 WS_LOCAL_MODE=True
 WS_ENABLE_VIEWER_ROUTES=True
@@ -97,14 +100,15 @@ COMPOSE_DATA_DIR=/data
 Short explanation of the parameters used:
 
 - `WS_CORS_ALLOW_ORIGINS` allow cors for different origins
+- `WS_DEBUG` enables debug logging level
 - `WS_DISABLE_OPENAPI` disable swagger api documentation (/docs`)
 - `WS_MAPPER_ADDRESS` storage mapper service address
 - `WS_LOCAL_MODE` when set to true, wsi service is started in local mode
-- `WS_ENABLE_VIEWER_ROUTES` when set to true, there are additional routes available for viewing images:  
+- `WS_ENABLE_VIEWER_ROUTES` when set to true, there are additional routes available for viewing images:
   - Simple Viewer `/slides/{slide_id/}/viewer`
   - Validation Viewer `/validation_viewer` (only local mode)
 - `WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS` set timeout for inactive histo images (default is 600 seconds)
-- `WS_MAX_RETURNED_REGION_SIZE` set maximum image region size for service (channels * width * height; default is 4 * 5000 * 5000)
+- `WS_MAX_RETURNED_REGION_SIZE` set maximum image region size for service (channels x width x height; default is 4 x 5000 x 5000)
 - `COMPOSE_RESTART` set to `no`, `always` to configure restart settings
 - `COMPOSE_NETWORK` set network used for wsi service
 - `COMPOSE_WS_PORT` set external port for wsi service
@@ -175,7 +179,7 @@ async def open(filepath, slide_id=0):
     return Slide(filepath, slide_id)
 ```
 
-Once these minimal requirements are taken care of, the python package can be installed on top of an existing  WSI Service docker image by simple running a Dockerfile along these lines:
+Once these minimal requirements are taken care of, the python package can be installed on top of an existing WSI Service docker image by simple running a Dockerfile along these lines:
 
 ```Dockerfile
 FROM registry.gitlab.com/empaia/services/wsi-service
