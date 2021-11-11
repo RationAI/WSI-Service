@@ -41,10 +41,10 @@ class SlideManager:
 
         if storage_address not in self.opened_slide_storages:
             async with self.storage_locks[storage_address]:
-                await self._open_slide(storage_address, slide_id)
-            logger.debug("Slide %s was opened", slide_id)
+                await self._open_slide(storage_address)
+            logger.debug("Slide handle is opened for address: %s", storage_address)
         else:
-            logger.debug("Slide %s is already open", slide_id)
+            logger.debug("Slide handle is already open for %s", slide_id)
 
         self._reset_slide_expiration(storage_address)
 
@@ -52,15 +52,19 @@ class SlideManager:
             await self.opened_slide_storages[storage_address].slide.refresh()
         except AttributeError:
             pass
-        return self.opened_slide_storages[storage_address].slide
+        slide = self.opened_slide_storages[storage_address].slide
+        # overwrite dummy id with current slide id
+        slide.slide_info.id = slide_id
+        return slide
 
     async def _set_storage_lock(self, storage_address):
         async with self.lock:
             if storage_address not in self.storage_locks:
                 self.storage_locks[storage_address] = asyncio.Lock()
 
-    async def _open_slide(self, storage_address, slide_id):
-        slide = await load_slide(storage_address, slide_id)
+    async def _open_slide(self, storage_address):
+        # we set a dummy id here, that will be overwriteen before returning the slide handle
+        slide = await load_slide(storage_address, "dummy-id")
         self.opened_slide_storages[storage_address] = ExpiringSlide(slide)
 
     def _reset_slide_expiration(self, storage_address):
