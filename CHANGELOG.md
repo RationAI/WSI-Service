@@ -2,7 +2,7 @@
 
 ## 0.5.6
 
-- Use storage address to cache open slides
+- Use storage address to cache open slides (workaround)
 - Added logger
 
 ## 0.5.5
