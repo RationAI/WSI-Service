@@ -66,9 +66,9 @@ def check_get_slide_label_valid(image_format, image_quality, slide_id, has_label
         else:
             image = get_image(response)
             if image_format in ["png", "bmp"] and slide_id in [
-                "4b0ec5e0ec5e5e05ae9e500857314f20",
-                "f863c2ef155654b1af0387acc7ebdb60",
-                "c801ce3d1de45f2996e6a07b2d449bca",
+                "f5f3a03b77fb5e0497b95eaff84e9a21",
+                "8d32dba05a4558218880f06caf30d3ac",
+                "1886900087965c9e845b39aebaa45ee6",
             ]:
                 assert image.getpixel((pixel_location[0], pixel_location[1])) == testpixel
     else:

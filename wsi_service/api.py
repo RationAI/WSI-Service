@@ -4,7 +4,7 @@ from typing import List
 
 from fastapi import FastAPI, HTTPException, Path, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from PIL import Image
 
 from wsi_service.api_utils import (
@@ -325,6 +325,7 @@ if settings.local_mode:
         (Only in standalone mode) Refresh available files by scanning for new files.
         """
         localmapper.refresh()
+        return JSONResponse({"detail": "Local mapper has been refreshed."}, status_code=200)
 
 
 if settings.enable_viewer_routes:

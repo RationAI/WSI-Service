@@ -9,17 +9,17 @@ from wsi_service.tests.unit.test_client import get_client_and_slide_manager
 @pytest.mark.asyncio
 async def test_slide_manager_timeout(aioresponses):
     aioresponses.get(
-        "http://testserver/slides/fc1ef3789eac548883e9923455608e13",
+        "http://testserver/slides/750129436e215175beb6c979bd9bfa50",
         status=200,
         payload={
-            "slide_id": "fc1ef3789eac548883e9923455608e13",
+            "slide_id": "750129436e215175beb6c979bd9bfa50",
             "storage_type": "fs",
             "storage_addresses": [
                 {
                     "address": "testcase/CMU-1-small.tiff",
                     "main_address": True,
-                    "storage_address_id": "f863c2ef155654b1af0387acc7ebdb60",
-                    "slide_id": "fc1ef3789eac548883e9923455608e13",
+                    "storage_address_id": "8d32dba05a4558218880f06caf30d3ac",
+                    "slide_id": "750129436e215175beb6c979bd9bfa50",
                 }
             ],
         },
@@ -28,7 +28,7 @@ async def test_slide_manager_timeout(aioresponses):
     slide_manager.close()
     slide_manager.timeout = 1
     assert len(slide_manager.opened_slide_storages.keys()) == 0
-    await slide_manager.get_slide("fc1ef3789eac548883e9923455608e13")
+    await slide_manager.get_slide("750129436e215175beb6c979bd9bfa50")
     assert len(slide_manager.opened_slide_storages.keys()) == 1
     await asyncio.sleep(0.5)
     assert len(slide_manager.opened_slide_storages.keys()) == 1

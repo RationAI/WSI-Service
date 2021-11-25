@@ -6,12 +6,12 @@ import aiohttp
 import pytest
 
 slide_ids = [
-    "4b0ec5e0ec5e5e05ae9e500857314f20",  # no label, no macro
-    "f863c2ef155654b1af0387acc7ebdb60",
-    "c801ce3d1de45f2996e6a07b2d449bca",  # no label
-    "7304006194f8530b9e19df1310a3670f",
-    "cdad4692405c556ca63185bee512e95e",  # no label
-    "c4682788c7e85d739ce043b3f6eaff70",  # no label
+    "f5f3a03b77fb5e0497b95eaff84e9a21",  # no label, no macro
+    "8d32dba05a4558218880f06caf30d3ac",
+    "1886900087965c9e845b39aebaa45ee6",  # no label
+    "45707118e3b55f1b8e03e1f19feee916",
+    "1666fd894d23529dbb8129f27c796e14",  # no label
+    "a7a5a6840e625616b08e7bca6ee790ca",  # no label
 ]
 
 
