@@ -82,13 +82,14 @@ Set environment variables in your shell or in a `.env` file:
 
 ```bash
 WS_CORS_ALLOW_ORIGINS=["*"]
-WS_DISABLE_OPENAPI=False
 WS_DEBUG=False
+WS_DISABLE_OPENAPI=False
 WS_MAPPER_ADDRESS=http://localhost:8080/v1/slides/{slide_id}/storage
 WS_LOCAL_MODE=True
 WS_ENABLE_VIEWER_ROUTES=True
 WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600
 WS_MAX_RETURNED_REGION_SIZE=25000000
+WS_MAX_THUMBNAIL_SIZE=500
 WS_ROOT_PATH=
 
 COMPOSE_RESTART=no
@@ -109,6 +110,7 @@ Short explanation of the parameters used:
   - Validation Viewer `/validation_viewer` (only local mode)
 - `WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS` set timeout for inactive histo images (default is 600 seconds)
 - `WS_MAX_RETURNED_REGION_SIZE` set maximum image region size for service (channels x width x height; default is 4 x 5000 x 5000)
+- `WS_MAX_THUMBNAIL_SIZE` set maximum thumbnail size that can be requested
 - `COMPOSE_RESTART` set to `no`, `always` to configure restart settings
 - `COMPOSE_NETWORK` set network used for wsi service
 - `COMPOSE_WS_PORT` set external port for wsi service
@@ -135,7 +137,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 Run while development composition is up and running:
 
 ```bash
-docker exec -it wsi-service_wsi_service_1 poetry run pytest --cov wsi_service
+docker exec -it wsi-service-wsi_service-1 poetry run pytest --cov wsi_service
 ```
 
 To run tests locally, make sure you have the latest [**testdata**](https://nextcloud.empaia.org/f/188182) (For access contact project maintainer).

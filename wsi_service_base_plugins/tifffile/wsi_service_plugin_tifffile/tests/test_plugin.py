@@ -16,9 +16,9 @@ from wsi_service.tests.integration.plugin_example_tests.plugin_example_tests imp
     "slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y",
     [
         # OME-TIFF 3x16bit
-        ("46061cfc30a65acab7a1ed644771a340", 3, 16, 3, 325, (256, 256), 11260, 22300),
+        ("80f38182247757799ad732bf6d035ac0", 3, 16, 3, 325, (256, 256), 11260, 22300),
         # OME-TIFF 5x8bit
-        ("56ed11a2a9e95f87a1e466cf720ceffa", 5, 8, 6, 498, (512, 512), 24960, 34560),
+        ("37b5c722d1425395b1817474dd41b946", 5, 8, 6, 498, (512, 512), 24960, 34560),
     ],
 )
 def test_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y):
@@ -29,17 +29,17 @@ def test_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pix
 @pytest.mark.parametrize(
     "slide_id, return_value, pixel_location, testpixel_rgb, testpixel_multichannel",
     [
-        ("46061cfc30a65acab7a1ed644771a340", 200, (0, 0), (0, 0, 0), (3, 2, 0)),
+        ("80f38182247757799ad732bf6d035ac0", 200, (0, 0), (0, 0, 0), (3, 2, 0)),
         (
-            "46061cfc30a65acab7a1ed644771a340",
+            "80f38182247757799ad732bf6d035ac0",
             200,
             (10, 10),
             (10, 6, 1),
             (675, 432, 121),
         ),
-        ("56ed11a2a9e95f87a1e466cf720ceffa", 200, (0, 0), (0, 0, 0), (0, 0, 0)),
+        ("37b5c722d1425395b1817474dd41b946", 200, (0, 0), (0, 0, 0), (0, 0, 0)),
         (
-            "56ed11a2a9e95f87a1e466cf720ceffa",
+            "37b5c722d1425395b1817474dd41b946",
             200,
             (10, 10),
             (87, 51, 23),
@@ -71,8 +71,8 @@ def test_get_slide_thumbnail_valid(
 @pytest.mark.parametrize(
     "slide_id, has_label, pixel_location, testpixel",
     [
-        ("46061cfc30a65acab7a1ed644771a340", False, (), ()),
-        ("56ed11a2a9e95f87a1e466cf720ceffa", False, (), ()),
+        ("80f38182247757799ad732bf6d035ac0", False, (), ()),
+        ("37b5c722d1425395b1817474dd41b946", False, (), ()),
     ],
 )
 def test_get_slide_label_valid(image_format, image_quality, slide_id, has_label, pixel_location, testpixel):
@@ -83,8 +83,8 @@ def test_get_slide_label_valid(image_format, image_quality, slide_id, has_label,
 @pytest.mark.parametrize(
     "slide_id, return_value, pixel_location, testpixel",
     [
-        ("46061cfc30a65acab7a1ed644771a340", 404, (), ()),
-        ("56ed11a2a9e95f87a1e466cf720ceffa", 404, (), ()),
+        ("80f38182247757799ad732bf6d035ac0", 404, (), ()),
+        ("37b5c722d1425395b1817474dd41b946", 404, (), ()),
     ],
 )
 def test_get_slide_macro_valid(image_format, image_quality, slide_id, return_value, pixel_location, testpixel):
@@ -96,7 +96,7 @@ def test_get_slide_macro_valid(image_format, image_quality, slide_id, return_val
     "slide_id, channels, start_point, size, pixel_location, testpixel_multichannel, testpixel_rgb",
     [
         (
-            "46061cfc30a65acab7a1ed644771a340",
+            "80f38182247757799ad732bf6d035ac0",
             3,
             (0, 0),
             (256, 256),
@@ -105,7 +105,7 @@ def test_get_slide_macro_valid(image_format, image_quality, slide_id, return_val
             (0, 0, 0),
         ),
         (
-            "46061cfc30a65acab7a1ed644771a340",
+            "80f38182247757799ad732bf6d035ac0",
             3,
             (512, 512),
             (256, 256),
@@ -114,7 +114,7 @@ def test_get_slide_macro_valid(image_format, image_quality, slide_id, return_val
             (60, 43, 60),
         ),
         (
-            "56ed11a2a9e95f87a1e466cf720ceffa",
+            "37b5c722d1425395b1817474dd41b946",
             5,
             (0, 0),
             (256, 256),
@@ -123,7 +123,7 @@ def test_get_slide_macro_valid(image_format, image_quality, slide_id, return_val
             (0, 0, 0),
         ),
         (
-            "56ed11a2a9e95f87a1e466cf720ceffa",
+            "37b5c722d1425395b1817474dd41b946",
             5,
             (512, 512),
             (256, 256),
@@ -160,7 +160,7 @@ def test_get_slide_region_valid_fluorescence(
 @pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
 @pytest.mark.parametrize(
     "slide_id, testpixel, tile_x, tile_y, tile_size",
-    [("56ed11a2a9e95f87a1e466cf720ceffa", (30, 7, 6), 21, 22, (512, 512))],
+    [("37b5c722d1425395b1817474dd41b946", (30, 7, 6), 21, 22, (512, 512))],
 )
 def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size):
     check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size)
@@ -171,7 +171,7 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
     "slide_id, level, channels, start_point, size, pixel_location, testpixel_multichannel, testpixel_rgb",
     [
         (
-            "46061cfc30a65acab7a1ed644771a340",
+            "80f38182247757799ad732bf6d035ac0",
             2,
             [0],
             (0, 0),
@@ -181,7 +181,7 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
             13,
         ),
         (
-            "46061cfc30a65acab7a1ed644771a340",
+            "80f38182247757799ad732bf6d035ac0",
             2,
             [0, 1],
             (0, 0),
@@ -191,7 +191,7 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
             (13, 9, 0),
         ),
         (
-            "56ed11a2a9e95f87a1e466cf720ceffa",
+            "37b5c722d1425395b1817474dd41b946",
             5,
             [0],
             (0, 0),
@@ -201,7 +201,7 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
             36,
         ),
         (
-            "56ed11a2a9e95f87a1e466cf720ceffa",
+            "37b5c722d1425395b1817474dd41b946",
             5,
             [0, 1, 2, 3],
             (0, 0),
@@ -241,14 +241,14 @@ def test_get_slide_region_dedicated_channel(
 @pytest.mark.parametrize(
     "slide_id, channels, expected_response",
     [
-        ("46061cfc30a65acab7a1ed644771a340", [0], 200),
-        ("46061cfc30a65acab7a1ed644771a340", [0, 1, 2], 200),
-        ("46061cfc30a65acab7a1ed644771a340", [0, 1, 6], 400),
-        ("46061cfc30a65acab7a1ed644771a340", [5], 400),
-        ("46061cfc30a65acab7a1ed644771a340", [], 200),
-        ("56ed11a2a9e95f87a1e466cf720ceffa", [0, 1, 2, 3, 4], 200),
-        ("56ed11a2a9e95f87a1e466cf720ceffa", [4], 200),
-        ("56ed11a2a9e95f87a1e466cf720ceffa", [5], 400),
+        ("80f38182247757799ad732bf6d035ac0", [0], 200),
+        ("80f38182247757799ad732bf6d035ac0", [0, 1, 2], 200),
+        ("80f38182247757799ad732bf6d035ac0", [0, 1, 6], 400),
+        ("80f38182247757799ad732bf6d035ac0", [5], 400),
+        ("80f38182247757799ad732bf6d035ac0", [], 200),
+        ("37b5c722d1425395b1817474dd41b946", [0, 1, 2, 3, 4], 200),
+        ("37b5c722d1425395b1817474dd41b946", [4], 200),
+        ("37b5c722d1425395b1817474dd41b946", [5], 400),
     ],
 )
 def test_get_slide_region_invalid_channel(slide_id, channels, expected_response):

@@ -4,12 +4,12 @@ import psutil
 import requests
 
 slide_ids = [
-    "4b0ec5e0ec5e5e05ae9e500857314f20",
-    "f863c2ef155654b1af0387acc7ebdb60",
-    "c801ce3d1de45f2996e6a07b2d449bca",
-    "7304006194f8530b9e19df1310a3670f",
-    "cdad4692405c556ca63185bee512e95e",
-    "c4682788c7e85d739ce043b3f6eaff70",
+    "f5f3a03b77fb5e0497b95eaff84e9a21",
+    "8d32dba05a4558218880f06caf30d3ac",
+    "1886900087965c9e845b39aebaa45ee6",
+    "45707118e3b55f1b8e03e1f19feee916",
+    "1666fd894d23529dbb8129f27c796e14",
+    "a7a5a6840e625616b08e7bca6ee790ca",
 ]
 
 
@@ -33,11 +33,11 @@ def test_thumbnail_cache_no_additional_memory_usage_after_first_thumbnail_reques
 def test_thumbnail_cache_speedup_test():
     time.sleep(6)  # make sure slide is closed
     start = time.time()
-    r = requests.get("http://localhost:8080/v1/slides/f863c2ef155654b1af0387acc7ebdb60/thumbnail/max_size/500/500")
+    r = requests.get("http://localhost:8080/v1/slides/8d32dba05a4558218880f06caf30d3ac/thumbnail/max_size/500/500")
     time_first = time.time() - start
     assert r.status_code == 200
     start = time.time()
-    r = requests.get("http://localhost:8080/v1/slides/f863c2ef155654b1af0387acc7ebdb60/thumbnail/max_size/500/500")
+    r = requests.get("http://localhost:8080/v1/slides/8d32dba05a4558218880f06caf30d3ac/thumbnail/max_size/500/500")
     time_second = time.time() - start
     assert r.status_code == 200
     speedup = time_first / time_second

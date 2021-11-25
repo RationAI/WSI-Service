@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.7
+
+- Fixed local mode uuid generation
+
 ## 0.5.6
 
 - Use storage address to cache open slides (workaround)

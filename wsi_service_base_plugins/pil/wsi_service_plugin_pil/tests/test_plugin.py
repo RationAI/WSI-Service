@@ -12,9 +12,9 @@ from wsi_service.tests.integration.plugin_example_tests.plugin_example_tests imp
     "slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y",
     [
         # JPG
-        ("5f858519fc285ce78161b023746df590", 3, 8, 1, -1, (500, 358), 500, 358),
+        ("7764a90026135d0f881c451d5bbf566a", 3, 8, 1, -1, (500, 358), 500, 358),
         # PNG
-        ("0f72fba3dc2359e18c09a1d59cd62ed0", 3, 8, 1, -1, (500, 358), 500, 358),
+        ("035b26b0a0ab5b258cc0dafb91fb09cc", 3, 8, 1, -1, (500, 358), 500, 358),
     ],
 )
 def test_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y):
@@ -26,13 +26,13 @@ def test_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pix
     "slide_id, return_value, pixel_location, testpixel_rgb",
     [
         (
-            "5f858519fc285ce78161b023746df590",
+            "7764a90026135d0f881c451d5bbf566a",
             200,
             (5, 5),
             (245, 246, 246),
         ),
         (
-            "0f72fba3dc2359e18c09a1d59cd62ed0",
+            "035b26b0a0ab5b258cc0dafb91fb09cc",
             200,
             (5, 5),
             (243, 245, 244),
@@ -62,8 +62,8 @@ def test_get_slide_thumbnail_valid(
 @pytest.mark.parametrize(
     "slide_id, testpixel, tile_x, tile_y, tile_size",
     [
-        ("5f858519fc285ce78161b023746df590", (243, 243, 243), 0, 0, (500, 358)),
-        ("0f72fba3dc2359e18c09a1d59cd62ed0", (243, 243, 243), 0, 0, (500, 358)),
+        ("7764a90026135d0f881c451d5bbf566a", (243, 243, 243), 0, 0, (500, 358)),
+        ("035b26b0a0ab5b258cc0dafb91fb09cc", (243, 243, 243), 0, 0, (500, 358)),
     ],
 )
 def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size):
@@ -75,7 +75,7 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
     "slide_id,  pixel_location, testpixel, start_x, start_y, size",
     [
         (
-            "4b0ec5e0ec5e5e05ae9e500857314f20",
+            "f5f3a03b77fb5e0497b95eaff84e9a21",
             (0, 0),
             (243, 243, 243),
             0,
