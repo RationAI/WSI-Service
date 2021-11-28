@@ -177,8 +177,8 @@ supported_file_extensions = [
     ".tif"
 ]
 
-async def open(filepath, slide_id=0):
-    return Slide(filepath, slide_id)
+async def open(filepath):
+    return await Slide.create(filepath)
 ```
 
 Once these minimal requirements are taken care of, the python package can be installed on top of an existing WSI Service docker image by simple running a Dockerfile along these lines:

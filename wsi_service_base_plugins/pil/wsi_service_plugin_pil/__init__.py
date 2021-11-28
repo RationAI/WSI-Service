@@ -3,5 +3,5 @@ from .slide import Slide
 supported_file_extensions = [".png", ".jpg", ".jpeg"]
 
 
-async def open(filepath, slide_id=0):
-    return Slide(filepath, slide_id)
+async def open(filepath):
+    return await Slide.create(filepath)

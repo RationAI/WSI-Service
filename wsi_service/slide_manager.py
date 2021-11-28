@@ -30,7 +30,7 @@ class SlideManager:
     def close(self):
         for storage_address in list(self.opened_slide_storages.keys()):
             self.opened_slide_storages[storage_address].timer.cancel()
-            self._close_slide(storage_address)
+            self._sync_close_slide(storage_address)
 
     async def get_slide(self, slide_id):
         main_storage_address = await self._get_slide_main_storage_address(slide_id)
@@ -71,7 +71,7 @@ class SlideManager:
         expiring_slide = self.opened_slide_storages[storage_address]
         if expiring_slide.timer is not None:
             expiring_slide.timer.cancel()
-        expiring_slide.timer = self.event_loop.call_later(self.timeout, self._close_slide, storage_address)
+        expiring_slide.timer = self.event_loop.call_later(self.timeout, self._sync_close_slide, storage_address)
         logger.debug("Set expiration timer for storage address (%s): %s", storage_address, self.timeout)
 
     async def _get_slide_main_storage_address(self, slide_id):
@@ -92,8 +92,11 @@ class SlideManager:
                 return storage_address
         return slide["storage_addresses"][0]
 
-    def _close_slide(self, storage_address):
+    def _sync_close_slide(self, storage_address):
+        asyncio.create_task(self._close_slide(storage_address))
+
+    async def _close_slide(self, storage_address):
         if storage_address in self.opened_slide_storages:
-            self.opened_slide_storages[storage_address].slide.close()
+            await self.opened_slide_storages[storage_address].slide.close()
             del self.opened_slide_storages[storage_address]
             logger.debug("Closed slide with storage address: %s", storage_address)

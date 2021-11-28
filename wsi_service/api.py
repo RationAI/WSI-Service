@@ -64,7 +64,7 @@ async def get_slide_info(slide_id: str):
     Get metadata information for a slide given its ID
     """
     slide = await slide_manager.get_slide(slide_id)
-    return slide.get_info()
+    return await slide.get_info()
 
 
 @api.get(
@@ -95,7 +95,7 @@ async def get_slide_thumbnail(
     """
     validate_image_request(image_format, image_quality)
     slide = await slide_manager.get_slide(slide_id)
-    thumbnail = slide.get_thumbnail(max_x, max_y)
+    thumbnail = await slide.get_thumbnail(max_x, max_y)
     return make_response(slide, thumbnail, image_format, image_quality)
 
 
@@ -123,7 +123,7 @@ async def get_slide_label(
     """
     validate_image_request(image_format, image_quality)
     slide = await slide_manager.get_slide(slide_id)
-    label = slide.get_label()
+    label = await slide.get_label()
     label.thumbnail((max_x, max_y), Image.ANTIALIAS)
     return make_response(slide, label, image_format, image_quality)
 
@@ -152,7 +152,7 @@ async def get_slide_macro(
     """
     validate_image_request(image_format, image_quality)
     slide = await slide_manager.get_slide(slide_id)
-    macro = slide.get_macro()
+    macro = await slide.get_macro()
     macro.thumbnail((max_x, max_y), Image.ANTIALIAS)
     return make_response(slide, macro, image_format, image_quality)
 
@@ -206,13 +206,13 @@ async def get_slide_region(
     slide = await slide_manager.get_slide(slide_id)
     if z != 0:
         try:
-            image_region = slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None, z=z)
+            image_region = await slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None, z=z)
         except TypeError as e:
             raise HTTPException(
                 status_code=422, detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers."""
             ) from e
     else:
-        image_region = slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None)
+        image_region = await slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None)
     validate_image_channels(slide, image_channels)
     return make_response(slide, image_region, image_format, image_quality, image_channels)
 
@@ -258,13 +258,13 @@ async def get_slide_tile(
     slide = await slide_manager.get_slide(slide_id)
     if z != 0:
         try:
-            image_tile = slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
+            image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
         except TypeError as e:
             raise HTTPException(
                 status_code=422, detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers."""
             ) from e
     else:
-        image_tile = slide.get_tile(level, tile_x, tile_y, padding_color=vp_color)
+        image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color)
     validate_image_channels(slide, image_channels)
     return make_response(slide, image_tile, image_format, image_quality, image_channels)
 

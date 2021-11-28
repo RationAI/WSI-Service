@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+- Extended async to all slide plugin functions
+
 ## 0.5.7
 
 - Fixed local mode uuid generation
