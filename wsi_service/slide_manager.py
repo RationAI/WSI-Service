@@ -21,6 +21,7 @@ class SlideManager:
         self.mapper_address = mapper_address
         self.data_dir = data_dir
         self.timeout = timeout
+        self.storage_mapper_cache = {}
         self.opened_slide_storages = {}
         self.lock = asyncio.Lock()
         self.storage_locks = {}
@@ -33,8 +34,12 @@ class SlideManager:
             self._sync_close_slide(storage_address)
 
     async def get_slide(self, slide_id):
-        main_storage_address = await self._get_slide_main_storage_address(slide_id)
-        storage_address = os.path.join(self.data_dir, main_storage_address["address"])
+        if slide_id in self.storage_mapper_cache:
+            storage_address = self.storage_mapper_cache[slide_id]
+        else:
+            main_storage_address = await self._get_slide_main_storage_address(slide_id)
+            storage_address = os.path.join(self.data_dir, main_storage_address["address"])
+            self.storage_mapper_cache[slide_id] = storage_address
         logger.debug("Get slide %s at storage address: %s", slide_id, storage_address)
 
         await self._set_storage_lock(storage_address)
@@ -63,8 +68,7 @@ class SlideManager:
                 self.storage_locks[storage_address] = asyncio.Lock()
 
     async def _open_slide(self, storage_address):
-        # we set a dummy id here, that will be overwriteen before returning the slide handle
-        slide = await load_slide(storage_address, "dummy-id")
+        slide = await load_slide(storage_address)
         self.opened_slide_storages[storage_address] = ExpiringSlide(slide)
 
     def _reset_slide_expiration(self, storage_address):

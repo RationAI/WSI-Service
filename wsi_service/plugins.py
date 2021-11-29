@@ -16,7 +16,7 @@ plugins = {
 }
 
 
-async def load_slide(filepath, slide_id=0):
+async def load_slide(filepath):
     if not (os.path.exists(filepath)):
         raise FileNotFoundError(f"File {filepath} not found.")
     file_extension = _get_file_extension(filepath)
