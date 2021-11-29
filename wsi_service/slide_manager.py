@@ -1,5 +1,4 @@
 import asyncio
-import atexit
 import os
 
 import aiohttp
@@ -26,7 +25,6 @@ class SlideManager:
         self.lock = asyncio.Lock()
         self.storage_locks = {}
         self.event_loop = asyncio.get_event_loop()
-        atexit.register(self.close)
 
     def close(self):
         for storage_address in list(self.opened_slide_storages.keys()):
