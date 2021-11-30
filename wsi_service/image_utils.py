@@ -85,10 +85,7 @@ def convert_narray_to_pil_image(narray, lower=None, upper=None, mode="RGB"):
 
 def save_rgb_image(pil_image, image_format, image_quality):
     mem = BytesIO()
-    if image_format == "png":
-        pil_image.save(mem, format=image_format, optimize=(image_quality > 0))
-    else:
-        pil_image.save(mem, format=image_format, quality=image_quality)
+    pil_image.save(mem, format=image_format, quality=image_quality)
     mem.seek(0)
     return mem
 

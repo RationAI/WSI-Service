@@ -17,7 +17,7 @@ from wsi_service.slide_utils import get_original_levels
 class Slide(BaseSlide):
     format_kinds = ["OME"]
 
-    def __init__(self, filepath, slide_id):
+    async def open(self, filepath):
         self.locker = Lock()
         try:
             self.tif_slide = tifffile.TiffFile(filepath)
@@ -34,16 +34,15 @@ class Slide(BaseSlide):
             self.parsed_metadata = xml.fromstring(self.ome_metadata)
         except Exception as ex:
             raise HTTPException(status_code=422, detail=f"Could not obtain ome metadata ({ex})")
-        # pixel_size = self.get_pixel_size(self.parsed_metadata[0][0])
-        self.slide_info = self.__get_slide_info_ome_tif(slide_id, self.parsed_metadata)
+        self.slide_info = self.__get_slide_info_ome_tif()
 
-    def close(self):
+    async def close(self):
         self.tif_slide.close()
 
-    def get_info(self):
+    async def get_info(self):
         return self.slide_info
 
-    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
         try:
@@ -67,7 +66,7 @@ class Slide(BaseSlide):
         result = np.concatenate(result_array, axis=0)[:, :, :, 0]
         return result
 
-    def get_thumbnail(self, max_x, max_y):
+    async def get_thumbnail(self, max_x, max_y):
         thumb_level = len(self.slide_info.levels) - 1
         for i, level in enumerate(self.slide_info.levels):
             if level.extent.x < max_x or level.extent.y < max_y:
@@ -81,25 +80,19 @@ class Slide(BaseSlide):
         else:
             max_x = max_x * (level_extent_x / level_extent_y)
 
-        thumbnail_org = self.get_region(thumb_level, 0, 0, level_extent_x, level_extent_y, settings.padding_color)
+        thumbnail_org = await self.get_region(thumb_level, 0, 0, level_extent_x, level_extent_y, settings.padding_color)
         thumbnail_resized = util.img_as_uint(transform.resize(thumbnail_org, (thumbnail_org.shape[0], max_y, max_x)))
         return thumbnail_resized
 
-    def _get_associated_image(self, associated_image_name):
-        raise HTTPException(
-            status_code=404,
-            detail=f"Associated image {associated_image_name} does not exist.",
-        )
-
-    def get_label(self):
+    async def get_label(self):
         self._get_associated_image("label")
 
-    def get_macro(self):
+    async def get_macro(self):
         self._get_associated_image("macro")
 
-    def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
         # implement extracting of tile without de/encoding of tile data
-        return self.get_region(
+        return await self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
             tile_y * self.slide_info.tile_extent.y,
@@ -109,6 +102,12 @@ class Slide(BaseSlide):
         )
 
     ## private members
+
+    def _get_associated_image(self, associated_image_name):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Associated image {associated_image_name} does not exist.",
+        )
 
     def __get_color_for_channel(self, channel_index, channel_depth, padding_color):
         if channel_depth == 8:
@@ -320,14 +319,14 @@ class Slide(BaseSlide):
         else:
             raise HTTPException(status_code=422, detail=f"Invalid pixel size unit ({pixel_unit_x})")
 
-    def __get_slide_info_ome_tif(self, slide_id, parsed_metadata):
+    def __get_slide_info_ome_tif(self):
         serie = self.tif_slide.series[0]
         channels = self.__get_channels_ome_tif()
         pixel_size = self.__get_pixel_size_ome_tif()
         levels = self.__get_levels_ome_tif(self.tif_slide)
         try:
             slide_info = SlideInfo(
-                id=slide_id,
+                id="",
                 channels=channels,
                 channel_depth=serie.keyframe.bitspersample,
                 extent=SlideExtent(

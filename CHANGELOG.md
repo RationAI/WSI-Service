@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0
+
+- Extended async to all slide plugin functions
+- Added cache for storage mapper
+- Fixed slow response due to StreamingResponse
+
 ## 0.5.7
 
 - Fixed local mode uuid generation

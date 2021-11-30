@@ -16,7 +16,7 @@ plugins = {
 }
 
 
-async def load_slide(filepath, slide_id=0):
+async def load_slide(filepath):
     if not (os.path.exists(filepath)):
         raise FileNotFoundError(f"File {filepath} not found.")
     file_extension = _get_file_extension(filepath)
@@ -38,7 +38,7 @@ async def load_slide(filepath, slide_id=0):
     else:
         selected_plugin_name, seletected_plugin = next(iter(available_plugins_for_image_file_extension.items()))
     try:
-        slide = await seletected_plugin.open(filepath, slide_id)
+        slide = await seletected_plugin.open(filepath)
     except Exception as e:
         print(f"Plugin {selected_plugin_name} unable to open image")
         raise e

@@ -5,7 +5,7 @@ import numpy as np
 import tifffile
 from fastapi import HTTPException
 from PIL import Image
-from starlette.responses import StreamingResponse
+from starlette.responses import Response
 
 from wsi_service.image_utils import (
     convert_narray_to_pil_image,
@@ -86,7 +86,7 @@ def make_image_response(pil_image, image_format, image_quality):
         raise HTTPException(status_code=400, detail="Provided image format parameter not supported")
 
     mem = save_rgb_image(pil_image, image_format, image_quality)
-    return StreamingResponse(mem, media_type=supported_image_formats[image_format])
+    return Response(mem.getvalue(), media_type=supported_image_formats[image_format])
 
 
 def make_tif_response(narray, image_format, image_quality):
@@ -106,7 +106,7 @@ def make_tif_response(narray, image_format, image_quality):
     tifffile.imwrite(mem, narray, photometric="minisblack", planarconfig="separate", compression=compression)
     mem.seek(0)
 
-    return StreamingResponse(mem, media_type=supported_image_formats[image_format])
+    return Response(mem.getvalue(), media_type=supported_image_formats[image_format])
 
 
 def validate_image_request(image_format, image_quality):

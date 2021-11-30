@@ -19,27 +19,26 @@ class Slide(BaseSlide):
         "philips",
     ]
 
-    def __init__(self, filepath, slide_id):
-        self.filepath = filepath
-        self.open()
-        self.slide_info = self.__get_slide_info_openslide(slide_id)
-        self.thumbnail = self.__get_thumbnail_openslide(settings.max_thumbnail_size, settings.max_thumbnail_size)
-        self.close()
-        self.open()
+    async def open(self, filepath):
+        await self.open_slide()
+        self.slide_info = self.__get_slide_info_openslide()
+        self.thumbnail = await self.__get_thumbnail_openslide(settings.max_thumbnail_size, settings.max_thumbnail_size)
+        await self.close()
+        await self.open_slide()
 
-    def open(self):
+    async def open_slide(self):
         try:
             self.openslide_slide = openslide.OpenSlide(self.filepath)
         except openslide.OpenSlideError as e:
             raise HTTPException(status_code=422, detail=f"OpenSlideError: {e}")
 
-    def close(self):
+    async def close(self):
         self.openslide_slide.close()
 
-    def get_info(self):
+    async def get_info(self):
         return self.slide_info
 
-    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
         try:
@@ -72,28 +71,19 @@ class Slide(BaseSlide):
 
         return rgb_img
 
-    def get_thumbnail(self, max_x, max_y):
+    async def get_thumbnail(self, max_x, max_y):
         thumbnail = self.thumbnail.copy()
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
 
-    def _get_associated_image(self, associated_image_name):
-        if associated_image_name not in self.openslide_slide.associated_images:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Associated image {associated_image_name} does not exist.",
-            )
-        associated_image_rgba = self.openslide_slide.associated_images[associated_image_name]
-        return associated_image_rgba.convert("RGB")
-
-    def get_label(self):
+    async def get_label(self):
         return self._get_associated_image("label")
 
-    def get_macro(self):
+    async def get_macro(self):
         return self._get_associated_image("macro")
 
-    def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
-        return self.get_region(
+    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+        return await self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
             tile_y * self.slide_info.tile_extent.y,
@@ -103,6 +93,15 @@ class Slide(BaseSlide):
         )
 
     # private members
+
+    def _get_associated_image(self, associated_image_name):
+        if associated_image_name not in self.openslide_slide.associated_images:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Associated image {associated_image_name} does not exist.",
+            )
+        associated_image_rgba = self.openslide_slide.associated_images[associated_image_name]
+        return associated_image_rgba.convert("RGB")
 
     def __get_levels_openslide(self):
         original_levels = get_original_levels(
@@ -145,14 +144,14 @@ class Slide(BaseSlide):
 
         return SlideExtent(x=tile_width, y=tile_height, z=1)
 
-    def __get_slide_info_openslide(self, slide_id):
+    def __get_slide_info_openslide(self):
         try:
             levels = self.__get_levels_openslide()
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Failed to retrieve slide level data. [{e}]")
         try:
             slide_info = SlideInfo(
-                id=slide_id,
+                id="",
                 channels=get_rgb_channel_list(),  # rgb channels
                 channel_depth=8,  # 8bit each channel
                 extent=SlideExtent(
@@ -169,9 +168,9 @@ class Slide(BaseSlide):
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
 
-    def __get_thumbnail_openslide(self, max_x, max_y):
+    async def __get_thumbnail_openslide(self, max_x, max_y):
         level = self.__get_best_level_for_thumbnail(max_x, max_y)
-        thumbnail = self.get_region(
+        thumbnail = await self.get_region(
             level,
             0,
             0,

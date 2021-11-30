@@ -8,7 +8,7 @@ from wsi_service.slide_utils import get_rgb_channel_list
 
 
 class Slide(BaseSlide):
-    def __init__(self, filepath, slide_id):
+    async def open(self, filepath):
         try:
             self.slide_image = Image.open(filepath)
         except UnidentifiedImageError:
@@ -17,7 +17,7 @@ class Slide(BaseSlide):
         width, height = self.slide_image.size
         channels = get_rgb_channel_list()
         self.slide_info = SlideInfo(
-            id=slide_id,
+            id="",
             channels=channels,
             channel_depth=8,
             extent=SlideExtent(x=width, y=height, z=1),
@@ -27,13 +27,13 @@ class Slide(BaseSlide):
             levels=[SlideLevel(extent=SlideExtent(x=width, y=height, z=1), downsample_factor=1.0)],
         )
 
-    def close(self):
+    async def close(self):
         self.slide_image.close()
 
-    def get_info(self):
+    async def get_info(self):
         return self.slide_info
 
-    def get_region(
+    async def get_region(
         self,
         level,
         start_x,
@@ -60,13 +60,13 @@ class Slide(BaseSlide):
         region.paste(cropped_image)
         return region
 
-    def get_thumbnail(self, max_x, max_y):
+    async def get_thumbnail(self, max_x, max_y):
         thumbnail = self.slide_image.copy()
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
 
-    def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
-        return self.get_region(
+    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+        return await self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
             tile_y * self.slide_info.tile_extent.y,
@@ -82,8 +82,8 @@ class Slide(BaseSlide):
             detail=f"Associated image {associated_image_name} does not exist.",
         )
 
-    def get_label(self):
+    async def get_label(self):
         self._get_associated_image("label")
 
-    def get_macro(self):
+    async def get_macro(self):
         self._get_associated_image("macro")

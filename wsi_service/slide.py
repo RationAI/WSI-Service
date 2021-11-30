@@ -1,24 +1,31 @@
-class Slide:
-    def __init__(self, filepath, slide_id):
+class Slide(object):
+    @classmethod
+    async def create(cls, filepath):
+        self = cls()
+        self.filepath = filepath
+        await self.open(filepath)
+        return self
+
+    async def open(self, filepath):
         raise NotImplementedError
 
-    def close(self):
+    async def close(self):
         raise NotImplementedError
 
-    def get_info(self):
+    async def get_info(self):
         raise NotImplementedError
 
-    def get_thumbnail(self, max_x, max_y):
+    async def get_thumbnail(self, max_x, max_y):
         raise NotImplementedError
 
-    def get_label(self):
+    async def get_label(self):
         raise NotImplementedError
 
-    def get_macro(self):
+    async def get_macro(self):
         raise NotImplementedError
 
-    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         raise NotImplementedError
 
-    def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
         raise NotImplementedError

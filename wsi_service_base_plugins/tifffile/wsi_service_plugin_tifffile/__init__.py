@@ -11,5 +11,5 @@ supported_file_extensions = [
 ]
 
 
-async def open(filepath, slide_id=0):
-    return Slide(filepath, slide_id)
+async def open(filepath):
+    return await Slide.create(filepath)
