@@ -1,8 +1,12 @@
 # Changelog
 
-## 0.6.1
+## 0.6.2
 
 - Added cache for slide/image handles
+
+## 0.6.1
+
+- removed explicit logging timestamps
 
 ## 0.6.0
 
