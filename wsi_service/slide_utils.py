@@ -11,7 +11,7 @@ class ExpiringSlide:
         self.timer = timer
 
 
-class SlideHandleCache:
+class LRUCache:
     def __init__(self, size):
         self.cache = OrderedDict()
         self.maxSize = size
@@ -19,24 +19,24 @@ class SlideHandleCache:
     def get_all(self):
         return self.cache
 
-    def has_slide(self, key):
+    def has_item(self, key):
         return key in self.cache
 
-    def get_slide(self, key):
+    def get_item(self, key):
         if key not in self.cache:
             return None
         self.cache.move_to_end(key)
         return self.cache[key]
 
-    def put_slide(self, key, slide):
-        self.cache[key] = slide
+    def put_item(self, key, item):
+        self.cache[key] = item
         self.cache.move_to_end(key)
         if len(self.cache) > self.maxSize:
-            removed_slide_handle = self.cache.popitem(last=False)
-            logger.debug("Removing slide handle from cache: %s", removed_slide_handle)
-            return removed_slide_handle
+            removed_item = self.cache.popitem(last=False)
+            logger.debug("Removing item from cache: %s", removed_item)
+            return removed_item
 
-    def pop_slide(self, key):
+    def pop_item(self, key):
         return self.cache.pop(key)
 
 

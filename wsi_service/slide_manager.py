@@ -5,18 +5,18 @@ import aiohttp
 from fastapi import HTTPException
 
 from wsi_service.plugins import load_slide
-from wsi_service.slide_utils import ExpiringSlide, SlideHandleCache
+from wsi_service.slide_utils import ExpiringSlide, LRUCache
 
 from .singletons import logger
 
 
 class SlideManager:
-    def __init__(self, mapper_address, data_dir, timeout, cache_size=50):
+    def __init__(self, mapper_address, data_dir, timeout, cache_size):
         self.mapper_address = mapper_address
         self.data_dir = data_dir
         self.timeout = timeout
         self.storage_mapper = {}
-        self.slide_cache = SlideHandleCache(cache_size)
+        self.slide_cache = LRUCache(cache_size)
         self.lock = asyncio.Lock()
         self.storage_locks = {}
         self.event_loop = asyncio.get_event_loop()
@@ -33,12 +33,12 @@ class SlideManager:
 
         await self._set_storage_lock(storage_address)
 
-        exp_slide = self.slide_cache.get_slide(storage_address)
+        exp_slide = self.slide_cache.get_item(storage_address)
         if exp_slide is None:
             async with self.storage_locks[storage_address]:
                 slide = await load_slide(storage_address)
                 exp_slide = ExpiringSlide(slide)
-                self.slide_cache.put_slide(storage_address, exp_slide)
+                self.slide_cache.put_item(storage_address, exp_slide)
                 logger.debug("New slide handle opened for storage address: %s", storage_address)
 
         self._reset_slide_expiration(storage_address, exp_slide)
@@ -90,7 +90,7 @@ class SlideManager:
         asyncio.create_task(self._close_slide(storage_address))
 
     async def _close_slide(self, storage_address):
-        if self.slide_cache.has_slide(storage_address):
-            exp_slide = self.slide_cache.pop_slide(storage_address)
+        if self.slide_cache.has_item(storage_address):
+            exp_slide = self.slide_cache.pop_item(storage_address)
             await exp_slide.slide.close()
             logger.debug("Closed slide with storage address: %s", storage_address)
