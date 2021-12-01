@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1
+
+- Added cache for slide/image handles
+
 ## 0.6.0
 
 - Extended async to all slide plugin functions

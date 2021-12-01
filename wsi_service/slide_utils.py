@@ -1,4 +1,43 @@
+from collections import OrderedDict
+
 from wsi_service.models.slide import SlideChannel, SlideColor, SlideExtent, SlideLevel
+
+from .singletons import logger
+
+
+class ExpiringSlide:
+    def __init__(self, slide, timer=None):
+        self.slide = slide
+        self.timer = timer
+
+
+class SlideHandleCache:
+    def __init__(self, size):
+        self.cache = OrderedDict()
+        self.maxSize = size
+
+    def get_all(self):
+        return self.cache
+
+    def has_slide(self, key):
+        return key in self.cache
+
+    def get_slide(self, key):
+        if key not in self.cache:
+            return None
+        self.cache.move_to_end(key)
+        return self.cache[key]
+
+    def put_slide(self, key, slide):
+        self.cache[key] = slide
+        self.cache.move_to_end(key)
+        if len(self.cache) > self.maxSize:
+            removed_slide_handle = self.cache.popitem(last=False)
+            logger.debug("Removing slide handle from cache: %s", removed_slide_handle)
+            return removed_slide_handle
+
+    def pop_slide(self, key):
+        return self.cache.popitem(key)[1]
 
 
 def get_original_levels(level_count, level_dimensions, level_downsamples):
