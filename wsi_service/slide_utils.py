@@ -37,7 +37,7 @@ class SlideHandleCache:
             return removed_slide_handle
 
     def pop_slide(self, key):
-        return self.cache.popitem(key)[1]
+        return self.cache.pop(key)
 
 
 def get_original_levels(level_count, level_dimensions, level_downsamples):
