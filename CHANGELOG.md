@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.1
+
+- removed explicit logging timestamps
+
+
 ## 0.6.0
 
 - Extended async to all slide plugin functions
