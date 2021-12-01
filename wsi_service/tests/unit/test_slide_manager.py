@@ -47,7 +47,7 @@ async def test_slide_manager_unknown():
 
 @pytest.mark.asyncio
 async def test_exceed_cache_limit(aioresponses):
-    for i in range(5):
+    for i in range(3):
         aioresponses.get(
             f"http://testserver/slides/750129436e215175beb6c979bd9bfa5{i}",
             status=200,
@@ -67,7 +67,7 @@ async def test_exceed_cache_limit(aioresponses):
     _, slide_manager = get_client_and_slide_manager()
     slide_manager.close()
 
-    for i in range(5):
+    for i in range(3):
         assert len(slide_manager.slide_cache.get_all()) == i
         await slide_manager.get_slide(f"750129436e215175beb6c979bd9bfa5{i}")
         if slide_manager.slide_cache.maxSize > i:
