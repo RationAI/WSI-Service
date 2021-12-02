@@ -50,7 +50,7 @@ def process_image_region(slide, image_tile, image_channels):
         raise HTTPException(status_code=400, detail="Failed to read region in an apropriate internal representation.")
 
 
-def process_image_region_raw(slide, image_tile, image_channels):
+def process_image_region_raw(image_tile, image_channels):
     if isinstance(image_tile, Image.Image):
         # pillow image
         narray = np.asarray(image_tile)
@@ -70,7 +70,7 @@ def process_image_region_raw(slide, image_tile, image_channels):
 def make_response(slide, image_region, image_format, image_quality, image_channels=None):
     if image_format == "tiff":
         # return raw image region as tiff
-        narray = process_image_region_raw(slide, image_region, image_channels)
+        narray = process_image_region_raw(image_region, image_channels)
         return make_tif_response(narray, image_format, image_quality)
     else:
         # return image region

@@ -42,7 +42,7 @@ class Slide(BaseSlide):
         if padding_color is None:
             padding_color = settings.padding_color
         try:
-            downsample_factor = int(self.slide_info.levels[level].downsample_factor)
+            downsample_factor = self.slide_info.levels[level].downsample_factor
         except IndexError:
             raise HTTPException(
                 status_code=422,
@@ -56,7 +56,10 @@ class Slide(BaseSlide):
                 detail=f"Downsample layer for requested base level {base_level} not available.",
             )
         base_size = (size_x, size_y)
-        level_0_location = (start_x * downsample_factor, start_y * downsample_factor)
+        level_0_location = (
+            (int)(start_x * downsample_factor),
+            (int)(start_y * downsample_factor),
+        )
         if base_size[0] * base_size[1] > settings.max_returned_region_size:
             raise HTTPException(
                 status_code=403,
