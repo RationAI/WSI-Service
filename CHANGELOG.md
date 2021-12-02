@@ -3,6 +3,7 @@
 ## 0.6.2
 
 - Added cache for slide/image handles
+- Fixed Leica rounding bug
 
 ## 0.6.1
 
