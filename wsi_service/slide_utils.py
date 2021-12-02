@@ -1,4 +1,43 @@
+from collections import OrderedDict
+
 from wsi_service.models.slide import SlideChannel, SlideColor, SlideExtent, SlideLevel
+
+from .singletons import logger
+
+
+class ExpiringSlide:
+    def __init__(self, slide, timer=None):
+        self.slide = slide
+        self.timer = timer
+
+
+class LRUCache:
+    def __init__(self, size):
+        self.cache = OrderedDict()
+        self.maxSize = size
+
+    def get_all(self):
+        return self.cache
+
+    def has_item(self, key):
+        return key in self.cache
+
+    def get_item(self, key):
+        if key not in self.cache:
+            return None
+        self.cache.move_to_end(key)
+        return self.cache[key]
+
+    def put_item(self, key, item):
+        self.cache[key] = item
+        self.cache.move_to_end(key)
+        if len(self.cache) > self.maxSize:
+            removed_item = self.cache.popitem(last=False)
+            logger.debug("Removing item from cache: %s", removed_item)
+            return removed_item
+
+    def pop_item(self, key):
+        return self.cache.pop(key)
 
 
 def get_original_levels(level_count, level_dimensions, level_downsamples):

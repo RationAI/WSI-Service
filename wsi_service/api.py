@@ -48,7 +48,12 @@ if settings.cors_allow_origins:
         allow_headers=["*"],
     )
 
-slide_manager = SlideManager(settings.mapper_address, settings.data_dir, settings.inactive_histo_image_timeout_seconds)
+slide_manager = SlideManager(
+    settings.mapper_address,
+    settings.data_dir,
+    settings.inactive_histo_image_timeout_seconds,
+    settings.image_handle_cache_size,
+)
 
 
 @api.get("/alive", response_model=WSIServiceStatus, status_code=status.HTTP_200_OK)
@@ -330,11 +335,7 @@ if settings.local_mode:
 
 if settings.enable_viewer_routes:
 
-    @api.get(
-        "/v1/slides/{slide_id}/viewer",
-        response_class=HTMLResponse,
-        include_in_schema=False,
-    )
+    @api.get("/v1/slides/{slide_id}/viewer", response_class=HTMLResponse, include_in_schema=False)
     async def viewer(slide_id: str):
         viewer_html = open(
             os.path.join(pathlib.Path(__file__).parent.absolute(), "viewer.html"), "r", encoding="utf-8"
@@ -345,11 +346,7 @@ if settings.enable_viewer_routes:
 
 if settings.enable_viewer_routes and settings.local_mode:
 
-    @api.get(
-        "/v1/validation_viewer",
-        response_class=HTMLResponse,
-        include_in_schema=False,
-    )
+    @api.get("/v1/validation_viewer", response_class=HTMLResponse, include_in_schema=False)
     async def validation_viewer():
         validation_viewer_html = open(
             os.path.join(pathlib.Path(__file__).parent.absolute(), "validation_viewer.html"), "r", encoding="utf-8"

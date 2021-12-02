@@ -16,5 +16,6 @@ services:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
       - WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=5
+      - WS_IMAGE_HANDLE_CACHE_SIZE=6
     volumes:
       - .:/wsi-service
