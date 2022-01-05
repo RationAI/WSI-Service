@@ -2,7 +2,7 @@
 
 ## 0.6.3
 
-- Bugfix for tiff files; return tiff files without internal compression (raw data)
+- Bugfix for tiff: removed JPEG compression
 
 ## 0.6.2
 
