@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.3
+
+- Bugfix for tiff files; return tiff files without internal compression (raw data)
+
 ## 0.6.2
 
 - Added cache for slide/image handles

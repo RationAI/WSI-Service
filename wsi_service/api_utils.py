@@ -71,7 +71,7 @@ def make_response(slide, image_region, image_format, image_quality, image_channe
     if image_format == "tiff":
         # return raw image region as tiff
         narray = process_image_region_raw(image_region, image_channels)
-        return make_tif_response(narray, image_format, image_quality)
+        return make_tif_response(narray, image_format)
     else:
         # return image region
         img = process_image_region(slide, image_region, image_channels)
@@ -89,7 +89,7 @@ def make_image_response(pil_image, image_format, image_quality):
     return Response(mem.getvalue(), media_type=supported_image_formats[image_format])
 
 
-def make_tif_response(narray, image_format, image_quality):
+def make_tif_response(narray, image_format):
     if image_format in alternative_spellings:
         image_format = alternative_spellings[image_format]
 
@@ -97,13 +97,10 @@ def make_tif_response(narray, image_format, image_quality):
         raise HTTPException(status_code=400, detail="Provided image format parameter not supported for OME tiff")
 
     mem = BytesIO()
-    if image_quality == 0:
-        # lossy comprssion with jpeg
-        compression = "JPEG"
-    else:
-        # by default we use deflate
-        compression = "DEFLATE"
-    tifffile.imwrite(mem, narray, photometric="minisblack", planarconfig="separate", compression=compression)
+    try:
+        tifffile.imwrite(mem, narray, photometric="minisblack", planarconfig="separate")
+    except Exception as ex:
+        raise HTTPException(status_code=400, detail=f"Error writing tiff file: {ex}")
     mem.seek(0)
 
     return Response(mem.getvalue(), media_type=supported_image_formats[image_format])

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wsi-service"
-version = "0.6.2"
+version = "0.6.3"
 description = "EMPAIA WSI Service to stream whole slide images"
 authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"

@@ -136,7 +136,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 Run while development composition is up and running:
 
 ```bash
-docker exec -it wsi-service-wsi_service-1 poetry run pytest --cov wsi_service
+docker exec -it wsi-service_wsi_service_1 poetry run pytest --cov wsi_service
 ```
 
 To run tests locally, make sure you have the latest [**testdata**](https://nextcloud.empaia.org/f/188182) (For access contact project maintainer).
