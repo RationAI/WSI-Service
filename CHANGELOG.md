@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.4
+
+- Bugfix for slide cache, added close on removal
+
 ## 0.6.3
 
 - Bugfix for tiff: removed JPEG compression
