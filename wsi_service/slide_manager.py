@@ -38,7 +38,10 @@ class SlideManager:
             async with self.storage_locks[storage_address]:
                 slide = await load_slide(storage_address)
                 exp_slide = ExpiringSlide(slide)
-                self.slide_cache.put_item(storage_address, exp_slide)
+                removed_item = self.slide_cache.put_item(storage_address, exp_slide)
+                if removed_item:
+                    removed_item[1].timer.cancel()
+                    await removed_item[1].slide.close()
                 logger.debug("New slide handle opened for storage address: %s", storage_address)
 
         self._reset_slide_expiration(storage_address, exp_slide)
