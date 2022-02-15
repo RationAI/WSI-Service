@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.5
+
+- Fixed debug layer in viewer
+- Fixed validation viewer padding
+
 ## 0.6.4
 
 - Bugfix for slide cache, added close on removal
