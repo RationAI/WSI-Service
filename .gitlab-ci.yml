@@ -40,14 +40,12 @@ test:
     - testdata
   before_script:
     - cp wsi_service/tests/integration/env_tests .env
-    - docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
-    - sleep 5
-    - docker-compose -f docker-compose.yml -f docker-compose.dev.yml logs
+    - docker-compose up --build -d
   script:
     - docker exec wsi-service_wsi_service_1 poetry run pytest --cov wsi_service
   after_script:
     - docker exec wsi-service_wsi_service_1 rm -r .pytest_cache
-    - docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
+    - docker-compose down
 
 build:
   stage: build
