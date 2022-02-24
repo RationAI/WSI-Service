@@ -35,10 +35,9 @@ version:
 test:
   stage: checks
   image: registry.gitlab.com/empaia/integration/test-runner
-  services:
-    - docker:dind
-  variables:
-    DOCKER_HOST: tcp://docker:2375
+  tags:
+    - empaia-docker
+    - testdata
   before_script:
     - cp wsi_service/tests/integration/env_tests .env
     - docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
