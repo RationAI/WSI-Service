@@ -41,6 +41,8 @@ test:
   before_script:
     - cp wsi_service/tests/integration/env_tests .env
     - docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+    - sleep 5
+    - docker-compose -f docker-compose.yml -f docker-compose.dev.yml logs
   script:
     - docker exec wsi-service_wsi_service_1 poetry run pytest --cov wsi_service
   after_script:
