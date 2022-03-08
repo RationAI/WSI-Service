@@ -39,14 +39,13 @@ api = FastAPI(
     root_path=settings.root_path,
 )
 
-if settings.cors_allow_origins:
-    api.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_allow_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+api.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 slide_manager = SlideManager(
     settings.mapper_address,
