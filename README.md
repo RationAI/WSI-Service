@@ -81,7 +81,6 @@ Make sure [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](htt
 Set environment variables in your shell or in a `.env` file:
 
 ```bash
-WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DEBUG=False
 WS_DISABLE_OPENAPI=False
 WS_MAPPER_ADDRESS=http://localhost:8080/v1/slides/{slide_id}/storage
@@ -99,7 +98,6 @@ COMPOSE_DATA_DIR=/data
 
 Short explanation of the parameters used:
 
-- `WS_CORS_ALLOW_ORIGINS` allow cors for different origins
 - `WS_DEBUG` enables debug logging level
 - `WS_DISABLE_OPENAPI` disable swagger api documentation (/docs`)
 - `WS_MAPPER_ADDRESS` storage mapper service address

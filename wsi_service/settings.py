@@ -1,5 +1,3 @@
-from typing import Set
-
 from pydantic import BaseSettings
 
 from wsi_service.version import __version__
@@ -11,7 +9,6 @@ class Settings(BaseSettings):
     version: str = __version__
 
     disable_openapi: bool = False
-    cors_allow_origins: Set[str] = None
     debug: bool = False
     data_dir: str = "/data"
     mapper_address: str = "http://localhost:8080/v1/slides/{slide_id}/storage"

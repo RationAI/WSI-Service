@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.6
+
+- allow all origins, which is now possible because frontends do no more use client credentials (instead they explicitly 
+use an authorization header)
+
 ## 0.6.5
 
 - Fixed debug layer in viewer
