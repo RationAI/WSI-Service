@@ -81,6 +81,7 @@ Make sure [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](htt
 Set environment variables in your shell or in a `.env` file:
 
 ```bash
+WS_CORS_ALLOW_CREDENTIALS=False
 WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DEBUG=False
 WS_DISABLE_OPENAPI=False
@@ -99,6 +100,8 @@ COMPOSE_DATA_DIR=/data
 
 Short explanation of the parameters used:
 
+- `WS_CORS_ALLOW_CREDENTIALS` when set to true, then browser credentials are enabled (note: WS_CORS_ALLOW_ORIGINS must 
+not contain "*" in that case)
 - `WS_CORS_ALLOW_ORIGINS` allow cors for different origins
 - `WS_DEBUG` enables debug logging level
 - `WS_DISABLE_OPENAPI` disable swagger api documentation (/docs`)

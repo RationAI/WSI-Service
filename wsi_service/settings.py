@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     version: str = __version__
 
     disable_openapi: bool = False
+    cors_allow_credentials: bool = False
     cors_allow_origins: Set[str] = None
     debug: bool = False
     data_dir: str = "/data"
