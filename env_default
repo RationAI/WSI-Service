@@ -1,3 +1,5 @@
+WS_CORS_ALLOW_CREDENTIALS=False
+WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DEBUG=False
 WS_DISABLE_OPENAPI=False
 WS_MAPPER_ADDRESS=http://localhost:8080/v1/slides/{slide_id}/storage
