@@ -51,9 +51,14 @@ class SlideManager:
         except AttributeError:
             pass
 
-        # overwrite dummy id with current slide id
-        exp_slide.slide.slide_info.id = slide_id
         return exp_slide.slide
+
+    async def get_slide_info(self, slide_id):
+        slide = await self.get_slide(slide_id=slide_id)
+        slide_info = await slide.get_info()
+        # overwrite dummy id with actual slide id
+        slide_info.id = slide_id
+        return slide_info
 
     def close(self):
         for storage_address, slide in self.slide_cache.get_all().items():

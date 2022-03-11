@@ -8,6 +8,7 @@ def check_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pi
     response = requests.get(f"http://localhost:8080/v1/slides/{slide_id}/info")
     assert response.status_code == 200
     slide_info = SlideInfo.parse_obj(response.json())
+    assert slide_info.id == slide_id
     assert slide_info.num_levels == num_levels
     assert round(slide_info.pixel_size_nm.x) == pixel_size_nm
     assert round(slide_info.pixel_size_nm.y) == pixel_size_nm

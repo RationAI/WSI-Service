@@ -68,8 +68,7 @@ async def get_slide_info(slide_id: str):
     """
     Get metadata information for a slide given its ID
     """
-    slide = await slide_manager.get_slide(slide_id)
-    return await slide.get_info()
+    return await slide_manager.get_slide_info(slide_id)
 
 
 @api.get(
