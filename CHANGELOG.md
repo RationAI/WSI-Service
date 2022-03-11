@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.8
+
 - Fixed slide_id bug for isyntax
 
 ## 0.6.7
