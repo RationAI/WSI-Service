@@ -41,8 +41,8 @@ docker-based-pytest:
     - !reference [.docker-init, after_script]
 
 bot-add-release-version-tag:
-  rules:
-    - when: never
+  only:
+    - never
 
 bot-add-release-version-tag-extended:
   needs:
@@ -51,8 +51,8 @@ bot-add-release-version-tag-extended:
     - job: poetry-codecheck-plugins
 
 docker-build-and-push:
-  rules:
-    - when: never
+  only:
+    - never
 
 docker-build-and-push-extended:
   needs:
