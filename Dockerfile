@@ -30,10 +30,12 @@ RUN poetry build
 WORKDIR /wsi-service/wsi_service_base_plugins/pil
 RUN poetry build
 
+
 FROM wsi_service_build AS wsi_service_dev
 
 WORKDIR /wsi-service
 RUN poetry install
+
 
 FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner@sha256:447581003eb7f78b488e6a7accb23dac93e8be38d21ee424af3bef25564f1cc1 AS wsi_service_intermediate
 
