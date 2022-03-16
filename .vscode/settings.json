@@ -1,5 +1,4 @@
 {
-    "python.pythonPath": "python3",
     // minimal linting rules following
     // https://code.visualstudio.com/docs/python/linting#_default-pylint-rules
     "python.linting.pylintEnabled": true,

@@ -1,4 +1,4 @@
-from .slide import Slide
+from wsi_service_plugin_openslide.slide import Slide
 
 supported_file_extensions = [
     ".bif",

@@ -30,13 +30,13 @@ alternative_spellings = {"jpg": "jpeg", "tif": "tiff"}
 def process_image_region(slide, image_tile, image_channels):
     if isinstance(image_tile, Image.Image):
         # pillow image
-        if image_channels == None:
+        if image_channels is None:
             return image_tile
         else:
             return convert_rgb_image_for_channels(image_tile, image_channels)
     elif isinstance(image_tile, (np.ndarray, np.generic)):
         # numpy array
-        if image_channels == None:
+        if image_channels is None:
             # workaround for now: we return first three channels as rgb
             result = get_requested_channels_as_rgb_array(image_tile, None, slide)
             rgb_image = convert_narray_to_pil_image(result)
@@ -58,7 +58,7 @@ def process_image_region_raw(image_tile, image_channels):
         return narray
     elif isinstance(image_tile, (np.ndarray, np.generic)):
         # numpy array
-        if image_channels == None:
+        if image_channels is None:
             return image_tile
         else:
             result = get_requested_channels_as_array(image_tile, image_channels)

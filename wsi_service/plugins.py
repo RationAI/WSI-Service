@@ -83,8 +83,8 @@ def _get_available_plugins_for_image_file_extension(file_extension):
     return available_plugins_for_image_file_extension
 
 
-def _get_duplicate_items(l):
-    return [item for item, count in collections.Counter(l).items() if count > 1]
+def _get_duplicate_items(list_input):
+    return [item for item, count in collections.Counter(list_input).items() if count > 1]
 
 
 def _validate_plugins_default():
