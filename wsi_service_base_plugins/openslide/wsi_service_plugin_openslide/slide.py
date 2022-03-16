@@ -46,7 +46,7 @@ class Slide(BaseSlide):
         except IndexError:
             raise HTTPException(
                 status_code=422,
-                detail=f"""The requested pyramid level is not available. 
+                detail=f"""The requested pyramid level is not available.
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
         base_level = level
@@ -63,7 +63,7 @@ class Slide(BaseSlide):
         if base_size[0] * base_size[1] > settings.max_returned_region_size:
             raise HTTPException(
                 status_code=403,
-                detail=f"""Requested image region is too large. Maximum number of pixels is set to 
+                detail=f"""Requested image region is too large. Maximum number of pixels is set to
                     {settings.max_returned_region_size}, your request is for {base_size[0] * base_size[1]} pixels.""",
             )
         try:
@@ -122,12 +122,12 @@ class Slide(BaseSlide):
                 pixel_size_nm_x = 1e7 / pixel_per_cm_x
                 pixel_size_nm_y = 1e7 / pixel_per_cm_y
             else:
-                raise ("Unable to extract pixel size from metadata.")
+                raise Exception("Unable to extract pixel size from metadata.")
         elif self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] in self.supported_vendors:
             pixel_size_nm_x = 1000.0 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X])
             pixel_size_nm_y = 1000.0 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_Y])
         else:
-            raise ("Unable to extract pixel size from metadata.")
+            raise Exception("Unable to extract pixel size from metadata.")
         return SlidePixelSizeNm(x=pixel_size_nm_x, y=pixel_size_nm_y)
 
     def __get_tile_extent(self):

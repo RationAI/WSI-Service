@@ -50,7 +50,7 @@ class Slide(BaseSlide):
         except IndexError:
             raise HTTPException(
                 status_code=422,
-                detail=f"""The requested pyramid level is not available. 
+                detail=f"""The requested pyramid level is not available.
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
 
@@ -101,7 +101,7 @@ class Slide(BaseSlide):
             padding_color,
         )
 
-    ## private members
+    # private members
 
     def _get_associated_image(self, associated_image_name):
         raise HTTPException(
@@ -196,7 +196,7 @@ class Slide(BaseSlide):
         )
         fh = page.parent.filehandle
 
-        if fh == None:
+        if fh is None:
             raise HTTPException(
                 status_code=422,
                 detail="Could not read from tiff file. File handle is null",

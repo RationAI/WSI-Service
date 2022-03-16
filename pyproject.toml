@@ -1,42 +1,42 @@
 [tool.poetry]
 name = "wsi-service"
-version = "0.6.8"
+version = "0.7.0"
 description = "EMPAIA WSI Service to stream whole slide images"
 authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pydantic = {extras = ["dotenv"], version = "^1.8.2"}
-fastapi = "^0.66.0"
-requests = "^2.25.0"
-uvicorn = "^0.14.0"
-numpy = "^1.21.0"
-Pillow = "^8.3.1"
-imagecodecs = "^2021.1.11"
-tifffile = "^2021.1.14"
-uvloop = "^0.15.3"
-aiohttp = "^3.7.4"
-httptools = "^0.2.0"
-filelock = "^3.0.12"
+pydantic = {extras = ["dotenv"], version = "^1.9.0"}
+fastapi = "^0.75.0"
+requests = "^2.27.1"
+uvicorn = "^0.17.6"
+numpy = "^1.22.3"
+Pillow = "^9.0.0"
+imagecodecs = "^2022.2.22"
+tifffile = "^2022.2.9"
+uvloop = "^0.16.0"
+aiohttp = "^3.8.1"
+httptools = "^0.4.0"
+filelock = "^3.6.0"
+idna = "^3.3"
 
 [tool.poetry.dev-dependencies]
-aiohttp = "^3.7.4"
-black = "^21.5b2"
-debugpy = "^1.3.0"
-isort = "^5.6.4"
-psutil = "^5.8.0"
-pylint = "^2.9.3"
-pytest-asyncio = "^0.15.1"
-pytest-cov = "^2.10.1"
-pytest = "^6.1.2"
-requests-mock = "^1.8.0"
-requests = "^2.7.0"
+aioresponses = "^0.7.3"
+black = "^22.1.0"
+debugpy = "^1.5.1"
+isort = "^5.10.1"
+psutil = "^5.9.0"
+pycodestyle = "^2.8.0"
+pylint = "^2.12.2"
+pytest-aioresponses = "^0.2.0"
+pytest-asyncio = "^0.18.2"
+pytest-cov = "^3.0.0"
+pytest = "^7.1.0"
+requests-mock = "^1.9.3"
 wsi-service-plugin-tifffile = { path = "wsi_service_base_plugins/tifffile", develop = true }
 wsi-service-plugin-pil = { path = "wsi_service_base_plugins/pil", develop = true }
 wsi-service-plugin-openslide = { path = "wsi_service_base_plugins/openslide", develop = true }
-aioresponses = "^0.7.2"
-pytest-aioresponses = "^0.2.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -56,4 +56,13 @@ ignored-modules = ["pydantic"]
 
 [tool.pylint."MESSAGES CONTROL"]
 max-line-length = 120
-disable = "R,C,W0613,E0213,W0603,W0231,E1136,W0707,W0622,W0201"
+disable = "R,C,W0613,E0213,W0603,W0231,E1136,W0707,W0622,W0201,E0401"
+
+[tool.pytest.ini_options]
+addopts = "--asyncio-mode=strict"
+testpaths = [
+    "wsi_service/tests",
+    "wsi_service_base_plugins/openslide/wsi_service_plugin_openslide/tests",
+    "wsi_service_base_plugins/pil/wsi_service_plugin_pil/tests",
+    "wsi_service_base_plugins/tifffile/wsi_service_plugin_tifffile/tests"
+]

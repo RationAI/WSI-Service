@@ -33,7 +33,7 @@ def test_get_available_slides_valid():
     assert slide["local_id"] == "CMU-1.svs"
     assert slide["slide_storage"]["slide_id"] == "8d32dba05a4558218880f06caf30d3ac"
     assert slide["slide_storage"]["storage_type"] == "fs"
-    assert slide["slide_storage"]["storage_addresses"][0]["main_address"] == True
+    assert slide["slide_storage"]["storage_addresses"][0]["main_address"] is True
     assert slide["slide_storage"]["storage_addresses"][0]["storage_address_id"] == "8d32dba05a4558218880f06caf30d3ac"
     assert slide["slide_storage"]["storage_addresses"][0]["address"].endswith("Aperio/CMU-1.svs")
     assert slide["slide_storage"]["storage_addresses"][0]["slide_id"] == "8d32dba05a4558218880f06caf30d3ac"
@@ -48,7 +48,7 @@ def test_get_slide_valid():
     assert slide["local_id"] == "CMU-1.tiff"
     assert slide["slide_storage"]["slide_id"] == "f5f3a03b77fb5e0497b95eaff84e9a21"
     assert slide["slide_storage"]["storage_type"] == "fs"
-    assert slide["slide_storage"]["storage_addresses"][0]["main_address"] == True
+    assert slide["slide_storage"]["storage_addresses"][0]["main_address"] is True
     assert slide["slide_storage"]["storage_addresses"][0]["storage_address_id"] == "f5f3a03b77fb5e0497b95eaff84e9a21"
     assert slide["slide_storage"]["storage_addresses"][0]["address"].endswith("Generic TIFF/CMU-1.tiff")
     assert slide["slide_storage"]["storage_addresses"][0]["slide_id"] == "f5f3a03b77fb5e0497b95eaff84e9a21"

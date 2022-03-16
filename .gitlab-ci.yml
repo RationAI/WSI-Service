@@ -1,44 +1,36 @@
-stages:
-  - checks
-  - build
+include:
+  - project: "empaia/integration/ci-templates"
+    ref: "main"
+    file:
+      - "pipeline-templates/pipeline-poetry-standard.yml"
+      - "job-templates/docker-init.yml"
+      - "job-templates/poetry-codecheck.yml"
 
 variables:
-  GIT_SUBMODULE_STRATEGY: recursive
+  TITLE: "WSIS"
+  DESCRIPTION: "Whole Slide Image Service (WSIS)"
+  DIRECTORY: "wsi_service"
+  TEST_DIRECTORY: "wsi_service/tests"
+  RUNNER_TAG: "empaia-parallel"
+  RUNNER_DOCKER_TAG: "empaia-docker"
+  HOST_PORT: 8080
+  CONTAINER_PORT: 8080
+  DOCKER_RUN_ALIVE_TEST: "true"
+  DOCKER_COMPOSE_ALIVE_TEST: "false"
+  POETRY_PYTEST: "false"
 
-codecheck:
-  stage: checks
-  image: registry.gitlab.com/empaia/integration/test-runner
-  before_script:
-    - poetry install
-  script:
-    - poetry run black . --check
-    - poetry run isort . --check
-    - poetry run pylint wsi_service wsi_service_base_plugins
+poetry-codecheck-plugins:
+  extends: .poetry-codecheck
+  variables:
+    DIRECTORY: "wsi_service_base_plugins"
 
-version:
-  stage: checks
-  image: registry.gitlab.com/empaia/integration/test-runner
-  services:
-    - docker:dind
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-  script:
-    - VERSION=$(poetry version --short)
-    - ./check_existing_docker.sh $CI_REGISTRY_IMAGE:$VERSION
-    - echo "VERSION=$VERSION" >> version.env
-  after_script:
-    - docker logout $CI_REGISTRY
-  artifacts:
-    reports:
-      dotenv: version.env
-
-test:
-  stage: checks
-  image: registry.gitlab.com/empaia/integration/test-runner
+docker-based-pytest:
+  extends: .docker-init
   tags:
     - empaia-docker
     - testdata
   before_script:
+    - !reference [.docker-init, before_script]
     - cp wsi_service/tests/integration/env_tests .env
     - docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --build -d
   script:
@@ -46,24 +38,4 @@ test:
   after_script:
     - docker exec wsi-service_wsi_service_1 rm -r .pytest_cache
     - docker-compose -f docker-compose.yml -f docker-compose.ci.yml down
-
-build:
-  stage: build
-  only:
-    - main
-  image: docker
-  services:
-    - docker:dind
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-  script:
-    - export BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-    - docker build --no-cache . -t $CI_REGISTRY_IMAGE:$VERSION -t $CI_REGISTRY_IMAGE --label org.opencontainers.image.created=$BUILD_TIME --label org.opencontainers.image.authors="EMPAIA" --label org.opencontainers.image.vendor="EMPAIA" --label org.opencontainers.image.version=$VERSION --label org.opencontainers.image.source=$CI_PROJECT_URL --label org.opencontainers.image.revision=$CI_COMMIT_SHA --label org.opencontainers.image.title="WSIS" --label org.opencontainers.image.description="Whole Slide Image Service (WSIS)"
-    - docker push $CI_REGISTRY_IMAGE:$VERSION
-    - docker push $CI_REGISTRY_IMAGE
-  after_script:
-    - docker logout $CI_REGISTRY
-  needs:
-    - job: version
-      artifacts: true
-    - job: test
+    - !reference [.docker-init, after_script]

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0
+
+- Updated CI
+- Added pycodestyle check
+- Updated models
+- Updated dependencies
+  - tifffile plugin now returns slightly different thumbnails
+
 ## 0.6.8
 
 - Fixed slide_id bug for isyntax

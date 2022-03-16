@@ -48,7 +48,7 @@ class Slide(BaseSlide):
         if level != 0:
             raise HTTPException(
                 status_code=422,
-                detail=f"""The requested pyramid level is not available. 
+                detail=f"""The requested pyramid level is not available.
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
         region = Image.new("RGB", (size_x, size_y), padding_color)

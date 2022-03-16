@@ -164,9 +164,8 @@ Check your code by running the following statements
 poetry run black .
 poetry run isort .
 poetry run pylint wsi_service wsi_service_base_plugins
+poetry run pycodestyle wsi_service wsi_service_base_plugins
 ```
-
-following [VS Code](https://code.visualstudio.com/docs/python/linting#_default-pylint-rules).
 
 ## Plugin development
 

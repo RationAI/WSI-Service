@@ -27,7 +27,7 @@ def test_thumbnail_cache_no_additional_memory_usage_after_first_thumbnail_reques
             r = requests.get(f"http://localhost:8080/v1/slides/{slide_id}/thumbnail/max_size/500/500")
             assert r.status_code == 200
     memory_usage_after_addtional_thumbnail_requests = get_memory_used_in_mb()
-    assert (memory_usage_after_addtional_thumbnail_requests - memory_usage_after_first_thumbnail_request) < 10
+    assert (memory_usage_after_addtional_thumbnail_requests - memory_usage_after_first_thumbnail_request) < 20.0
 
 
 def test_thumbnail_cache_speedup_test():
