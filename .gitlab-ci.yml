@@ -39,3 +39,15 @@ docker-based-pytest:
     - docker exec wsi-service_wsi_service_1 rm -r .pytest_cache
     - docker-compose -f docker-compose.yml -f docker-compose.ci.yml down
     - !reference [.docker-init, after_script]
+
+bot-add-release-version-tag:
+  needs:
+    - !reference [bot-add-release-version-tag, needs]
+    - job: docker-based-pytest
+    - job: poetry-codecheck-plugins
+
+docker-build-and-push:
+  needs:
+    - !reference [docker-build-and-push, needs]
+    - job: docker-based-pytest
+    - job: poetry-codecheck-plugins
