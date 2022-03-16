@@ -5,6 +5,8 @@ include:
       - "pipeline-templates/pipeline-poetry-standard.yml"
       - "job-templates/docker-init.yml"
       - "job-templates/poetry-codecheck.yml"
+      - "job-templates/bot-add-release-version-tag.yml"
+      - "job-templates/docker-build-and-push.yml"
 
 variables:
   TITLE: "WSIS"
@@ -45,16 +47,18 @@ bot-add-release-version-tag:
     - never
 
 bot-add-release-version-tag-extended:
+  extends: .bot-add-release-version-tag
   needs:
     - !reference [bot-add-release-version-tag, needs]
     - job: docker-based-pytest
     - job: poetry-codecheck-plugins
 
 docker-build-and-push:
-  only:
-    - never
+  rules:
+    - when: never
 
 docker-build-and-push-extended:
+  extends: .docker-build-and-push
   needs:
     - !reference [docker-build-and-push, needs]
     - job: docker-based-pytest
