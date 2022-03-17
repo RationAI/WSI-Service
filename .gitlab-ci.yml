@@ -43,8 +43,8 @@ docker-based-pytest:
     - !reference [.docker-init, after_script]
 
 bot-add-release-version-tag:
-  only:
-    - never
+  rules:
+    - when: never
 
 bot-add-release-version-tag-extended:
   extends: .bot-add-release-version-tag
