@@ -142,7 +142,7 @@ Run while development composition is up and running:
 docker exec -it wsi-service_wsi_service_1 poetry run pytest --cov wsi_service
 ```
 
-To run tests locally, make sure you have the latest [**testdata**](https://nextcloud.empaia.org/f/188182) (For access contact project maintainer).
+To run tests locally, make sure you have the latest testdata (For access contact project maintainer).
 
 After downloading the testdata, set the path of the `OpenSlide_adapted` folder as environment variable in your `.env` file:
 
