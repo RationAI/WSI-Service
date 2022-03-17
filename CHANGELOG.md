@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.1
+
+- Improved docker build time
+
 ## 0.7.0
 
 - Updated CI
