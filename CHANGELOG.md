@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.3
+
+- Updated Dockerfile
+
 ## 0.7.2
 
 - Small CI update
