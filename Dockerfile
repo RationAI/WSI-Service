@@ -66,7 +66,7 @@ RUN mkdir /data
 FROM ubuntu:20.04@sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718 AS wsi_service_production
 
 RUN apt-get update \
-  && apt-get install --no-install-recommends -y python3 \
+  && apt-get install --no-install-recommends -y python3 python3-pip \
   && rm -rf /var/lib/apt/lists/*
 
 RUN adduser --disabled-password --gecos '' appuser \
