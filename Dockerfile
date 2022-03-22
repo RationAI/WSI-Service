@@ -63,7 +63,16 @@ RUN pip3 install /wsi-service/dist/*.whl
 RUN mkdir /data
 
 
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/python-base@sha256:8b9fc06bcbcaec02f0d09960d84159283d37e3814e17ab8b43357dceb31d423a AS wsi_service_production
+FROM ubuntu:20.04@sha256:dcc176d1ab45d154b767be03c703a35fe0df16cfb1cc7ea5dd3b6f9af99b6718 AS wsi_service_production
+
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y python3 python3-pip \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN adduser --disabled-password --gecos '' appuser \
+  && mkdir /artifacts && chown appuser:appuser /artifacts \
+  && mkdir -p /opt/app/bin && chown appuser:appuser /opt/app/bin
+USER appuser
 
 COPY --chown=appuser --from=wsi_service_build /openslide_deps/* /usr/lib/x86_64-linux-gnu/
 COPY --chown=appuser --from=wsi_service_build /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.40.0 /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.40.0
