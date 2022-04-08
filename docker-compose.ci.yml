@@ -17,4 +17,4 @@ services:
       - PYTHONUNBUFFERED=1
       - WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=5
       - WS_IMAGE_HANDLE_CACHE_SIZE=6
-      - NO_PROXY="localhost"
+      - NO_PROXY=localhost,127.0.0.1,testserver
