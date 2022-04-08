@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.5
+
+- Updated Dependencies
+
 ## 0.7.4
 
 - Updated Dockerfile
