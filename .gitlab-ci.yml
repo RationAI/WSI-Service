@@ -31,6 +31,7 @@ docker-based-pytest:
     - !reference [.docker-init, before_script]
     - cp wsi_service/tests/integration/env_tests .env
     - docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --build -d
+    - sleep 10
   script:
     - docker exec wsi-service_wsi_service_1 poetry run pytest --cov wsi_service
   after_script:
