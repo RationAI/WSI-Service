@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.11 AS wsi_service_build
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.14@sha256:5f1a9dc5e6c7c052233778bec79e887e0c7e77f2c7018ca28721ef9a0d5bc05b AS wsi_service_build
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -41,7 +41,7 @@ WORKDIR /wsi-service
 RUN poetry install
 
 
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.11 AS wsi_service_intermediate
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.14@sha256:5f1a9dc5e6c7c052233778bec79e887e0c7e77f2c7018ca28721ef9a0d5bc05b AS wsi_service_intermediate
 
 RUN mkdir /artifacts
 COPY --from=wsi_service_build /wsi-service/requirements.txt /artifacts
@@ -63,7 +63,7 @@ RUN pip3 install /wsi-service/dist/*.whl
 RUN mkdir /data
 
 
-FROM ubuntu:20.04@sha256:9101220a875cee98b016668342c489ff0674f247f6ca20dfc91b91c0f28581ae AS wsi_service_production
+FROM ubuntu:20.04@sha256:115822d64890aae5cde3c1e85ace4cc97308bb1fd884dac62f4db0a16dbddb36 AS wsi_service_production
 
 RUN apt-get update \
   && apt-get install --no-install-recommends -y python3 python3-pip \
