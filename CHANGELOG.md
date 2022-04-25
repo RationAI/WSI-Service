@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.7
+
+- Updated Dependencies
+
 ## 0.7.6
 
 - Fixed no proxy setting for ci
