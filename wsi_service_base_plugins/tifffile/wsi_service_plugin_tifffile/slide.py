@@ -23,7 +23,7 @@ class Slide(BaseSlide):
             self.tif_slide = tifffile.TiffFile(filepath)
             if self.tif_slide.series[0].kind not in self.format_kinds:
                 raise HTTPException(
-                    status_code=422,
+                    status_code=500,
                     detail=f"Unsupported file format ({self.tif_slide.series[0].kind})",
                 )
         except Exception as e:
@@ -33,7 +33,7 @@ class Slide(BaseSlide):
             self.ome_metadata = self.tif_slide.ome_metadata
             self.parsed_metadata = xml.fromstring(self.ome_metadata)
         except Exception as ex:
-            raise HTTPException(status_code=422, detail=f"Could not obtain ome metadata ({ex})")
+            raise HTTPException(status_code=400, detail=f"Could not obtain ome metadata ({ex})")
         self.slide_info = self.__get_slide_info_ome_tif()
 
     async def close(self):
@@ -49,13 +49,13 @@ class Slide(BaseSlide):
             level_slide = self.slide_info.levels[level]
         except IndexError:
             raise HTTPException(
-                status_code=422,
+                status_code=400,
                 detail=f"""The requested pyramid level is not available.
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
 
         if size_x < 1 or size_y < 1 or start_x < 0 or start_y < 0:
-            raise HTTPException(status_code=422, detail="Requested image region invalid.")
+            raise HTTPException(status_code=400, detail="Requested image region invalid.")
 
         result_array = []
         tif_level = self.__get_tif_level_for_slide_level(level_slide)
@@ -227,7 +227,7 @@ class Slide(BaseSlide):
                     # search to tile offset and read image tile
                     fh.seek(offset)
                     if fh.tell() != offset:
-                        raise HTTPException(status_code=422, detail="Failed reading to tile offset")
+                        raise HTTPException(status_code=500, detail="Failed reading to tile offset")
                     data = fh.read(bytecount)
                     tile, _indices, _shape = page.decode(data, index, jpegtables)
 
@@ -297,7 +297,7 @@ class Slide(BaseSlide):
         )
         if pixel_unit_x != pixel_unit_y:
             raise HTTPException(
-                status_code=422,
+                status_code=500,
                 detail="Different pixel size unit in x- and y-direction not supported.",
             )
         pixel_size_x = (
@@ -317,7 +317,7 @@ class Slide(BaseSlide):
             y = float(pixel_size_y) * 1e6
             return SlidePixelSizeNm(x=x, y=y)
         else:
-            raise HTTPException(status_code=422, detail=f"Invalid pixel size unit ({pixel_unit_x})")
+            raise HTTPException(status_code=500, detail=f"Invalid pixel size unit ({pixel_unit_x})")
 
     def __get_slide_info_ome_tif(self):
         serie = self.tif_slide.series[0]

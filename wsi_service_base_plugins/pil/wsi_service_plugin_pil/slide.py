@@ -12,7 +12,7 @@ class Slide(BaseSlide):
         try:
             self.slide_image = Image.open(filepath)
         except UnidentifiedImageError:
-            raise HTTPException(status_code=422, detail="PIL Unidentified Image Error")
+            raise HTTPException(status_code=500, detail="PIL Unidentified Image Error")
         self.slide_image = Image.open(filepath).convert("RGB")
         width, height = self.slide_image.size
         channels = get_rgb_channel_list()
@@ -33,21 +33,12 @@ class Slide(BaseSlide):
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(
-        self,
-        level,
-        start_x,
-        start_y,
-        size_x,
-        size_y,
-        padding_color=None,
-        z=0,
-    ):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
         if level != 0:
             raise HTTPException(
-                status_code=422,
+                status_code=400,
                 detail=f"""The requested pyramid level is not available.
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )

@@ -89,9 +89,9 @@ def test_get_slide_tile_padding_color(slide_id, tile_x, tile_y, level, expected_
     [
         (10, 1, 200),  # ok
         (10, 0, 200),  # ok
-        (10, -1, 422),  # level -1 fails
+        (10, -1, 400),  # level -1 fails
         (10, 9, 200),  # level 10 ist coarsest level
-        (10, 16, 422),  # level fails
+        (10, 16, 400),  # level fails
     ],
 )
 def test_get_slide_tile_invalid(slide_id, tile_x, level, expected_response):
@@ -111,7 +111,7 @@ def test_get_region_maximum_extent(tile_size):
         f"http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{tile_size}/{tile_size}"
     )
     if tile_size * tile_size > 25000000:
-        assert response.status_code == 403  # requested data too large
+        assert response.status_code == 422  # requested data too large
     elif tile_size <= 0:
         assert response.status_code == 422  # Unprocessable Entity
     else:

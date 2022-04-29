@@ -201,7 +201,7 @@ async def get_slide_region(
     validate_image_request(image_format, image_quality)
     if size_x * size_y > settings.max_returned_region_size:
         raise HTTPException(
-            status_code=403,
+            status_code=422,
             detail=f"Requested region may not contain more than {settings.max_returned_region_size} pixels.",
         )
     if size_x * size_y == 0:

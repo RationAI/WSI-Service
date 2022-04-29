@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.8
+
+- Use more meaningfull error codes
+
 ## 0.7.7
 
 - Updated Dependencies
