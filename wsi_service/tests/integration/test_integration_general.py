@@ -100,7 +100,7 @@ def test_get_slide_tile_invalid(slide_id, tile_x, level, expected_response):
     assert response.status_code == expected_response
 
 
-@pytest.mark.parametrize("tile_size", [-1, 0, 1, 10000])
+@pytest.mark.parametrize("tile_size", [-1, 0, 1, 256, 512, 10000])
 def test_get_region_maximum_extent(tile_size):
 
     level = 5
@@ -111,8 +111,8 @@ def test_get_region_maximum_extent(tile_size):
         f"http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{tile_size}/{tile_size}"
     )
     if tile_size * tile_size > 25000000:
-        assert response.status_code == 403  # requested data too large
+        assert response.status_code == 422  # requested data too large
     elif tile_size <= 0:
-        assert response.status_code == 422  # Unprocessable Entity
+        assert response.status_code == 422
     else:
         assert response.status_code == 200

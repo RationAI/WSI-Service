@@ -30,7 +30,7 @@ class Slide(BaseSlide):
         try:
             self.openslide_slide = openslide.OpenSlide(self.filepath)
         except openslide.OpenSlideError as e:
-            raise HTTPException(status_code=422, detail=f"OpenSlideError: {e}")
+            raise HTTPException(status_code=500, detail=f"OpenSlideError: {e}")
 
     async def close(self):
         self.openslide_slide.close()
@@ -52,7 +52,7 @@ class Slide(BaseSlide):
         base_level = level
         if base_level >= len(self.openslide_slide.level_downsamples):
             raise HTTPException(
-                status_code=422,
+                status_code=400,
                 detail=f"Downsample layer for requested base level {base_level} not available.",
             )
         base_size = (size_x, size_y)
@@ -62,7 +62,7 @@ class Slide(BaseSlide):
         )
         if base_size[0] * base_size[1] > settings.max_returned_region_size:
             raise HTTPException(
-                status_code=403,
+                status_code=400,
                 detail=f"""Requested image region is too large. Maximum number of pixels is set to
                     {settings.max_returned_region_size}, your request is for {base_size[0] * base_size[1]} pixels.""",
             )
@@ -70,7 +70,7 @@ class Slide(BaseSlide):
             base_img = self.openslide_slide.read_region(level_0_location, base_level, base_size)
             rgb_img = rgba_to_rgb_with_background_color(base_img, padding_color)
         except openslide.OpenSlideError as e:
-            raise HTTPException(status_code=422, detail=f"OpenSlideError: {e}")
+            raise HTTPException(status_code=500, detail=f"OpenSlideError: {e}")
 
         return rgb_img
 
@@ -173,13 +173,18 @@ class Slide(BaseSlide):
 
     async def __get_thumbnail_openslide(self, max_x, max_y):
         level = self.__get_best_level_for_thumbnail(max_x, max_y)
-        thumbnail = await self.get_region(
-            level,
-            0,
-            0,
-            self.slide_info.levels[level].extent.x,
-            self.slide_info.levels[level].extent.y,
-        )
+
+        try:
+            thumbnail = await self.get_region(
+                level,
+                0,
+                0,
+                self.slide_info.levels[level].extent.x,
+                self.slide_info.levels[level].extent.y,
+            )
+        except HTTPException as e:
+            raise HTTPException(status_code=500, detail=f"Failed to extract thumbnail from WSI [{e}].")
+
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
 

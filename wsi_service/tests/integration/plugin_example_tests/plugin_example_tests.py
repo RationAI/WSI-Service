@@ -208,7 +208,7 @@ def check_get_slide_region_invalid_channel(slide_id, channels, expected_response
     assert response.status_code == expected_response
 
 
-def check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size):
+def check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size, status_code):
 
     level = 0
     size_x = size
@@ -217,7 +217,7 @@ def check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size):
         f"http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}",
         stream=True,
     )
-    assert response.status_code == 403
+    assert response.status_code == status_code
 
 
 def check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size):

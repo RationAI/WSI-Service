@@ -172,8 +172,8 @@ async def get_slide_region(
     level: int = Path(None, ge=0, example=0, description="Pyramid level of region"),
     start_x: int = Path(None, example=0, description="x component of start coordinate of requested region"),
     start_y: int = Path(None, example=0, description="y component of start coordinate of requested region"),
-    size_x: int = Path(None, example=1024, description="Width of requested region"),
-    size_y: int = Path(None, example=1024, description="Height of requested region"),
+    size_x: int = Path(None, gt=0, example=1024, description="Width of requested region"),
+    size_y: int = Path(None, gt=0, example=1024, description="Height of requested region"),
     image_channels: List[int] = ImageChannelQuery,
     z: int = ZStackQuery,
     image_format: str = ImageFormatsQuery,
@@ -201,11 +201,9 @@ async def get_slide_region(
     validate_image_request(image_format, image_quality)
     if size_x * size_y > settings.max_returned_region_size:
         raise HTTPException(
-            status_code=403,
+            status_code=422,
             detail=f"Requested region may not contain more than {settings.max_returned_region_size} pixels.",
         )
-    if size_x * size_y == 0:
-        raise HTTPException(status_code=422, detail="Requested region must contain at least 1 pixel.")
 
     slide = await slide_manager.get_slide(slide_id)
     if z != 0:
