@@ -38,7 +38,7 @@ class Slide(BaseSlide):
             padding_color = settings.padding_color
         if level != 0:
             raise HTTPException(
-                status_code=400,
+                status_code=422,
                 detail=f"""The requested pyramid level is not available.
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )

@@ -45,7 +45,7 @@ class Slide(BaseSlide):
             downsample_factor = self.slide_info.levels[level].downsample_factor
         except IndexError:
             raise HTTPException(
-                status_code=400,
+                status_code=422,
                 detail=f"""The requested pyramid level is not available.
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )

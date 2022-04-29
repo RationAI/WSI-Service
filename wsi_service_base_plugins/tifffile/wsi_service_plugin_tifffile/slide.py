@@ -49,7 +49,7 @@ class Slide(BaseSlide):
             level_slide = self.slide_info.levels[level]
         except IndexError:
             raise HTTPException(
-                status_code=400,
+                status_code=422,
                 detail=f"""The requested pyramid level is not available.
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
