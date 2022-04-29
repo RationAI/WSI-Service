@@ -204,7 +204,7 @@ async def get_slide_region(
             status_code=422,
             detail=f"Requested region may not contain more than {settings.max_returned_region_size} pixels.",
         )
-    if size_x * size_y == 0:
+    if size_x * size_y <= 0:
         raise HTTPException(status_code=422, detail="Requested region must contain at least 1 pixel.")
 
     slide = await slide_manager.get_slide(slide_id)

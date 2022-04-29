@@ -89,7 +89,7 @@ def test_get_slide_tile_padding_color(slide_id, tile_x, tile_y, level, expected_
     [
         (10, 1, 200),  # ok
         (10, 0, 200),  # ok
-        (10, -1, 422),  # level -1 fails
+        (10, -1, 400),  # level -1 fails
         (10, 9, 200),  # level 10 ist coarsest level
         (10, 16, 422),  # level fails
     ],
@@ -100,7 +100,7 @@ def test_get_slide_tile_invalid(slide_id, tile_x, level, expected_response):
     assert response.status_code == expected_response
 
 
-@pytest.mark.parametrize("tile_size", [-1, 0, 1, 10000])
+@pytest.mark.parametrize("tile_size", [-1, 0, 1, 256, 512, 10000])
 def test_get_region_maximum_extent(tile_size):
 
     level = 5
@@ -113,6 +113,6 @@ def test_get_region_maximum_extent(tile_size):
     if tile_size * tile_size > 25000000:
         assert response.status_code == 422  # requested data too large
     elif tile_size <= 0:
-        assert response.status_code == 422  # Unprocessable Entity
+        assert response.status_code == 422
     else:
         assert response.status_code == 200
