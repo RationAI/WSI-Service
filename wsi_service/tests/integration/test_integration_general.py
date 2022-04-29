@@ -89,9 +89,9 @@ def test_get_slide_tile_padding_color(slide_id, tile_x, tile_y, level, expected_
     [
         (10, 1, 200),  # ok
         (10, 0, 200),  # ok
-        (10, -1, 400),  # level -1 fails
+        (10, -1, 422),  # level -1 fails
         (10, 9, 200),  # level 10 ist coarsest level
-        (10, 16, 400),  # level fails
+        (10, 16, 422),  # level fails
     ],
 )
 def test_get_slide_tile_invalid(slide_id, tile_x, level, expected_response):

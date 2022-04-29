@@ -279,13 +279,11 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
 
 
 @pytest.mark.parametrize(
-    "slide_id, testpixel, start_x, start_y, size",
-    [
-        ("f5f3a03b77fb5e0497b95eaff84e9a21", (223, 217, 222), 15000, 15000, 30045),
-    ],
+    "slide_id, testpixel, start_x, start_y, size, status_code",
+    [("f5f3a03b77fb5e0497b95eaff84e9a21", (223, 217, 222), 15000, 15000, 30045, 500)],
 )
-def test_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size):
-    check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size)
+def test_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size, status_code):
+    check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size, status_code)
 
 
 @pytest.mark.parametrize("image_format, image_quality", [("png", 100), ("tiff", 100)])
@@ -301,7 +299,7 @@ def test_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size):
             (128, 128),
             [246],
             (246, 0, 0),
-        ),
+        )
     ],
 )
 def test_get_slide_region_dedicated_channel(

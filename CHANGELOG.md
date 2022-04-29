@@ -2,7 +2,7 @@
 
 ## 0.7.8
 
-- Use more meaningfull error codes
+- Use more meaningful http error codes
 
 ## 0.7.7
 
