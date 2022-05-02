@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.9
+
+- Updated Dependencies
+
 ## 0.7.8
 
 - Use more meaningful http error codes
