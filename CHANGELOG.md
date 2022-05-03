@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.10
+
+- Fixed dev mode
+
 ## 0.7.9
 
 - Updated Dependencies

@@ -19,19 +19,15 @@ ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libpixman-1.so.0.40.0
 COPY . /wsi-service
 
 WORKDIR /wsi-service
-RUN python3 -m venv .venv
 RUN poetry build && poetry export -f requirements.txt > requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/tifffile
-RUN python3 -m venv .venv
 RUN poetry build && poetry export -f requirements.txt > requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/openslide
-RUN python3 -m venv .venv
 RUN poetry build && poetry export -f requirements.txt > requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/pil
-RUN python3 -m venv .venv
 RUN poetry build && poetry export -f requirements.txt > requirements.txt
 
 
