@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.15@sha256:3506d448613375fefbec0dc2ae583c586d20623a1cb2ca8db0537fd71a405cb7 AS wsi_service_build
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.16@sha256:cfb0773bfac0b2a7b3e75343bb78c17e368e42ef5c8bb928113e8a5bb8efd42c AS wsi_service_build
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -37,7 +37,7 @@ WORKDIR /wsi-service
 RUN poetry install
 
 
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.15@sha256:3506d448613375fefbec0dc2ae583c586d20623a1cb2ca8db0537fd71a405cb7 AS wsi_service_intermediate
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.16@sha256:cfb0773bfac0b2a7b3e75343bb78c17e368e42ef5c8bb928113e8a5bb8efd42c AS wsi_service_intermediate
 
 RUN mkdir /artifacts
 COPY --from=wsi_service_build /wsi-service/requirements.txt /artifacts
