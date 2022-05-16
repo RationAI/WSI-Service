@@ -3,5 +3,5 @@
   "extends": [
     "config:base"
   ],
-  "assignees": ["nweiss"]
+  "assignees": ["michael.franz.sy"]
 }
