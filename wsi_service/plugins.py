@@ -72,6 +72,10 @@ def _get_file_extension(filepath):
     file_extension = pathlib.Path(filepath).suffix
     if ".ome" + file_extension in filepath:
         file_extension = ".ome" + file_extension
+    elif file_extension == "" and pathlib.Path(filepath).is_dir():
+        files = list(pathlib.Path(filepath).glob("*.dcm"))
+        if len(files) > 0:
+            file_extension = "dicom-folder"
     return file_extension
 
 
@@ -100,7 +104,10 @@ def _validate_plugins_default():
         if len(available_plugins_for_image_file_extension) > 1 and file_extension not in settings.plugins_default:
             other_plugin_options = "\n".join(["- " + p for p in available_plugins_for_image_file_extension])
             raise Exception(
-                f"There is more than one plugin available for file extension {file_extension}.\nPlease specify one of the following plugins as default in the settings:\n{other_plugin_options}"
+                f"""
+                There is more than one plugin available for file extension {file_extension}.\n
+                Please specify one of the following plugins as default in the settings:\n{other_plugin_options}
+                """
             )
 
 

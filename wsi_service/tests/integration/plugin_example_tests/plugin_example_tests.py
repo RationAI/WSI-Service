@@ -27,7 +27,10 @@ def check_get_slide_thumbnail_valid(
     max_size_x = 21
     max_size_y = 22
     response = requests.get(
-        f"http://localhost:8080/v1/slides/{slide_id}/thumbnail/max_size/{max_size_x}/{max_size_y}?image_format={image_format}&image_quality={image_quality}",
+        (
+            f"http://localhost:8080/v1/slides/{slide_id}/thumbnail/max_size/{max_size_x}/{max_size_y}"
+            f"?image_format={image_format}&image_quality={image_quality}"
+        ),
         stream=True,
     )
     assert response.status_code == return_value
@@ -44,7 +47,7 @@ def check_get_slide_thumbnail_valid(
         image = get_image(response)
         x, y = image.size
         assert (x == max_size_x) or (y == max_size_y)
-        if image_format in ["png", "bmp"]:
+        if image_format == "png":
             assert image.getpixel((pixel_location[0], pixel_location[1])) == testpixel_rgb
 
 
@@ -52,7 +55,10 @@ def check_get_slide_label_valid(image_format, image_quality, slide_id, has_label
 
     max_x, max_y = 200, 200
     response = requests.get(
-        f"http://localhost:8080/v1/slides/{slide_id}/label/max_size/{max_x}/{max_y}?image_format={image_format}&image_quality={image_quality}",
+        (
+            f"http://localhost:8080/v1/slides/{slide_id}/label/max_size/{max_x}/{max_y}"
+            f"?image_format={image_format}&image_quality={image_quality}"
+        ),
         stream=True,
     )
     if has_label:
@@ -66,11 +72,7 @@ def check_get_slide_label_valid(image_format, image_quality, slide_id, has_label
                 assert c == value
         else:
             image = get_image(response)
-            if image_format in ["png", "bmp"] and slide_id in [
-                "f5f3a03b77fb5e0497b95eaff84e9a21",
-                "8d32dba05a4558218880f06caf30d3ac",
-                "1886900087965c9e845b39aebaa45ee6",
-            ]:
+            if image_format == "png":
                 assert image.getpixel((pixel_location[0], pixel_location[1])) == testpixel
     else:
         assert response.status_code == 404
@@ -80,7 +82,10 @@ def check_get_slide_macro_valid(image_format, image_quality, slide_id, return_va
 
     max_x, max_y = 200, 200
     response = requests.get(
-        f"http://localhost:8080/v1/slides/{slide_id}/macro/max_size/{max_x}/{max_y}?image_format={image_format}&image_quality={image_quality}",
+        (
+            f"http://localhost:8080/v1/slides/{slide_id}/macro/max_size/{max_x}/{max_y}"
+            f"?image_format={image_format}&image_quality={image_quality}"
+        ),
         stream=True,
     )
     assert response.status_code == return_value
@@ -93,7 +98,7 @@ def check_get_slide_macro_valid(image_format, image_quality, slide_id, return_va
                 assert c == value
         else:
             image = get_image(response)
-            if image_format in ["png", "bmp"]:
+            if image_format == "png":
                 assert image.getpixel((pixel_location[0], pixel_location[1])) == testpixel
 
 
@@ -105,7 +110,11 @@ def check_get_slide_region_valid_brightfield(
     size_x = size
     size_y = size + 198
     response = requests.get(
-        f"http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format={image_format}&image_quality={image_quality}",
+        (
+            f"http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/"
+            f"start/{start_x}/{start_y}/size/{size_x}/{size_y}"
+            f"?image_format={image_format}&image_quality={image_quality}"
+        ),
         stream=True,
     )
     assert response.status_code == 200
@@ -123,7 +132,7 @@ def check_get_slide_region_valid_brightfield(
         image = get_image(response)
         x, y = image.size
         assert (x == size_x) or (y == size_y)
-        if image_format in ["png", "bmp"]:
+        if image_format == "png":
             assert image.getpixel((pixel_location[0], pixel_location[1])) == testpixel
 
 
@@ -141,7 +150,11 @@ def check_get_slide_region_valid_fluorescence(
 
     level = 2
     response = requests.get(
-        f"http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/start/{start_point[0]}/{start_point[1]}/size/{size[0]}/{size[1]}?image_format={image_format}&image_quality={image_quality}",
+        (
+            f"http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/"
+            f"start/{start_point[0]}/{start_point[1]}/size/{size[0]}/{size[1]}"
+            f"?image_format={image_format}&image_quality={image_quality}"
+        ),
         stream=True,
     )
     assert response.status_code == 200
@@ -178,7 +191,11 @@ def check_get_slide_region_dedicated_channel(
 
     str_channels = "&".join([f"image_channels={str(ch)}" for ch in channels])
     response = requests.get(
-        f"http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/start/{start_point[0]}/{start_point[1]}/size/{size[0]}/{size[1]}?image_format={image_format}&image_quality={image_quality}&{str_channels}",
+        (
+            f"http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/"
+            f"start/{start_point[0]}/{start_point[1]}/size/{size[0]}/{size[1]}"
+            f"?image_format={image_format}&image_quality={image_quality}&{str_channels}"
+        ),
         stream=True,
     )
     assert response.status_code == 200
@@ -195,7 +212,7 @@ def check_get_slide_region_dedicated_channel(
         image = get_image(response)
         x, y = image.size
         assert (x == size[0]) or (y == size[1])
-        if image_format in ["png", "bmp"]:
+        if image_format == "png":
             assert image.getpixel((pixel_location[0], pixel_location[1])) == testpixel_rgb
 
 
@@ -214,7 +231,10 @@ def check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size, 
     size_x = size
     size_y = size + 198
     response = requests.get(
-        f"http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}",
+        (
+            f"http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/"
+            f"start/{start_x}/{start_y}/size/{size_x}/{size_y}"
+        ),
         stream=True,
     )
     assert response.status_code == status_code
@@ -224,7 +244,10 @@ def check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel,
 
     level = 0
     response = requests.get(
-        f"http://localhost:8080/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}?image_format={image_format}&image_quality={image_quality}",
+        (
+            f"http://localhost:8080/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}"
+            f"?image_format={image_format}&image_quality={image_quality}"
+        ),
         stream=True,
     )
     assert response.status_code == 200
@@ -241,5 +264,5 @@ def check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel,
         image = get_image(response)
         x, y = image.size
         assert (x == tile_size[0]) or (y == tile_size[1])
-        if image_format in ["png", "bmp"]:
+        if image_format == "png":
             assert image.getpixel((0, 0)) == testpixel

@@ -30,6 +30,9 @@ RUN poetry build && poetry export -f requirements.txt > requirements.txt
 WORKDIR /wsi-service/wsi_service_base_plugins/pil
 RUN poetry build && poetry export -f requirements.txt > requirements.txt
 
+WORKDIR /wsi-service/wsi_service_base_plugins/wsidicom
+RUN poetry build && poetry export -f requirements.txt > requirements.txt
+
 
 FROM wsi_service_build AS wsi_service_dev
 
@@ -48,11 +51,14 @@ COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/openslide/re
 RUN pip install -r /artifacts/requirements_openslide.txt
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/pil/requirements.txt /artifacts/requirements_pil.txt
 RUN pip install -r /artifacts/requirements_pil.txt
+COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/wsidicom/requirements.txt /artifacts/requirements_wsidicom.txt
+RUN pip install -r /artifacts/requirements_wsidicom.txt
 
 COPY --from=wsi_service_build /wsi-service/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/openslide/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/pil/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tifffile/dist/ /wsi-service/dist/
+COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/wsidicom/dist/ /wsi-service/dist/
 
 RUN pip3 install /wsi-service/dist/*.whl
 

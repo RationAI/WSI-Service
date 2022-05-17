@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.13
+
+- Added DICOM plugin based on wsidicom
+- Set pycodestyle max-length to 120
+  - Some needed formattings in code and comments
+
 ## 0.7.12
 
 - Updated Dependencies
