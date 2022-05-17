@@ -182,21 +182,38 @@ async def get_slide_region(
     """
     Get a region of a slide given its ID and by providing the following parameters:
 
-    * `level` - Pyramid level of the region. Level 0 is highest (original) resolution. The available levels depend on the image.
+    * `level` - Pyramid level of the region. Level 0 is highest (original) resolution.
+    The available levels depend on the image.
 
-    * `start_x`, `start_y` - Start coordinates of the requested region. Coordinates are given with respect to the requested level. Coordinates define the upper left corner of the region with respect to the image origin (0, 0) at the upper left corner of the image.
+    * `start_x`, `start_y` - Start coordinates of the requested region.
+    Coordinates are given with respect to the requested level.
+    Coordinates define the upper left corner of the region with respect to the image origin
+    (0, 0) at the upper left corner of the image.
 
-    * `size_x`, `size_y` - Width and height of requested region. Size needs to be given with respect to the requested level.
+    * `size_x`, `size_y` - Width and height of requested region.
+    Size needs to be given with respect to the requested level.
 
     There are a number of addtional query parameters:
 
-    * `image_channels` - Single channels (or multiple channels) can be retrieved through the optional parameter image_channels as an integer array referencing the channel IDs. This is paricularly important for images with abitrary image channels and channels with a higher color depth than 8bit (e.g. fluorescence images). The channel composition of the image can be obtained through the slide info endpoint, where the dedicated channels are listed along with its color, name and bitness. By default all channels are returned.
+    * `image_channels` - Single channels (or multiple channels) can be retrieved through the optional parameter
+    image_channels as an integer array referencing the channel IDs.
+    This is paricularly important for images with abitrary image channels and channels with a higher
+    color depth than 8bit (e.g. fluorescence images).
+    The channel composition of the image can be obtained through the slide info endpoint,
+    where the dedicated channels are listed along with its color, name and bitness.
+    By default all channels are returned.
 
-    * `z` - The region endpoint also offers the selection of a layer in a Z-Stack by setting the index z. Default is z=0.
+    * `z` - The region endpoint also offers the selection of a layer in a Z-Stack by setting the index z.
+    Default is z=0.
 
-    * `image_format` - The image format can be selected. Formats include jpeg, png, tiff, bmp, gif. When tiff is specified as output format the raw data of the image is returned. Multi-channel images can also be represented as RGB-images (mostly for displaying reasons in the viewer). Note that the mapping of all color channels to RGB values is currently restricted to the first three channels. Default is jpeg.
+    * `image_format` - The image format can be selected. Formats include jpeg, png, tiff, bmp, gif.
+    When tiff is specified as output format the raw data of the image is returned.
+    Multi-channel images can also be represented as RGB-images (mostly for displaying reasons in the viewer).
+    Note that the mapping of all color channels to RGB values is currently restricted to the first three channels.
+    Default is jpeg.
 
-    * `image_quality` - The image quality can be set for specific formats, e.g. for the jpeg format a value between 0 and 100 can be selected. Default is 90.
+    * `image_quality` - The image quality can be set for specific formats,
+    e.g. for the jpeg format a value between 0 and 100 can be selected. Default is 90.
     """
     validate_image_request(image_format, image_quality)
     if size_x * size_y > settings.max_returned_region_size:
@@ -239,21 +256,38 @@ async def get_slide_tile(
     """
     Get a tile of a slide given its ID and by providing the following parameters:
 
-    * `level` - Pyramid level of the tile. Level 0 is highest (original) resolution. The available levels depend on the image.
+    * `level` - Pyramid level of the tile. Level 0 is highest (original) resolution.
+    The available levels depend on the image.
 
-    * `tile_x`, `tile_y` - Coordinates are given with respect to tiles, i.e. tile coordinate n is the n-th tile in the respective dimension. Coordinates are also given with respect to the requested level. Coordinates (0,0) select the tile at the upper left corner of the image.
+    * `tile_x`, `tile_y` - Coordinates are given with respect to tiles,
+    i.e. tile coordinate n is the n-th tile in the respective dimension.
+    Coordinates are also given with respect to the requested level.
+    Coordinates (0,0) select the tile at the upper left corner of the image.
 
     There are a number of addtional query parameters:
 
-    * `image_channels` - Single channels (or multiple channels) can be retrieved through the optional parameter image_channels as an integer array referencing the channel IDs. This is paricularly important for images with abitrary image channels and channels with a higher color depth than 8bit (e.g. fluorescence images). The channel composition of the image can be obtained through the slide info endpoint, where the dedicated channels are listed along with its color, name and bitness. By default all channels are returned.
+    * `image_channels` - Single channels (or multiple channels) can be retrieved through
+    the optional parameter image_channels as an integer array referencing the channel IDs.
+    This is paricularly important for images with abitrary image channels and channels
+    with a higher color depth than 8bit (e.g. fluorescence images).
+    The channel composition of the image can be obtained through the slide info endpoint,
+    where the dedicated channels are listed along with its color, name and bitness.
+    By default all channels are returned.
 
-    * `z` - The region endpoint also offers the selection of a layer in a Z-Stack by setting the index z. Default is z=0.
+    * `z` - The region endpoint also offers the selection of a layer in a Z-Stack by setting the index z.
+    Default is z=0.
 
-    * `padding_color` - Background color as 24bit-hex-string with leading #, that is used when image tile contains whitespace when out of image extent. Default is white.
+    * `padding_color` - Background color as 24bit-hex-string with leading #,
+    that is used when image tile contains whitespace when out of image extent. Default is white.
 
-    * `image_format` - The image format can be selected. Formats include jpeg, png, tiff, bmp, gif. When tiff is specified as output format the raw data of the image is returned. Multi-channel images can also be represented as RGB-images (mostly for displaying reasons in the viewer). Note that the mapping of all color channels to RGB values is currently restricted to the first three channels. Default is jpeg.
+    * `image_format` - The image format can be selected. Formats include jpeg, png, tiff, bmp, gif.
+    When tiff is specified as output format the raw data of the image is returned.
+    Multi-channel images can also be represented as RGB-images (mostly for displaying reasons in the viewer).
+    Note that the mapping of all color channels to RGB values is currently restricted to the first three channels.
+    Default is jpeg.
 
-    * `image_quality` - The image quality can be set for specific formats, e.g. for the jpeg format a value between 0 and 100 can be selected. Default is 90.
+    * `image_quality` - The image quality can be set for specific formats,
+    e.g. for the jpeg format a value between 0 and 100 can be selected. Default is 90.
     """
     vp_color = validate_hex_color_string(padding_color)
     validate_image_request(image_format, image_quality)

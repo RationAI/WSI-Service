@@ -71,7 +71,10 @@ def test_get_slide_invalid_slide_id():
 def test_get_slide_tile_padding_color(slide_id, tile_x, tile_y, level, expected_response, size):
 
     response = requests.get(
-        f"http://localhost:8080/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}?image_format=png&padding_color=%23AABBCC",
+        (
+            f"http://localhost:8080/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}"
+            "?image_format=png&padding_color=%23AABBCC"
+        ),
         stream=True,
     )
     assert response.status_code == expected_response
@@ -108,7 +111,9 @@ def test_get_region_maximum_extent(tile_size):
     start_y = 23
     slide_id = "45707118e3b55f1b8e03e1f19feee916"
     response = requests.get(
-        f"http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{tile_size}/{tile_size}"
+        f"""
+        http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{tile_size}/{tile_size}
+        """
     )
     if tile_size * tile_size > 25000000:
         assert response.status_code == 422  # requested data too large

@@ -1,16 +1,13 @@
 [tool.poetry]
-name = "wsi-service-plugin-tifffile"
-version = "0.1.1"
+name = "wsi-service-plugin-wsidicom"
+version = "0.1.0"
 description = ""
 authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-numpy = "^1.22.3"
-Pillow = "^9.0.0"
-scikit-image = "^0.19.2"
-tifffile = "2022.2.9"
+wsidicom = "^0.3.0"
 
 [tool.poetry.dev-dependencies]
 

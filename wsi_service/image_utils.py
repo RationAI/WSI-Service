@@ -5,9 +5,17 @@ from fastapi import HTTPException
 from PIL import Image
 
 
-def rgba_to_rgb_with_background_color(image_rgba, padding_color):
-    image_rgb = Image.new("RGB", image_rgba.size, padding_color)
-    image_rgb.paste(image_rgba, mask=image_rgba.split()[3])
+def rgba_to_rgb_with_background_color(image_rgba, padding_color, size=None, paste_start=None):
+    size = size if size else image_rgba.size
+    image_rgb = Image.new("RGB", size, padding_color)
+    if image_rgba is None:
+        return image_rgb
+    elif image_rgba.info.get("transparency", None) is not None or image_rgba.mode == "RGBA":
+        image_rgb.paste(image_rgba, mask=image_rgba.split()[3])
+    elif image_rgba.mode == "RGB":
+        image_rgb.paste(image_rgba, box=paste_start)
+    else:
+        raise HTTPException(400, "Raw image data has unsupported image format!")
     return image_rgb
 
 

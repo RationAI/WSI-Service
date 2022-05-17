@@ -128,18 +128,53 @@ It is not recommened to run the python package outside the specified docker imag
 
 ## Development
 
+**Important:** Make sure you don't have a virtual environment inside the `wsi-service` root folder.
+
+Not only in application, also in development it is recommended not to use the python package outside the specified developer docker image due to issues with library dependencies on different platforms. For developers who have not developed with a docker container before, this may be a bit unfamiliar at first, but the next steps should help to set it up step by step.
+
 Run
 
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-### Run tests
+### Run debugging
 
-Run while development composition is up and running:
+Open VS Code and ensure you have the extensions _Docker_ and _Remote - Containers_ installed.
+
+Use the Docker extension to attach VS Code to the running `wsi-service` container (use `Attach Visual Studio Code` option).
+
+A new VS Code window will open. After first start install the Python extension.
+
+If not already open, open the folder `/wsi-service/`.
+
+Go to the terminal windows of VS Code and activate the virtual environment created by poetry:
 
 ```bash
-docker exec -it wsi-service_wsi_service_1 poetry run pytest --cov wsi_service
+# use name of created venv
+
+source /root/.cache/pypoetry/virtualenvs/wsi-service-<your_venv_suffix>/bin/activate
+```
+
+To stop and debug at any point in the code, use VS Code to start `Python: Remote Attach` while development composition is up and running.
+
+### Run static code analysis and fix issues
+
+Check your code by running the following statements before pushing changes:
+
+```bash
+isort .
+black .
+pycodestyle wsi_service wsi_service_base_plugins
+pylint wsi_service wsi_service_base_plugins
+```
+
+### Run tests
+
+Run in attached VS Code while development composition is up and running:
+
+```bash
+pytest --cov wsi_service --maxfail=1
 ```
 
 To run tests locally, make sure you have the latest testdata (For access contact project maintainer).
@@ -148,23 +183,6 @@ After downloading the testdata, set the path of the `OpenSlide_adapted` folder a
 
 ```bash
 COMPOSE_DATA_DIR=/testdata/OpenSlide_adapted
-```
-
-### Run debugging
-
-Use VS Code to start `Python: Remote Attach` while development composition is up and running.
-
-### Run static code analysis and fix issues
-
-If you are using VS Code there are already default [settings](https://www.gitlab.com/empaia/services/wsi-service/-/blob/main/.vscode/settings.json) that will sort your imports and reformat the code on save. Furthermore, there will be standard pylint warnings from VS Code that should be fixed manually.
-
-Check your code by running the following statements
-
-```bash
-poetry run black .
-poetry run isort .
-poetry run pylint wsi_service wsi_service_base_plugins
-poetry run pycodestyle wsi_service wsi_service_base_plugins
 ```
 
 ## Plugin development
@@ -192,6 +210,6 @@ COPY wsi-service-plugin-PLUGINNAME.whl /tmp/wsi-service-plugin-PLUGINNAME.whl
 RUN pip3 install /tmp/wsi-service-plugin-PLUGINNAME.whl
 ```
 
-There are three base plugins ([openslide](./wsi_service_base_plugins/openslide/), [pil](./wsi_service_base_plugins/pil/), [tiffile](./wsi_service_base_plugins/tifffile/)) that can be used as templates for new plugins. Additionally to the mentioned minimal requirements these plugins use poetry to manage and create the python package. This is highly recommended when creating a plugin. Furthermore, these plugins implement tests based on pytest by defining a number of parameters on top of example integration test functions defined as part of the WSI Service ([plugin_example_tests](./wsi_service/tests/integration/plugin_example_tests)).
+There are four base plugins ([openslide](./wsi_service_base_plugins/openslide/), [pil](./wsi_service_base_plugins/pil/), [tiffile](./wsi_service_base_plugins/tifffile/), [wsidicom](./wsi_service_base_plugins/wsidicom/)) that can be used as templates for new plugins. Additionally to the mentioned minimal requirements these plugins use poetry to manage and create the python package. This is highly recommended when creating a plugin. Furthermore, these plugins implement tests based on pytest by defining a number of parameters on top of example integration test functions defined as part of the WSI Service ([plugin_example_tests](./wsi_service/tests/integration/plugin_example_tests)).
 
 A more complete example of an external plugin integration can be found in the iSyntax integration repository ([wsi-service-plugin-isyntax](https://www.gitlab.com/empaia/services/wsi-service-plugin-isyntax)). That example includes the usage of an external service that is run in an additional docker container due to runtime limitations.

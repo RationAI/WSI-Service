@@ -130,7 +130,10 @@ def validate_image_channels(slide, image_channels):
         if i >= len(slide.slide_info.channels):
             raise HTTPException(
                 status_code=400,
-                detail=f"Selected image channel excceds channel bounds (selected: {i} max: {len(slide.slide_info.channels)-1})",
+                detail=f"""
+                Selected image channel excceds channel bounds
+                (selected: {i} max: {len(slide.slide_info.channels)-1})
+                """,
             )
     if len(image_channels) != len(set(image_channels)):
         raise HTTPException(status_code=400, detail="No duplicates allowed in channels")
