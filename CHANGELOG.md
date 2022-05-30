@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.14
+
+- Updated Dependencies
+
 ## 0.7.13
 
 - Added DICOM plugin based on wsidicom
