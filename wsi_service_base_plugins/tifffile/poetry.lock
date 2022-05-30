@@ -132,7 +132,7 @@ numpy = ">=1.16.5"
 
 [[package]]
 name = "tifffile"
-version = "2022.2.9"
+version = "2022.5.4"
 description = "Read and write TIFF files"
 category = "main"
 optional = false
@@ -147,7 +147,7 @@ all = ["imagecodecs (>=2021.11.20)", "matplotlib (>=3.3)", "lxml"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "74679a2fca759b3d0c9396f424252162702e952798ffb60e6c487d337a44d683"
+content-hash = "549b067fb927a3c6fb50c5177cb82d2b74487964385e2113e5a50fb8f41801f5"
 
 [metadata.files]
 imageio = [
@@ -310,6 +310,6 @@ scipy = [
     {file = "scipy-1.6.1.tar.gz", hash = "sha256:c4fceb864890b6168e79b0e714c585dbe2fd4222768ee90bc1aa0f8218691b11"},
 ]
 tifffile = [
-    {file = "tifffile-2022.2.9-py3-none-any.whl", hash = "sha256:cf6c32777e1ff6249e9227196535c5ab8531ec520744cf2a62789535d4aec417"},
-    {file = "tifffile-2022.2.9.tar.gz", hash = "sha256:7eda74117643681bb2caa695b48f39e2243b4887f7cf991d5adffd813e5c8373"},
+    {file = "tifffile-2022.5.4-py3-none-any.whl", hash = "sha256:52b4c02040d00c1811e26c0f6abd41e77e2d57559b3657ff3e873955f74f5c57"},
+    {file = "tifffile-2022.5.4.tar.gz", hash = "sha256:b03147a15862b7c1d90d47435197f149bef7a52c25ad67cf1f9b465faa71b8d2"},
 ]
