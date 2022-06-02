@@ -100,7 +100,7 @@ COMPOSE_DATA_DIR=/data
 
 Short explanation of the parameters used:
 
-- `WS_CORS_ALLOW_CREDENTIALS` when set to true, then browser credentials are enabled (note: WS_CORS_ALLOW_ORIGINS must 
+- `WS_CORS_ALLOW_CREDENTIALS` when set to true, then browser credentials are enabled (note: WS_CORS_ALLOW_ORIGINS must
 not contain "*" in that case)
 - `WS_CORS_ALLOW_ORIGINS` allow cors for different origins
 - `WS_DEBUG` enables debug logging level
@@ -125,6 +125,16 @@ docker-compose up --build
 ```
 
 It is not recommened to run the python package outside the specified docker image due to issues with library dependencies on different platforms.
+
+## Update OpenSlide version
+
+The WSI-Service uses a customized version of OpenSlide to support the VSF-format.
+
+If you want to update the version of OpenSlide some steps are needed:
+
+1. Update OpenSlide: the source code can be found here: [https://github.com/EMPAIA/openslide](https://github.com/EMPAIA/openslide)
+2. Build the updated OpenSlide version. See here for more information: [https://gitlab.com/empaia/integration/ci-openslide](https://gitlab.com/empaia/integration/ci-openslide)
+3. Update the value of `OPENSLIDE_VERSION` in the `Dockerfile`. Use the same value (commit hash in GitHub) as in step **2.**
 
 ## Development
 
