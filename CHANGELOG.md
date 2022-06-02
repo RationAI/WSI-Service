@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.15
+
+- Custom OpenSlide version will be used in Docker build
+- Added adjustments to openslide plugin for VSF support
+
 ## 0.7.14
 
 - Updated Dependencies

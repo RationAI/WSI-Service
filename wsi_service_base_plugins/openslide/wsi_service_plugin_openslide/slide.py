@@ -17,10 +17,12 @@ class Slide(BaseSlide):
         "leica",
         "trestle",
         "philips",
+        "vsf",
     ]
 
     async def open(self, filepath):
         await self.open_slide()
+        self.format = self.openslide_slide.detect_format(filepath)
         self.slide_info = self.__get_slide_info_openslide()
         self.thumbnail = await self.__get_thumbnail_openslide(settings.max_thumbnail_size, settings.max_thumbnail_size)
         await self.close()
@@ -66,9 +68,37 @@ class Slide(BaseSlide):
                 detail=f"""Requested image region is too large. Maximum number of pixels is set to
                     {settings.max_returned_region_size}, your request is for {base_size[0] * base_size[1]} pixels.""",
             )
+        if self.format == "vsf":
+            end_x = int((start_x + base_size[0]) * downsample_factor)
+            end_y = int((start_y + base_size[1]) * downsample_factor)
+            if end_x > self.openslide_slide.dimensions[0] or end_y > self.openslide_slide.dimensions[1]:
+                new_size_x = min(
+                    int(
+                        (int(base_size[0] * downsample_factor) - (end_x - self.openslide_slide.dimensions[0]))
+                        / downsample_factor
+                    ),
+                    base_size[0],
+                )
+                new_size_y = min(
+                    int(
+                        (int(base_size[1] * downsample_factor) - (end_y - self.openslide_slide.dimensions[1]))
+                        / downsample_factor
+                    ),
+                    base_size[1],
+                )
+                base_size = (new_size_x, new_size_y)
+
         try:
             base_img = self.openslide_slide.read_region(level_0_location, base_level, base_size)
-            rgb_img = rgba_to_rgb_with_background_color(base_img, padding_color)
+            if self.format == "vsf":
+                rgb_img = rgba_to_rgb_with_background_color(
+                    base_img,
+                    padding_color,
+                    size=(size_x, size_y),
+                    paste_size=base_size,
+                )
+            else:
+                rgb_img = rgba_to_rgb_with_background_color(base_img, padding_color)
         except openslide.OpenSlideError as e:
             raise HTTPException(status_code=500, detail=f"OpenSlideError: {e}")
 

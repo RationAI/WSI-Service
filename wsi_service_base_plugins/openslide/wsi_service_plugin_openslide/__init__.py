@@ -8,6 +8,7 @@ supported_file_extensions = [
     ".svs",
     ".tiff",
     ".tif",
+    ".vsf",
 ]
 
 

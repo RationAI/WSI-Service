@@ -1,5 +1,8 @@
 FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.19@sha256:13e74d28f64500593b1af06a00eb1a30e3fb6663abf1ce4bdc0fe781cb08c1b5 AS wsi_service_build
 
+# EDIT to set version of OpenSlide
+ENV OPENSLIDE_VERSION=3390d5a
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
@@ -7,6 +10,10 @@ RUN apt-get update \
   python3-openslide
 
 RUN mkdir /openslide_deps
+
+RUN curl -o /usr/lib/x86_64-linux-gnu/libopenslide.so.0 \
+  https://gitlab.com/api/v4/projects/36668960/packages/generic/libopenslide.so.0/$OPENSLIDE_VERSION/libopenslide.so.0
+
 RUN cp /usr/lib/x86_64-linux-gnu/libopenslide.so.0 /openslide_deps
 RUN ldd /usr/lib/x86_64-linux-gnu/libopenslide.so.0 \
   | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp -v '{}' /openslide_deps
