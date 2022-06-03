@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.16
+
+- Updated Dependencies
+
 ## 0.7.15
 
 - Custom OpenSlide version will be used in Docker build
