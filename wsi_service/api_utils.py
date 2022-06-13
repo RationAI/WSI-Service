@@ -98,7 +98,10 @@ def make_tif_response(narray, image_format):
 
     mem = BytesIO()
     try:
-        tifffile.imwrite(mem, narray, photometric="minisblack", compression="DEFLATE")
+        if narray.shape[0] == 1:
+            tifffile.imwrite(mem, narray, photometric="minisblack", compression="DEFLATE")
+        else:
+            tifffile.imwrite(mem, narray, photometric="minisblack", planarconfig="separate", compression="DEFLATE")
     except Exception as ex:
         raise HTTPException(status_code=400, detail=f"Error writing tiff file: {ex}")
     mem.seek(0)
