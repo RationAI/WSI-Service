@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.18
+
+- Updated Dependencies
+
 ## 0.7.17
 
 - Updated dependancies and fixed tifffile dep
