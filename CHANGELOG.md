@@ -3,6 +3,7 @@
 ## 0.7.23
 
 - Updated Dependencies
+- Added additional checks for pixel size of generic tiff
 
 ## 0.7.22
 
