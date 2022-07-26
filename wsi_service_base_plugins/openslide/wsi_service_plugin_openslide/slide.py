@@ -147,17 +147,31 @@ class Slide(BaseSlide):
     def __get_pixel_size(self):
         if self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] == "generic-tiff":
             if self.openslide_slide.properties["tiff.ResolutionUnit"] == "centimeter":
+                if (
+                    "tiff.XResolution" not in self.openslide_slide.properties
+                    or "tiff.YResolution" not in self.openslide_slide.properties
+                ):
+                    raise HTTPException(
+                        status_code=404,
+                        detail="Generic tiff file is missing valid values for x and y resolution.",
+                    )
                 pixel_per_cm_x = float(self.openslide_slide.properties["tiff.XResolution"])
                 pixel_per_cm_y = float(self.openslide_slide.properties["tiff.YResolution"])
                 pixel_size_nm_x = 1e7 / pixel_per_cm_x
                 pixel_size_nm_y = 1e7 / pixel_per_cm_y
             else:
-                raise Exception("Unable to extract pixel size from metadata.")
+                raise HTTPException(
+                    status_code=404,
+                    detail="Unable to extract pixel size from metadata.",
+                )
         elif self.openslide_slide.properties[openslide.PROPERTY_NAME_VENDOR] in self.supported_vendors:
             pixel_size_nm_x = 1000.0 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_X])
             pixel_size_nm_y = 1000.0 * float(self.openslide_slide.properties[openslide.PROPERTY_NAME_MPP_Y])
         else:
-            raise Exception("Unable to extract pixel size from metadata.")
+            raise HTTPException(
+                status_code=404,
+                detail="Unable to extract pixel size from metadata.",
+            )
         return SlidePixelSizeNm(x=pixel_size_nm_x, y=pixel_size_nm_y)
 
     def __get_tile_extent(self):
