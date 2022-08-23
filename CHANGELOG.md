@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.27
+
+- Updated Dependencies
+
 ## 0.7.26
 
 - Updated Dependencies
