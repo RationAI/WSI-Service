@@ -70,6 +70,9 @@ Different formats are supported by plugins for accessing image data. Three base 
 - [tiffile](./wsi_service_base_plugins/tifffile/)
   - OME-TIFF (\*.ome.tif, \*.ome.tif, \*.ome.tiff, \*.ome.tf2, \*.ome.tf8, \*.ome.btf)
 
+- [wsidicom](./wsi_service_base_plugins/wsidicom/)
+  - DICOM FOLDER
+
 ## Setup
 
 _This section shows how to run and create the WSI Service after checking out this repository. Based on a docker compose file and environment variables, it shows how to properly set up the WSI Service for different deployment scenarios. If you just want to get a first impression of the WSI service, go to [Quickstart](#quickstart)._
