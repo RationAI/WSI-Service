@@ -20,6 +20,7 @@ aiohttp = "^3.8.1"
 httptools = "^0.4.0"
 filelock = "^3.6.0"
 idna = "^3.3"
+zipfly = "^6.0.3"
 
 [tool.poetry.dev-dependencies]
 aioresponses = "^0.7.3"

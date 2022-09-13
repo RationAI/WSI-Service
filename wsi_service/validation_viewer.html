@@ -52,6 +52,9 @@
                 <v-container class="px-8 pt-8">
                     <v-checkbox v-model="debugLayer" label="Show Debug Layer" class="pa-0 ma-0"></v-checkbox>
                 </v-container>
+                <v-subheader class="pt-10">
+                    <v-icon medium>mdi-download</v-icon>&nbsp; <a :href="getDownloadAddress()">Download</a>
+                </v-subheader>
             </v-navigation-drawer>
             <v-main>
                 <v-container v-if="viewerUrl" fluid
@@ -151,6 +154,9 @@
                         return "background-color: lightgray;"
                     }
                     return ""
+                },
+                getDownloadAddress() {
+                    return "slides/" + this.selectedSlideId + "/download"
                 },
                 getColor: function (item) {
                     if (item.children &&

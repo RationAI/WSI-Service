@@ -60,6 +60,10 @@ class SlideManager:
         slide_info.id = slide_id
         return slide_info
 
+    async def get_slide_file_paths(self, slide_id):
+        storage_addresses = await self._get_slide_storage_addresses(slide_id)
+        return [os.path.join(self.data_dir, s["address"]) for s in storage_addresses]
+
     def close(self):
         for storage_address, slide in self.slide_cache.get_all().items():
             slide.timer.cancel()
@@ -76,7 +80,7 @@ class SlideManager:
         expiring_slide.timer = self.event_loop.call_later(self.timeout, self._sync_close_slide, storage_address)
         logger.debug("Set expiration timer for storage address (%s): %s", storage_address, self.timeout)
 
-    async def _get_slide_main_storage_address(self, slide_id):
+    async def _get_slide_storage_addresses(self, slide_id):
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(self.mapper_address.format(slide_id=slide_id)) as r:
@@ -89,10 +93,14 @@ class SlideManager:
             raise HTTPException(
                 status_code=503, detail="WSI Service is unable to connect to the Storage Mapper Service."
             )
-        for storage_address in slide["storage_addresses"]:
+        return slide["storage_addresses"]
+
+    async def _get_slide_main_storage_address(self, slide_id):
+        storage_addresses = await self._get_slide_storage_addresses(slide_id)
+        for storage_address in storage_addresses:
             if storage_address["main_address"]:
                 return storage_address
-        return slide["storage_addresses"][0]
+        return storage_addresses[0]
 
     def _sync_close_slide(self, storage_address):
         asyncio.create_task(self._close_slide(storage_address))
