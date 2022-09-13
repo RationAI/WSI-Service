@@ -84,7 +84,7 @@ async def download_slide(slide_id: str):
     # with a slide, but only a folder, e.g. DICOM. These folders are
     # expanded to include the files they contain, and then removed.
     paths = remove_folders(expand_folders(paths))
-    zf = ZipFly(paths=get_zipfly_paths(paths), chunksize="10_000_000")  # TODO: check chunksize
+    zf = ZipFly(paths=get_zipfly_paths(paths), chunksize="1_000_000")
     return StreamingResponse(
         zf.generator(),
         media_type="application/zip",
