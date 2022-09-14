@@ -9,6 +9,7 @@ supported_file_extensions = [
     ".tiff",
     ".tif",
     ".vsf",
+    "vsf-folder",
 ]
 
 

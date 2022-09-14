@@ -106,7 +106,6 @@ class LocalMapper:
             files = glob.glob(os.path.join(absfile.replace(".mrxs", ""), "*"))
             for f in files:
                 address = f.replace(data_dir + "/", "")
-                print(address)
                 assocaited_storage_addresses.append(
                     StorageAddress(
                         address=f.replace(data_dir + "/", ""),
@@ -115,8 +114,6 @@ class LocalMapper:
                         slide_id=slide_id,
                     )
                 )
-        if absfile.endswith(".vsf"):
-            pass  # get example data
         return assocaited_storage_addresses
 
     def get_cases(self):

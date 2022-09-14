@@ -76,6 +76,9 @@ def _get_file_extension(filepath):
         files = list(pathlib.Path(filepath).glob("*.dcm"))
         if len(files) > 0:
             file_extension = "dicom-folder"
+        files = list(pathlib.Path(filepath).glob("*.vsf"))
+        if len(files) > 0:
+            file_extension = "vsf-folder"
     return file_extension
 
 
