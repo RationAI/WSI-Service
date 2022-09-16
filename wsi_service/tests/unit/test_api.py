@@ -9,6 +9,7 @@ from wsi_service.tests.unit.test_client import get_client_and_slide_manager
         # general endpoints
         ("/alive", 200),
         ("/v1/slides/14b5c5dab96b540bba23b08429592bcf/info", 200),
+        ("/v1/slides/14b5c5dab96b540bba23b08429592bcf/download", 200),
         ("/v1/slides/14b5c5dab96b540bba23b08429592bcf/thumbnail/max_size/1/1", 200),
         ("/v1/slides/14b5c5dab96b540bba23b08429592bcf/label/max_size/1/1", 404),
         ("/v1/slides/14b5c5dab96b540bba23b08429592bcf/macro/max_size/1/1", 404),

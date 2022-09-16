@@ -61,11 +61,11 @@ def get_plugins_overview():
     return plugins_overview
 
 
-def _get_supported_file_extensions():
-    supported_file_extensions = []
-    for plugin in plugins.values():
-        supported_file_extensions += plugin.supported_file_extensions
-    return supported_file_extensions
+def get_file_format_identifier(filepath):
+    file_extension = _get_file_extension(filepath)
+    if file_extension[0] == ".":
+        file_extension = file_extension[1:]
+    return file_extension.replace(".", "-")
 
 
 def _get_file_extension(filepath):
@@ -76,7 +76,17 @@ def _get_file_extension(filepath):
         files = list(pathlib.Path(filepath).glob("*.dcm"))
         if len(files) > 0:
             file_extension = "dicom-folder"
+        files = list(pathlib.Path(filepath).glob("*.vsf"))
+        if len(files) > 0:
+            file_extension = "vsf-folder"
     return file_extension
+
+
+def _get_supported_file_extensions():
+    supported_file_extensions = []
+    for plugin in plugins.values():
+        supported_file_extensions += plugin.supported_file_extensions
+    return supported_file_extensions
 
 
 def _get_available_plugins_for_image_file_extension(file_extension):

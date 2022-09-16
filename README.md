@@ -25,6 +25,7 @@ Regions of the WSI can be requested on any of the available levels. There is als
 There are several endpoints made available by this service:
 
 - `GET /v1/slides/{slide_id}/info` - Get slide info
+- `GET /v1/slides/{slide_id}/download` - Download slide
 - `GET /v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}` - Get slide region
 - `GET /v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}` - Get slide tile
 - `GET /v1/slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}` - Get slide thumbnail image
@@ -53,22 +54,24 @@ The WSI Service relies on the [Storage Mapper Service](https://www.gitlab.com/em
 Different formats are supported by plugins for accessing image data. Three base plugins are included and support the following formats:
 
 - [openslide](./wsi_service_base_plugins/openslide/)
-
   - 3DHISTECH (\*.mrxs)
   - APERIO (\*.svs)
   - GENERIC TIF (\*.tif / \*.tiff)
   - HAMAMATSU (\*.ndpi)
+  - VSF (\*.vsf)
   - Partially supported:
     - LEICA (\*.scn)
     - VENTANA (\*.bif)
 
 - [pil](./wsi_service_base_plugins/pil/)
-
   - JPEG (\*.jpeg, \*.jpg)
   - PNG (\*.png)
 
 - [tiffile](./wsi_service_base_plugins/tifffile/)
   - OME-TIFF (\*.ome.tif, \*.ome.tif, \*.ome.tiff, \*.ome.tf2, \*.ome.tf8, \*.ome.btf)
+
+- [wsidicom](./wsi_service_base_plugins/wsidicom/)
+  - DICOM FOLDER
 
 ## Setup
 

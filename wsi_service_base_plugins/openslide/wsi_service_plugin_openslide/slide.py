@@ -1,3 +1,6 @@
+import glob
+import os
+
 import openslide
 from fastapi import HTTPException
 
@@ -21,8 +24,9 @@ class Slide(BaseSlide):
     ]
 
     async def open(self, filepath):
+        self.filepath = self._check_and_adapt_filepath(filepath)
         await self.open_slide()
-        self.format = self.openslide_slide.detect_format(filepath)
+        self.format = self.openslide_slide.detect_format(self.filepath)
         self.slide_info = self.__get_slide_info_openslide()
         self.thumbnail = await self.__get_thumbnail_openslide(settings.max_thumbnail_size, settings.max_thumbnail_size)
         await self.close()
@@ -126,6 +130,13 @@ class Slide(BaseSlide):
         )
 
     # private members
+
+    def _check_and_adapt_filepath(self, filepath):
+        if os.path.isdir(filepath):
+            vsf_files = glob.glob(os.path.join(filepath, "*.vsf"))
+            if len(vsf_files) > 0:
+                filepath = vsf_files[0]
+        return filepath
 
     def _get_associated_image(self, associated_image_name):
         if associated_image_name not in self.openslide_slide.associated_images:

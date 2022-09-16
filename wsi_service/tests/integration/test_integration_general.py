@@ -1,3 +1,8 @@
+import os
+import shutil
+import tempfile
+from zipfile import ZipFile
+
 import pytest
 import requests
 
@@ -121,3 +126,60 @@ def test_get_region_maximum_extent(tile_size):
         assert response.status_code == 422
     else:
         assert response.status_code == 200
+
+
+@pytest.mark.parametrize(
+    "slide_id, file_count, file_size",
+    [
+        ("8d32dba05a4558218880f06caf30d3ac", 1, 177552579),  # SVS
+        ("50f3010ed9a55f04b2e0d88cd19c6923", 5, 184520422),  # DICOM
+        # ("45707118e3b55f1b8e03e1f19feee916", 26, 2915564670),  # MRXS
+        # ("0f9083099777557b9c5c1083be953396", 10, 244418134),  # VSF
+    ],
+)
+def test_download(slide_id, file_count, file_size):
+    def download_file(url, download_folder):
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            filename = r.headers["content-disposition"].replace("attachment;filename=", "")
+            file_path = os.path.join(download_folder, filename)
+            with open(file_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=1_000_000):
+                    f.write(chunk)
+        return file_path
+
+    def get_file_count(path):
+        file_count = 0
+        with os.scandir(path) as it:
+            for entry in it:
+                if entry.is_file():
+                    file_count += 1
+                elif entry.is_dir():
+                    file_count += get_file_count(entry.path)
+        return file_count
+
+    def get_dir_size(path):
+        dir_size = 0
+        with os.scandir(path) as it:
+            for entry in it:
+                if entry.is_file():
+                    dir_size += entry.stat().st_size
+                elif entry.is_dir():
+                    dir_size += get_dir_size(entry.path)
+        return dir_size
+
+    # create temp dir
+    tmp_dir = tempfile.mkdtemp()
+    # download
+    file_path = download_file(f"http://localhost:8080/v1/slides/{slide_id}/download", tmp_dir)
+    assert os.path.exists(file_path)
+    assert slide_id in file_path
+    # unzip
+    zf = ZipFile(file_path)
+    output_dir = os.path.join(tmp_dir, slide_id)
+    zf.extractall(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
+    assert get_file_count(output_dir) == file_count
+    assert get_dir_size(output_dir) == file_size
+    # remove temp dir
+    shutil.rmtree(tmp_dir)

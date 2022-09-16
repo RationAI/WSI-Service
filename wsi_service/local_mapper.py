@@ -1,3 +1,4 @@
+import glob
 import hashlib
 import os
 import pickle
@@ -80,6 +81,7 @@ class LocalMapper:
                 if slide_id not in self.slide_map:
                     self.case_map[case_id].slides.append(slide_id)
                     address = absfile.replace(data_dir + "/", "")
+                    assocaited_storage_addresses = self._get_assocaited_storage_addresses(absfile, data_dir, slide_id)
                     self.slide_map[slide_id] = SlideLocalMapper(
                         id=slide_id,
                         local_id=case_file,
@@ -93,9 +95,26 @@ class LocalMapper:
                                     storage_address_id=slide_id,
                                     slide_id=slide_id,
                                 )
-                            ],
+                            ]
+                            + assocaited_storage_addresses,
                         ),
                     )
+
+    def _get_assocaited_storage_addresses(self, absfile, data_dir, slide_id):
+        assocaited_storage_addresses = []
+        if absfile.endswith(".mrxs"):
+            files = glob.glob(os.path.join(absfile.replace(".mrxs", ""), "*"))
+            for f in files:
+                address = f.replace(data_dir + "/", "")
+                assocaited_storage_addresses.append(
+                    StorageAddress(
+                        address=f.replace(data_dir + "/", ""),
+                        main_address=False,
+                        storage_address_id=uuid5(NAMESPACE_URL, slide_id + address).hex,
+                        slide_id=slide_id,
+                    )
+                )
+        return assocaited_storage_addresses
 
     def get_cases(self):
         self.load()

@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException, Path, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from PIL import Image
+from zipfly import ZipFly
 
 from wsi_service.api_utils import (
     make_response,
@@ -28,6 +29,7 @@ from wsi_service.responses import ImageRegionResponse, ImageResponses
 from wsi_service.service_status import WSIServiceStatus
 from wsi_service.singletons import settings
 from wsi_service.slide_manager import SlideManager
+from wsi_service.slide_utils import expand_folders, get_zipfly_paths, remove_folders
 
 api = FastAPI(
     title=settings.title,
@@ -69,6 +71,27 @@ async def get_slide_info(slide_id: str):
     Get metadata information for a slide given its ID
     """
     return await slide_manager.get_slide_info(slide_id)
+
+
+@api.get("/v1/slides/{slide_id}/download", tags=["Main Routes"])
+async def download_slide(slide_id: str):
+    """
+    Download raw slide data as zip
+    """
+    paths = await slide_manager.get_slide_file_paths(slide_id)
+    # Paths contain file paths that are stored in the storage mapper.
+    # This sometimes does not include all files that are associated
+    # with a slide, but only a folder, e.g. DICOM. These folders are
+    # expanded to include the files they contain, and then removed.
+    paths = remove_folders(expand_folders(paths))
+    zf = ZipFly(paths=get_zipfly_paths(paths), chunksize="1_000_000")
+    return StreamingResponse(
+        zf.generator(),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f"attachment;filename={slide_id}.zip",
+        },
+    )
 
 
 @api.get(
@@ -307,7 +330,7 @@ async def get_slide_tile(
 
 @api.on_event("shutdown")
 async def shutdown_event():
-    await slide_manager.close()
+    slide_manager.close()
 
 
 if settings.local_mode:

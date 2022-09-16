@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0
+
+- Added download endpoint
+
 ## 0.7.30
 
 - Updated Dependencies
