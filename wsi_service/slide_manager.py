@@ -4,7 +4,7 @@ import os
 import aiohttp
 from fastapi import HTTPException
 
-from wsi_service.plugins import load_slide
+from wsi_service.plugins import get_file_format_identifier, load_slide
 from wsi_service.slide_utils import ExpiringSlide, LRUCache
 
 from .singletons import logger
@@ -58,6 +58,11 @@ class SlideManager:
         slide_info = await slide.get_info()
         # overwrite dummy id with actual slide id
         slide_info.id = slide_id
+        # set slide format identifier
+        slide_info.format = get_file_format_identifier(slide.filepath)
+        # enable raw download if filepath exists on disk
+        if os.path.exists(slide.filepath):
+            slide_info.raw_download = True
         return slide_info
 
     async def get_slide_file_paths(self, slide_id):

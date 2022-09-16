@@ -52,7 +52,7 @@
                 <v-container class="px-8 pt-8">
                     <v-checkbox v-model="debugLayer" label="Show Debug Layer" class="pa-0 ma-0"></v-checkbox>
                 </v-container>
-                <v-subheader class="pt-10">
+                <v-subheader class="pt-10" v-if="raw_download(selectedSlideInfoItems)">
                     <v-icon medium>mdi-download</v-icon>&nbsp; <a :href="getDownloadAddress()">Download</a>
                 </v-subheader>
             </v-navigation-drawer>
@@ -170,6 +170,13 @@
                     }
                     return `rgb(0,0,0)`
                 },
+                raw_download(selectedSlideInfoItems) {
+                    for (item of selectedSlideInfoItems) {
+                        if (item.name == "raw_download : true") {
+                            return true
+                        }
+                    }
+                },
                 getIconForItemName: function (itemName) {
                     if (itemName.startsWith("id"))
                         return 'mdi-identifier'
@@ -199,6 +206,10 @@
                         return 'mdi-transfer-down'
                     if (itemName.startsWith("channel_"))
                         return 'mdi-numeric'
+                    if (itemName.startsWith("format"))
+                        return 'mdi-folder-information'
+                    if (itemName.startsWith("raw_download"))
+                        return 'mdi-download'
                     return 'mdi-label'
                 }
             }
