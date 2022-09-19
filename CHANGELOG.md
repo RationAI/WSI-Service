@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+
+- Updated Dependencies
+
 ## 0.8.0
 
 - Added download endpoint
