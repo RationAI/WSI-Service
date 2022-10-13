@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.2
+
+- Fixed openslide plugin thumbnail bug
+
 ## 0.8.1
 
 - Updated Dependencies
