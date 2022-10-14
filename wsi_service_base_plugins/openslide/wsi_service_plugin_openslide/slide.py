@@ -112,9 +112,12 @@ class Slide(BaseSlide):
 
     async def get_thumbnail(self, max_x, max_y):
         if not hasattr(self, "thumbnail"):
-            self.thumbnail = await self.__get_thumbnail_openslide(
-                settings.max_thumbnail_size, settings.max_thumbnail_size
-            )
+            try:
+                self.thumbnail = self._get_associated_image("thumbnail")
+            except HTTPException:
+                self.thumbnail = await self.__get_thumbnail_openslide(
+                    settings.max_thumbnail_size, settings.max_thumbnail_size
+                )
         thumbnail = self.thumbnail.copy()
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
