@@ -81,9 +81,13 @@
             <v-main>
                 <v-container v-if="viewerUrl" fluid
                     style="padding: 0; margin: 0; width: 100%; height: 100%; overflow:hidden;">
-                    <iframe frameBorder="0" :src="viewerUrl" name="viewer"
+                    <iframe v-if="viewerUrl" frameBorder="0" :src="viewerUrl" name="viewer"
                         style="padding: 0; margin: 0; width: 100%; height: 100%; overflow:hidden;">
                     </iframe>
+                </v-container>
+                <v-container v-if="error" fluid>
+                    <b>{{error.message}}</b><br>
+                    {{error.response.data.detail}}
                 </v-container>
             </v-main>
         </v-app>
@@ -107,25 +111,37 @@
                     debugLayer: false,
                     macroAvailable: true,
                     thumbnailAvailable: true,
-                    labelAvailable: true
+                    labelAvailable: true,
+                    error: null
                 }
             },
             watch: {
                 selectedSlideId() {
+                    this.error = null
+                    this.macroAvailable = true
+                    this.thumbnailAvailable = true
+                    this.labelAvailable = true
+                    this.selectedSlideInfo = null
+                    this.selectedSlideInfoItems = []
+                    this.viewerUrl = ""
                     axios.get(`slides/${this.selectedSlideId}/info`)
                         .then(function (response) {
+                            this.error = null
                             this.selectedSlideInfo = response.data
+                        }.bind(this)
+                        ).catch(function (error) {
+                            this.error = error
                         }.bind(this))
                 },
                 selectedSlideInfo() {
-                    this.selectedSlideInfoItems = []
-                    this.viewerUrl = null
-                    this.selectedSlideInfoItems = this.eachRecursive(this.selectedSlideInfo)
-                    this.viewerUrl = `slides/${this.selectedSlideId}/viewer?debug=${this.debugLayer}&z=0`
-                    this.thumbnailUrl = `slides/${this.selectedSlideId}/thumbnail/max_size/300/300`
-                    this.macroUrl = `slides/${this.selectedSlideId}/macro/max_size/300/300`
-                    this.labelUrl = `slides/${this.selectedSlideId}/label/max_size/300/300`
-                    this.checkThumbnailMacroLabel()
+                    if (this.selectedSlideInfo) {
+                        this.selectedSlideInfoItems = this.eachRecursive(this.selectedSlideInfo)
+                        this.viewerUrl = `slides/${this.selectedSlideId}/viewer?debug=${this.debugLayer}&z=0`
+                        this.thumbnailUrl = `slides/${this.selectedSlideId}/thumbnail/max_size/300/300`
+                        this.macroUrl = `slides/${this.selectedSlideId}/macro/max_size/300/300`
+                        this.labelUrl = `slides/${this.selectedSlideId}/label/max_size/300/300`
+                        this.checkThumbnailMacroLabel()
+                    }
                 },
                 debugLayer() {
                     this.viewerUrl = `slides/${this.selectedSlideId}/viewer?debug=${this.debugLayer}&z=0`
