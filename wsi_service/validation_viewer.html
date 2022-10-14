@@ -52,21 +52,21 @@
                         mdi-cancel</v-icon>
                 </v-subheader>
                 <v-container class="px-12 pt-0" v-if="thumbnailAvailable">
-                    <v-img :src="thumbnailUrl" max-height="300" max-width="300"></v-img>
+                    <v-img contain :src="thumbnailUrl" max-height="200" max-width="300"></v-img>
                 </v-container>
                 <v-subheader>
                     <v-icon medium>mdi-image-size-select-large</v-icon>&nbsp; Macro&nbsp; <v-icon v-if="!macroAvailable"
                         medium></v-icon>
                 </v-subheader>
                 <v-container class="px-12 pt-0" v-if="macroAvailable">
-                    <v-img :src="macroUrl" max-height="300" max-width="300"></v-img>
+                    <v-img contain :src="macroUrl" max-height="200" max-width="300"></v-img>
                 </v-container>
                 <v-subheader>
                     <v-icon medium>mdi-barcode-scan</v-icon>&nbsp; Label&nbsp; <v-icon v-if="!labelAvailable" medium>
                     </v-icon>
                 </v-subheader>
                 <v-container class="px-12 pt-0" v-if="labelAvailable">
-                    <v-img :src="labelUrl" max-height="300" max-width="300"></v-img>
+                    <v-img contain :src="labelUrl" max-height="200" max-width="300"></v-img>
                 </v-container>
                 <v-subheader class="pt-10" v-if="checkRawDownload(selectedSlideInfoItems)">
                     <v-icon medium>mdi-download</v-icon>&nbsp; <a :href="getDownloadAddress()">Download</a>
@@ -137,9 +137,9 @@
                     if (this.selectedSlideInfo) {
                         this.selectedSlideInfoItems = this.eachRecursive(this.selectedSlideInfo)
                         this.viewerUrl = `slides/${this.selectedSlideId}/viewer?debug=${this.debugLayer}&z=0`
-                        this.thumbnailUrl = `slides/${this.selectedSlideId}/thumbnail/max_size/300/300`
-                        this.macroUrl = `slides/${this.selectedSlideId}/macro/max_size/300/300`
-                        this.labelUrl = `slides/${this.selectedSlideId}/label/max_size/300/300`
+                        this.thumbnailUrl = `slides/${this.selectedSlideId}/thumbnail/max_size/300/200`
+                        this.macroUrl = `slides/${this.selectedSlideId}/macro/max_size/300/200`
+                        this.labelUrl = `slides/${this.selectedSlideId}/label/max_size/300/200`
                         this.checkThumbnailMacroLabel()
                     }
                 },
