@@ -46,15 +46,37 @@
                         </v-icon>
                     </template>
                 </v-treeview>
+                <v-subheader>
+                    <v-icon medium>mdi-image-frame</v-icon>&nbsp; Thumbnail&nbsp; <v-icon v-if="!thumbnailAvailable"
+                        medium>
+                        mdi-cancel</v-icon>
+                </v-subheader>
+                <v-container class="px-12 pt-0" v-if="thumbnailAvailable">
+                    <v-img :src="thumbnailUrl" max-height="300" max-width="300"></v-img>
+                </v-container>
+                <v-subheader>
+                    <v-icon medium>mdi-image-size-select-large</v-icon>&nbsp; Macro&nbsp; <v-icon v-if="!macroAvailable"
+                        medium></v-icon>
+                </v-subheader>
+                <v-container class="px-12 pt-0" v-if="macroAvailable">
+                    <v-img :src="macroUrl" max-height="300" max-width="300"></v-img>
+                </v-container>
+                <v-subheader>
+                    <v-icon medium>mdi-barcode-scan</v-icon>&nbsp; Label&nbsp; <v-icon v-if="!labelAvailable" medium>
+                    </v-icon>
+                </v-subheader>
+                <v-container class="px-12 pt-0" v-if="labelAvailable">
+                    <v-img :src="labelUrl" max-height="300" max-width="300"></v-img>
+                </v-container>
+                <v-subheader class="pt-10" v-if="checkRawDownload(selectedSlideInfoItems)">
+                    <v-icon medium>mdi-download</v-icon>&nbsp; <a :href="getDownloadAddress()">Download</a>
+                </v-subheader>
                 <v-subheader class="pt-10">
                     <v-icon medium>mdi-settings</v-icon>&nbsp; Viewer Settings
                 </v-subheader>
                 <v-container class="px-8 pt-8">
                     <v-checkbox v-model="debugLayer" label="Show Debug Layer" class="pa-0 ma-0"></v-checkbox>
                 </v-container>
-                <v-subheader class="pt-10" v-if="raw_download(selectedSlideInfoItems)">
-                    <v-icon medium>mdi-download</v-icon>&nbsp; <a :href="getDownloadAddress()">Download</a>
-                </v-subheader>
             </v-navigation-drawer>
             <v-main>
                 <v-container v-if="viewerUrl" fluid
@@ -82,7 +104,10 @@
                     viewerUrl: null,
                     selectedSlideInfo: null,
                     selectedSlideInfoItems: [],
-                    debugLayer: false
+                    debugLayer: false,
+                    macroAvailable: true,
+                    thumbnailAvailable: true,
+                    labelAvailable: true
                 }
             },
             watch: {
@@ -97,6 +122,10 @@
                     this.viewerUrl = null
                     this.selectedSlideInfoItems = this.eachRecursive(this.selectedSlideInfo)
                     this.viewerUrl = `slides/${this.selectedSlideId}/viewer?debug=${this.debugLayer}&z=0`
+                    this.thumbnailUrl = `slides/${this.selectedSlideId}/thumbnail/max_size/300/300`
+                    this.macroUrl = `slides/${this.selectedSlideId}/macro/max_size/300/300`
+                    this.labelUrl = `slides/${this.selectedSlideId}/label/max_size/300/300`
+                    this.checkThumbnailMacroLabel()
                 },
                 debugLayer() {
                     this.viewerUrl = `slides/${this.selectedSlideId}/viewer?debug=${this.debugLayer}&z=0`
@@ -170,12 +199,29 @@
                     }
                     return `rgb(0,0,0)`
                 },
-                raw_download(selectedSlideInfoItems) {
+                checkRawDownload(selectedSlideInfoItems) {
                     for (item of selectedSlideInfoItems) {
                         if (item.name == "raw_download : true") {
                             return true
                         }
                     }
+                },
+                checkThumbnailMacroLabel() {
+                    this.thumbnailAvailable = true
+                    this.macroAvailable = true
+                    this.labelAvailable = true
+                    axios.get(this.thumbnailUrl)
+                        .catch(function () {
+                            this.thumbnailAvailable = false
+                        }.bind(this))
+                    axios.get(this.macroUrl)
+                        .catch(function () {
+                            this.macroAvailable = false
+                        }.bind(this))
+                    axios.get(this.labelUrl)
+                        .catch(function () {
+                            this.labelAvailable = false
+                        }.bind(this))
                 },
                 getIconForItemName: function (itemName) {
                     if (itemName.startsWith("id"))
