@@ -28,7 +28,6 @@ class Slide(BaseSlide):
         await self.open_slide()
         self.format = self.openslide_slide.detect_format(self.filepath)
         self.slide_info = self.__get_slide_info_openslide()
-        self.thumbnail = await self.__get_thumbnail_openslide(settings.max_thumbnail_size, settings.max_thumbnail_size)
         await self.close()
         await self.open_slide()
 
@@ -52,8 +51,8 @@ class Slide(BaseSlide):
         except IndexError:
             raise HTTPException(
                 status_code=422,
-                detail=f"""The requested pyramid level is not available.
-                    The coarsest available level is {len(self.slide_info.levels) - 1}.""",
+                detail="The requested pyramid level is not available. "
+                + f"The coarsest available level is {len(self.slide_info.levels) - 1}.",
             )
         base_level = level
         if base_level >= len(self.openslide_slide.level_downsamples):
@@ -69,8 +68,11 @@ class Slide(BaseSlide):
         if base_size[0] * base_size[1] > settings.max_returned_region_size:
             raise HTTPException(
                 status_code=400,
-                detail=f"""Requested image region is too large. Maximum number of pixels is set to
-                    {settings.max_returned_region_size}, your request is for {base_size[0] * base_size[1]} pixels.""",
+                detail=(
+                    "Requested image region is too large. Maximum number of pixels is set to "
+                    + f"{settings.max_returned_region_size}, your request is for "
+                    + f"{base_size[0] * base_size[1]} pixels."
+                ),
             )
         if self.format == "vsf":
             end_x = int((start_x + base_size[0]) * downsample_factor)
@@ -109,6 +111,13 @@ class Slide(BaseSlide):
         return rgb_img
 
     async def get_thumbnail(self, max_x, max_y):
+        if not hasattr(self, "thumbnail"):
+            try:
+                self.thumbnail = self._get_associated_image("thumbnail")
+            except HTTPException:
+                self.thumbnail = await self.__get_thumbnail_openslide(
+                    settings.max_thumbnail_size, settings.max_thumbnail_size
+                )
         thumbnail = self.thumbnail.copy()
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
@@ -193,7 +202,7 @@ class Slide(BaseSlide):
             and "openslide.level[0].tile-width" in self.openslide_slide.properties
         ):
             # some tiles can have an unequal tile height and width that can cause problems in the slide viewer
-            # since the tile route is soley used for viewing, we provide the default tile width and height
+            # since the tile route is used for viewing only, we provide the default tile width and height
             temp_height = self.openslide_slide.properties["openslide.level[0].tile-height"]
             temp_width = self.openslide_slide.properties["openslide.level[0].tile-width"]
             if temp_height == temp_width:
@@ -238,7 +247,10 @@ class Slide(BaseSlide):
                 self.slide_info.levels[level].extent.y,
             )
         except HTTPException as e:
-            raise HTTPException(status_code=500, detail=f"Failed to extract thumbnail from WSI [{e}].")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to extract thumbnail from WSI [{e.detail}].",
+            )
 
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
