@@ -10,7 +10,7 @@ from wsi_service.image_utils import (
     get_requested_channels_as_rgb_array,
     get_single_channel,
 )
-from wsi_service.models.slide import SlideColor
+from wsi_service.models.v3.slide import SlideColor
 
 ndarray = np.array(
     [

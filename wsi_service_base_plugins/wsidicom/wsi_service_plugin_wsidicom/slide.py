@@ -3,7 +3,7 @@ from wsidicom import WsiDicom
 from wsidicom.errors import WsiDicomNotFoundError, WsiDicomOutOfBoundsError
 
 from wsi_service.image_utils import rgba_to_rgb_with_background_color
-from wsi_service.models.slide import SlideExtent, SlideInfo, SlidePixelSizeNm
+from wsi_service.models.v3.slide import SlideExtent, SlideInfo, SlidePixelSizeNm
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
 from wsi_service.slide_utils import get_original_levels, get_rgb_channel_list
@@ -13,7 +13,9 @@ class Slide(BaseSlide):
     async def open(self, filepath):
         await self.open_slide()
         self.slide_info = self.__get_slide_info_dicom()
-        self.thumbnail = await self.__get_thumbnail_dicom(settings.max_thumbnail_size, settings.max_thumbnail_size)
+        self.thumbnail = await self.__get_thumbnail_dicom(
+            settings.max_thumbnail_size, settings.max_thumbnail_size
+        )
         await self.close()
         await self.open_slide()
 
@@ -29,7 +31,9 @@ class Slide(BaseSlide):
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    async def get_region(
+        self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0
+    ):
         if padding_color is None:
             padding_color = settings.padding_color
         if level >= len(self.dicom_slide.levels):
@@ -61,7 +65,12 @@ class Slide(BaseSlide):
             paste_start = None
 
             # Case 1 - region completely outside bounds
-            if start_x + size_x < 0 or start_y + size_y < 0 or start_x > level_size_x or start_y > level_size_y:
+            if (
+                start_x + size_x < 0
+                or start_y + size_y < 0
+                or start_x > level_size_x
+                or start_y > level_size_y
+            ):
                 return rgba_to_rgb_with_background_color(
                     None,
                     padding_color,
@@ -91,7 +100,9 @@ class Slide(BaseSlide):
                 base_img, padding_color, size=(size_x, size_y), paste_start=paste_start
             )
         except WsiDicomOutOfBoundsError as e:
-            raise HTTPException(status_code=422, detail=f"WsiDicomOutOfBoundsError: {e}")
+            raise HTTPException(
+                status_code=422, detail=f"WsiDicomOutOfBoundsError: {e}"
+            )
 
         return rgb_img
 
@@ -128,14 +139,21 @@ class Slide(BaseSlide):
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
         try:
-            tile_size_x, tile_size_y = self.dicom_slide.levels[level].tile_size.to_tuple()
+            tile_size_x, tile_size_y = self.dicom_slide.levels[
+                level
+            ].tile_size.to_tuple()
             level_size_x, level_size_y = self.dicom_slide.levels[level].size.to_tuple()
 
             max_tile_idx_x = level_size_x // tile_size_x
             max_tile_idx_y = level_size_y // tile_size_y
 
             # Case 1 - tile not in bounds
-            if tile_x < 0 or tile_y < 0 or tile_x > max_tile_idx_x or tile_y > max_tile_idx_y:
+            if (
+                tile_x < 0
+                or tile_y < 0
+                or tile_x > max_tile_idx_x
+                or tile_y > max_tile_idx_y
+            ):
                 tile = None
             else:
                 tile = self.dicom_slide.read_tile(level_dicom, (tile_x, tile_y))
@@ -146,7 +164,9 @@ class Slide(BaseSlide):
                 size=(tile_size_x, tile_size_y),
             )
         except WsiDicomOutOfBoundsError as e:
-            raise HTTPException(status_code=422, detail=f"WsiDicomOutOfBoundsError: {e}")
+            raise HTTPException(
+                status_code=422, detail=f"WsiDicomOutOfBoundsError: {e}"
+            )
 
     # private members
 
@@ -159,7 +179,7 @@ class Slide(BaseSlide):
 
         for level in levels:
             level_dimensions.append(level.size.to_tuple())
-            level_downsamples.append(2**level.level)
+            level_downsamples.append(2 ** level.level)
 
         original_levels = get_original_levels(
             level_count=level_count,
@@ -191,7 +211,9 @@ class Slide(BaseSlide):
         try:
             levels = self.__get_levels_dicom()
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Failed to retrieve slide level data. [{e}]")
+            raise HTTPException(
+                status_code=404, detail=f"Failed to retrieve slide level data. [{e}]"
+            )
         try:
             slide_info = SlideInfo(
                 id="",
@@ -209,11 +231,15 @@ class Slide(BaseSlide):
             )
             return slide_info
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
+            raise HTTPException(
+                status_code=404, detail=f"Failed to gather slide infos. [{e}]"
+            )
 
     async def __get_thumbnail_dicom(self, max_x, max_y):
         try:
             thumbnail = self.dicom_slide.read_thumbnail((max_x, max_y))
             return thumbnail
         except Exception as e:
-            raise HTTPException(status_code=500, detail="Failed to extract thumbnail from WSI.") from e
+            raise HTTPException(
+                status_code=500, detail="Failed to extract thumbnail from WSI."
+            ) from e

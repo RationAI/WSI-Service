@@ -2,7 +2,7 @@ import glob
 import os
 from collections import OrderedDict
 
-from wsi_service.models.slide import SlideChannel, SlideColor, SlideExtent, SlideLevel
+from wsi_service.models.v3.slide import SlideChannel, SlideColor, SlideExtent, SlideLevel
 
 from .singletons import logger
 

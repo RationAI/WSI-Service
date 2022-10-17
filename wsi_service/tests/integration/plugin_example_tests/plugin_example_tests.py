@@ -1,6 +1,6 @@
 import requests
 
-from wsi_service.models.slide import SlideInfo
+from wsi_service.models.v3.slide import SlideInfo
 from wsi_service.tests.integration.plugin_example_tests.helpers import get_image, get_tiff_image
 
 
