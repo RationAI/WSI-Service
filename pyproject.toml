@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wsi-service"
-version = "0.8.2"
+version = "0.8.3"
 description = "EMPAIA WSI Service to stream whole slide images"
 authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
@@ -32,7 +32,7 @@ pycodestyle = "^2.8.0"
 pylint = "^2.12.2"
 pytest-aioresponses = "^0.2.0"
 pytest-asyncio = "^0.19.0"
-pytest-cov = "^3.0.0"
+pytest-cov = "^4.0.0"
 pytest = "^7.1.0"
 requests-mock = "^1.9.3"
 wsi-service-plugin-tifffile = { path = "wsi_service_base_plugins/tifffile", develop = true }
