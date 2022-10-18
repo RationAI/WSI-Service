@@ -58,10 +58,9 @@ Different formats are supported by plugins for accessing image data. Three base 
   - APERIO (\*.svs)
   - GENERIC TIF (\*.tif / \*.tiff)
   - HAMAMATSU (\*.ndpi)
+  - LEICA (\*.scn)
+  - VENTANA (\*.bif)
   - VSF (\*.vsf)
-  - Partially supported:
-    - LEICA (\*.scn)
-    - VENTANA (\*.bif)
 
 - [pil](./wsi_service_base_plugins/pil/)
   - JPEG (\*.jpeg, \*.jpg)

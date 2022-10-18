@@ -56,14 +56,14 @@
                 </v-container>
                 <v-subheader>
                     <v-icon medium>mdi-image-size-select-large</v-icon>&nbsp; Macro&nbsp; <v-icon v-if="!macroAvailable"
-                        medium></v-icon>
+                        medium>mdi-cancel</v-icon>
                 </v-subheader>
                 <v-container class="px-12 pt-0" v-if="macroAvailable">
                     <v-img contain :src="macroUrl" max-height="200" max-width="300"></v-img>
                 </v-container>
                 <v-subheader>
                     <v-icon medium>mdi-barcode-scan</v-icon>&nbsp; Label&nbsp; <v-icon v-if="!labelAvailable" medium>
-                    </v-icon>
+                        mdi-cancel</v-icon>
                 </v-subheader>
                 <v-container class="px-12 pt-0" v-if="labelAvailable">
                     <v-img contain :src="labelUrl" max-height="200" max-width="300"></v-img>
