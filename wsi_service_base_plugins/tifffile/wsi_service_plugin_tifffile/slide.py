@@ -7,7 +7,6 @@ import tifffile
 from fastapi import HTTPException
 from skimage import transform, util
 
-from wsi_service.image_utils import convert_int_to_rgba_array
 from wsi_service.models.v3.slide import (
     SlideChannel,
     SlideColor,
@@ -17,7 +16,8 @@ from wsi_service.models.v3.slide import (
 )
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
-from wsi_service.slide_utils import get_original_levels
+from wsi_service.utils.image_utils import convert_int_to_rgba_array
+from wsi_service.utils.slide_utils import get_original_levels
 
 
 class Slide(BaseSlide):

@@ -4,11 +4,11 @@ import os
 import openslide
 from fastapi import HTTPException
 
-from wsi_service.image_utils import rgba_to_rgb_with_background_color
 from wsi_service.models.v3.slide import SlideExtent, SlideInfo, SlidePixelSizeNm
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
-from wsi_service.slide_utils import get_original_levels, get_rgb_channel_list
+from wsi_service.utils.image_utils import rgba_to_rgb_with_background_color
+from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list
 
 
 class Slide(BaseSlide):

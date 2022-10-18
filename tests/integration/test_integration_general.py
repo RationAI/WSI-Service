@@ -6,7 +6,7 @@ from zipfile import ZipFile
 import pytest
 import requests
 
-from wsi_service.tests.integration.plugin_example_tests.helpers import get_image
+from tests.integration.plugin_example_tests.helpers import get_image
 
 
 def test_alive():
@@ -16,7 +16,7 @@ def test_alive():
 
 
 def test_get_cases_valid():
-    response = requests.get("http://localhost:8080/v1/cases/")
+    response = requests.get("http://localhost:8080/cases/")
     assert response.status_code == 200
     cases = response.json()
     assert len(cases) > 10
@@ -26,7 +26,7 @@ def test_get_cases_valid():
 
 
 def test_get_available_slides_valid():
-    response = requests.get("http://localhost:8080/v1/cases/4593f30c39d75d2385c6c8811c4ae7e0/slides/")
+    response = requests.get("http://localhost:8080/cases/4593f30c39d75d2385c6c8811c4ae7e0/slides/")
     assert response.status_code == 200
     slides = response.json()
     slide = list(
@@ -45,7 +45,7 @@ def test_get_available_slides_valid():
 
 
 def test_get_slide_valid():
-    response = requests.get("http://localhost:8080/v1/slides/f5f3a03b77fb5e0497b95eaff84e9a21")
+    response = requests.get("http://localhost:8080/slides/f5f3a03b77fb5e0497b95eaff84e9a21")
     assert response.status_code == 200
     slide = response.json()
     assert len(slide.keys()) == 3
@@ -60,13 +60,13 @@ def test_get_slide_valid():
 
 
 def test_get_available_slides_invalid_case_id():
-    response = requests.get("http://localhost:8080/v1/cases/invalid_id/slides/")
+    response = requests.get("http://localhost:8080/cases/invalid_id/slides/")
     assert response.status_code == 404
     assert response.json()["detail"] == "Case with case_id invalid_id does not exist"
 
 
 def test_get_slide_invalid_slide_id():
-    response = requests.get("http://localhost:8080/v1/slides/invalid_id")
+    response = requests.get("http://localhost:8080/slides/invalid_id")
     assert response.status_code == 404
     assert response.json()["detail"] == "Slide with slide_id invalid_id does not exist"
 

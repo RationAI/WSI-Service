@@ -96,4 +96,4 @@ EXPOSE 8080/tcp
 
 WORKDIR /usr/local/lib/python3.8/dist-packages/wsi_service
 
-CMD ["python3", "-m", "uvicorn", "wsi_service.api:api", "--host", "0.0.0.0", "--port", "8080", "--loop=uvloop", "--http=httptools"]
+CMD ["python3", "-m", "uvicorn", "wsi_service.app:app", "--host", "0.0.0.0", "--port", "8080", "--loop=uvloop", "--http=httptools"]

@@ -8,7 +8,7 @@ services:
       [
         "sh",
         "-c",
-        "poetry run python -m uvicorn wsi_service.api:api --host 0.0.0.0 --loop=uvloop --http=httptools --port 8080"
+        "poetry run python -m uvicorn wsi_service.app:app --host 0.0.0.0 --loop=uvloop --http=httptools --port 8080"
       ]
     ports:
       - 5678:5678

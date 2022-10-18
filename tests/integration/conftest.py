@@ -10,7 +10,7 @@ def wait_for_services():
         try:
             r = requests.get("http://localhost:8080/alive")
             if r.json()["status"] == "ok":
-                response = requests.get("http://localhost:8080/v1/refresh_local_mapper")
+                response = requests.get("http://localhost:8080/refresh_local_mapper")
                 assert response.status_code == 200
                 break
         except requests.exceptions.RequestException:

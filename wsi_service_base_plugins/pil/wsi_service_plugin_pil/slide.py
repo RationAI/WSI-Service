@@ -9,7 +9,7 @@ from wsi_service.models.v3.slide import (
 )
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
-from wsi_service.slide_utils import get_rgb_channel_list
+from wsi_service.utils.slide_utils import get_rgb_channel_list
 
 
 class Slide(BaseSlide):

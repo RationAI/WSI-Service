@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.0
+
+- introduced new structure to support different api versions
+- added api v3
+
 ## 0.8.3
 
 - Fixed openslide plugin thumbnail bug

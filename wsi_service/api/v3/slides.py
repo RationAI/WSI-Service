@@ -5,22 +5,22 @@ from fastapi.responses import StreamingResponse
 from PIL import Image
 from zipfly import ZipFly
 
-from wsi_service.api_utils import (
-    make_response,
-    validate_hex_color_string,
-    validate_image_channels,
-    validate_image_request,
-)
-from wsi_service.models.v3.slide import SlideInfo
-from wsi_service.queries import (
+from wsi_service.custom_models.queries import (
     ImageChannelQuery,
     ImageFormatsQuery,
     ImagePaddingColorQuery,
     ImageQualityQuery,
     ZStackQuery,
 )
-from wsi_service.responses import ImageRegionResponse, ImageResponses
-from wsi_service.slide_utils import expand_folders, get_zipfly_paths, remove_folders
+from wsi_service.custom_models.responses import ImageRegionResponse, ImageResponses
+from wsi_service.models.v3.slide import SlideInfo
+from wsi_service.utils.app_utils import (
+    make_response,
+    validate_hex_color_string,
+    validate_image_channels,
+    validate_image_request,
+)
+from wsi_service.utils.download_utils import expand_folders, get_zipfly_paths, remove_folders
 
 
 def add_routes_slides(app, settings, slide_manager):
@@ -29,7 +29,7 @@ def add_routes_slides(app, settings, slide_manager):
         """
         Get metadata information for a slide given its ID
         """
-        return await slide_manager.get_slide_info(slide_id)
+        return await slide_manager.get_slide_info(slide_id, slide_info_model=SlideInfo)
 
     @app.get(
         "/slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}",
