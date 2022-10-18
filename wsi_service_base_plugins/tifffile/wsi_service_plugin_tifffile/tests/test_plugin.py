@@ -21,17 +21,11 @@ from tests.integration.plugin_example_tests.plugin_example_tests import (
         ("37b5c722d1425395b1817474dd41b946", 5, 8, 6, 498, (512, 512), 24960, 34560),
     ],
 )
-def test_get_slide_info_valid(
-    slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y
-):
-    check_get_slide_info_valid(
-        slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y
-    )
+def test_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y):
+    check_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y)
 
 
-@pytest.mark.parametrize(
-    "image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)]
-)
+@pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
 @pytest.mark.parametrize(
     "slide_id, return_value, pixel_location, testpixel_rgb, testpixel_multichannel",
     [
@@ -73,9 +67,7 @@ def test_get_slide_thumbnail_valid(
     )
 
 
-@pytest.mark.parametrize(
-    "image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)]
-)
+@pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
 @pytest.mark.parametrize(
     "slide_id, has_label, pixel_location, testpixel",
     [
@@ -83,17 +75,11 @@ def test_get_slide_thumbnail_valid(
         ("37b5c722d1425395b1817474dd41b946", False, (), ()),
     ],
 )
-def test_get_slide_label_valid(
-    image_format, image_quality, slide_id, has_label, pixel_location, testpixel
-):
-    check_get_slide_label_valid(
-        image_format, image_quality, slide_id, has_label, pixel_location, testpixel
-    )
+def test_get_slide_label_valid(image_format, image_quality, slide_id, has_label, pixel_location, testpixel):
+    check_get_slide_label_valid(image_format, image_quality, slide_id, has_label, pixel_location, testpixel)
 
 
-@pytest.mark.parametrize(
-    "image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)]
-)
+@pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
 @pytest.mark.parametrize(
     "slide_id, return_value, pixel_location, testpixel",
     [
@@ -101,17 +87,11 @@ def test_get_slide_label_valid(
         ("37b5c722d1425395b1817474dd41b946", 404, (), ()),
     ],
 )
-def test_get_slide_macro_valid(
-    image_format, image_quality, slide_id, return_value, pixel_location, testpixel
-):
-    check_get_slide_macro_valid(
-        image_format, image_quality, slide_id, return_value, pixel_location, testpixel
-    )
+def test_get_slide_macro_valid(image_format, image_quality, slide_id, return_value, pixel_location, testpixel):
+    check_get_slide_macro_valid(image_format, image_quality, slide_id, return_value, pixel_location, testpixel)
 
 
-@pytest.mark.parametrize(
-    "image_format, image_quality", [("tiff", 100), ("jpeg", 90), ("png", 100)]
-)
+@pytest.mark.parametrize("image_format, image_quality", [("tiff", 100), ("jpeg", 90), ("png", 100)])
 @pytest.mark.parametrize(
     "slide_id, channels, start_point, size, pixel_location, testpixel_multichannel, testpixel_rgb",
     [
@@ -177,19 +157,13 @@ def test_get_slide_region_valid_fluorescence(
     )
 
 
-@pytest.mark.parametrize(
-    "image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)]
-)
+@pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
 @pytest.mark.parametrize(
     "slide_id, testpixel, tile_x, tile_y, tile_size",
     [("37b5c722d1425395b1817474dd41b946", (30, 7, 6), 21, 22, (512, 512))],
 )
-def test_get_slide_tile_valid(
-    image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size
-):
-    check_get_slide_tile_valid(
-        image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size
-    )
+def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size):
+    check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size)
 
 
 @pytest.mark.parametrize("image_format, image_quality", [("png", 100), ("tiff", 100)])
