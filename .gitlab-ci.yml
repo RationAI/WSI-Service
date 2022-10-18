@@ -29,7 +29,7 @@ docker-based-pytest:
     - testdata
   before_script:
     - !reference [.docker-init, before_script]
-    - cp wsi_service/tests/integration/env_tests .env
+    - cp tests/integration/env_tests .env
     - docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --build -d
     - sleep 10
   script:
