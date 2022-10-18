@@ -1,12 +1,7 @@
 from fastapi import HTTPException
 from PIL import Image, UnidentifiedImageError
 
-from wsi_service.models.v3.slide import (
-    SlideExtent,
-    SlideInfo,
-    SlideLevel,
-    SlidePixelSizeNm,
-)
+from wsi_service.models.v3.slide import SlideExtent, SlideInfo, SlideLevel, SlidePixelSizeNm
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
 from wsi_service.utils.slide_utils import get_rgb_channel_list
@@ -29,11 +24,7 @@ class Slide(BaseSlide):
             num_levels=1,
             pixel_size_nm=SlidePixelSizeNm(x=-1, y=-1),  # pixel size unknown
             tile_extent=SlideExtent(x=width, y=height, z=1),
-            levels=[
-                SlideLevel(
-                    extent=SlideExtent(x=width, y=height, z=1), downsample_factor=1.0
-                )
-            ],
+            levels=[SlideLevel(extent=SlideExtent(x=width, y=height, z=1), downsample_factor=1.0)],
         )
 
     async def close(self):
@@ -42,9 +33,7 @@ class Slide(BaseSlide):
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(
-        self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0
-    ):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
         if level != 0:
