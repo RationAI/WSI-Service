@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0
+
+- Updated to v3 models
+
 ## 1.1.1
 
 - Updated dependencies
