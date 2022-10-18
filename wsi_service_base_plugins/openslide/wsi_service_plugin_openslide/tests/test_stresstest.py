@@ -33,12 +33,12 @@ async def test_stresstest(event_loop):
                 x = randint(0, 100)
                 y = randint(0, 100)
                 urls += [
-                    f"http://localhost:8080/v1/slides/{slide_id}/info",
-                    f"http://localhost:8080/v1/slides/{slide_id}/thumbnail/max_size/200/200",
-                    f"http://localhost:8080/v1/slides/{slide_id}/label/max_size/200/200",
-                    f"http://localhost:8080/v1/slides/{slide_id}/macro/max_size/200/200",
-                    f"http://localhost:8080/v1/slides/{slide_id}/region/level/0/start/0/0/size/200/200",
-                    f"http://localhost:8080/v1/slides/{slide_id}/tile/level/0/tile/{x}/{y}",
+                    f"http://localhost:8080/v3/slides/{slide_id}/info",
+                    f"http://localhost:8080/v3/slides/{slide_id}/thumbnail/max_size/200/200",
+                    f"http://localhost:8080/v3/slides/{slide_id}/label/max_size/200/200",
+                    f"http://localhost:8080/v3/slides/{slide_id}/macro/max_size/200/200",
+                    f"http://localhost:8080/v3/slides/{slide_id}/region/level/0/start/0/0/size/200/200",
+                    f"http://localhost:8080/v3/slides/{slide_id}/tile/level/0/tile/{x}/{y}",
                 ]
         shuffle(urls)
 
