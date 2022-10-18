@@ -12,7 +12,7 @@ The `<local-data-folder>` should contain the following structure:
 - another_case/img.tif
 - etc.
 
-Visit [http://localhost:8080/docs](http://localhost:8080/docs) to checkout the available endpoints. There is also a simple viewer, which can be accessed via [http://localhost:8080/v1/validation_viewer](http://localhost:8080/v1/validation_viewer).
+Visit [http://localhost:8080/docs](http://localhost:8080/docs) to checkout the available endpoints. There is also a simple viewer, which can be accessed via [http://localhost:8080/validation_viewer](http://localhost:8080/validation_viewer).
 
 ## Overview
 
@@ -24,13 +24,13 @@ Regions of the WSI can be requested on any of the available levels. There is als
 
 There are several endpoints made available by this service:
 
-- `GET /v1/slides/{slide_id}/info` - Get slide info
-- `GET /v1/slides/{slide_id}/download` - Download slide
-- `GET /v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}` - Get slide region
-- `GET /v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}` - Get slide tile
-- `GET /v1/slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}` - Get slide thumbnail image
-- `GET /v1/slides/{slide_id}/label/max_size/{max_x}/{max_y}` - Get slide label image
-- `GET /v1/slides/{slide_id}/macro/max_size/{max_x}/{max_y}` - Get slide macro image
+- `GET /v3/slides/{slide_id}/info` - Get slide info
+- `GET /v3/slides/{slide_id}/download` - Download slide
+- `GET /v3/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}` - Get slide region
+- `GET /v3/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}` - Get slide tile
+- `GET /v3/slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}` - Get slide thumbnail image
+- `GET /v3/slides/{slide_id}/label/max_size/{max_x}/{max_y}` - Get slide label image
+- `GET /v3/slides/{slide_id}/macro/max_size/{max_x}/{max_y}` - Get slide macro image
 
 The last five endpoints all return image data. The image format and its quality (e.g. for jpeg) can be selected. Formats include jpeg, png, tiff, bmp, gif.
 
@@ -44,10 +44,10 @@ Get a detailed description of each endpoint by running the WSI Service (see _Get
 
 The WSI Service relies on the [Storage Mapper Service](https://www.gitlab.com/empaia/services/storage-mapper-service) to get storage information for a certain slide id. If activated (see _Getting started_ section), the WSI Service will be run in standalone mode using a local mapper. This local mapper fulfills the function of the storage mapper service, the id mapper service and part of the clinical data service by creating case ids for folders found in the data folder and slide ids for images within these case folders. In the standalone mode there are few additional endpoints, which can be accessed:
 
-- `GET /v1/cases/` - Get cases
-- `GET /v1/cases/{case_id}/slides/` - Get available slides
-- `GET /v1/slides/{slide_id}` - Get slide
-- `GET /v1/slides/{slide_id}/storage` - Get slide storage information
+- `GET /cases/` - Get cases
+- `GET /cases/{case_id}/slides/` - Get available slides
+- `GET /slides/{slide_id}` - Get slide
+- `GET /slides/{slide_id}/storage` - Get slide storage information
 
 ### Supported formats
 
@@ -88,7 +88,7 @@ WS_CORS_ALLOW_CREDENTIALS=False
 WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DEBUG=False
 WS_DISABLE_OPENAPI=False
-WS_MAPPER_ADDRESS=http://localhost:8080/v1/slides/{slide_id}/storage
+WS_MAPPER_ADDRESS=http://localhost:8080/slides/{slide_id}/storage
 WS_LOCAL_MODE=True
 WS_ENABLE_VIEWER_ROUTES=True
 WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600
