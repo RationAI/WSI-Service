@@ -165,7 +165,7 @@
                         let level = (numLevels - inverseLevel - 1).toString()
                         let text;
                         if (textTileCoord) {
-                            text = `/v3/slides/REPLACE_SLIDE_ID/level/${level}/tile/${x}/${y}?z=${z}`
+                            text = `${level}/${x}/${y}`
                         } else {
                             text = '';
                         }
