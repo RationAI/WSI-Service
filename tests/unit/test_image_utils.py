@@ -1,6 +1,7 @@
 import numpy as np
 
-from wsi_service.image_utils import (
+from wsi_service.models.v3.slide import SlideColor
+from wsi_service.utils.image_utils import (
     convert_int_to_rgba_array,
     convert_narray_to_pil_image,
     convert_narray_uintX_to_uint8,
@@ -10,7 +11,6 @@ from wsi_service.image_utils import (
     get_requested_channels_as_rgb_array,
     get_single_channel,
 )
-from wsi_service.models.slide import SlideColor
 
 ndarray = np.array(
     [

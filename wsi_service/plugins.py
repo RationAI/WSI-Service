@@ -5,13 +5,13 @@ import pathlib
 import pkgutil
 from importlib.metadata import version as version_from_name
 
-from wsi_service.service_status import PluginInfo
+from wsi_service.custom_models.service_status import PluginInfo
 from wsi_service.singletons import settings
 
 # check for plugins
 plugins = {
     name.replace("wsi_service_plugin_", ""): importlib.import_module(name)
-    for finder, name, ispkg in pkgutil.iter_modules()
+    for _, name, _ in pkgutil.iter_modules()
     if name.startswith("wsi_service_plugin_")
 }
 

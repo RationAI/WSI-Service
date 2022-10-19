@@ -4,10 +4,11 @@ import os
 import aiohttp
 from fastapi import HTTPException
 
+from wsi_service.models.v1.slide import SlideInfo as SlideInfoV1
+from wsi_service.models.v3.slide import SlideInfo as SlideInfoV3
 from wsi_service.plugins import get_file_format_identifier, load_slide
-from wsi_service.slide_utils import ExpiringSlide, LRUCache
-
-from .singletons import logger
+from wsi_service.singletons import logger
+from wsi_service.utils.slide_utils import ExpiringSlide, LRUCache
 
 
 class SlideManager:
@@ -53,16 +54,19 @@ class SlideManager:
 
         return exp_slide.slide
 
-    async def get_slide_info(self, slide_id):
+    async def get_slide_info(self, slide_id, slide_info_model):
         slide = await self.get_slide(slide_id=slide_id)
         slide_info = await slide.get_info()
         # overwrite dummy id with actual slide id
         slide_info.id = slide_id
-        # set slide format identifier
-        slide_info.format = get_file_format_identifier(slide.filepath)
-        # enable raw download if filepath exists on disk
-        if os.path.exists(slide.filepath):
-            slide_info.raw_download = True
+        # slide info conversion
+        slide_info = self._convert_slide_info_to_match_slide_info_model(slide_info, slide_info_model)
+        if isinstance(slide_info, SlideInfoV3):
+            # set slide format identifier
+            slide_info.format = get_file_format_identifier(slide.filepath)
+            # enable raw download if filepath exists on disk
+            if os.path.exists(slide.filepath):
+                slide_info.raw_download = True
         return slide_info
 
     async def get_slide_file_paths(self, slide_id):
@@ -115,3 +119,17 @@ class SlideManager:
             exp_slide = self.slide_cache.pop_item(storage_address)
             await exp_slide.slide.close()
             logger.debug("Closed slide with storage address: %s", storage_address)
+
+    def _convert_slide_info_to_match_slide_info_model(self, slide_info, slide_info_model):
+        if issubclass(slide_info_model, SlideInfoV1):
+            if isinstance(slide_info, SlideInfoV3):
+                # v3 --> v1
+                slide_info_dict = slide_info.dict()
+                del slide_info_dict["format"]
+                del slide_info_dict["raw_download"]
+                slide_info = SlideInfoV1.parse_obj(slide_info_dict)
+        if issubclass(slide_info_model, SlideInfoV3):
+            if isinstance(slide_info, SlideInfoV1):
+                # v1 --> v3
+                slide_info = SlideInfoV3.parse_obj(slide_info.dict())
+        return slide_info

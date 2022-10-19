@@ -29,7 +29,7 @@ docker-based-pytest:
     - testdata
   before_script:
     - !reference [.docker-init, before_script]
-    - cp wsi_service/tests/integration/env_tests .env
+    - cp tests/integration/env_tests .env
     - docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --build -d
     - sleep 10
   script:
@@ -39,8 +39,26 @@ docker-based-pytest:
     - docker-compose -f docker-compose.yml -f docker-compose.ci.yml down
     - !reference [.docker-init, after_script]
 
+docker-based-pytest-storage-mapper:
+  extends: .docker-init
+  tags:
+    - empaia-docker
+    - testdata
+  before_script:
+    - !reference [.docker-init, before_script]
+    - cp tests/integration/env_tests .env
+    - docker-compose -f docker-compose.storage-mapper-service.yml -f docker-compose.ci.yml up --build -d
+    - sleep 10
+  script:
+    - docker exec wsi-service_wsi_service_1 poetry run pytest -k test_real_storage_mapper_with_wsi_service
+  after_script:
+    - docker exec wsi-service_wsi_service_1 rm -r .pytest_cache
+    - docker-compose -f docker-compose.storage-mapper-service.yml -f docker-compose.ci.yml down
+    - !reference [.docker-init, after_script]
+
 docker-build-and-push:
   needs:
     - !reference [.docker-build-and-push-default-needs, needs]
-    - job: docker-based-pytest
     - job: poetry-codecheck-plugins
+    - job: docker-based-pytest
+    - job: docker-based-pytest-storage-mapper

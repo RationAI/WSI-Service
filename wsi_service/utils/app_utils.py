@@ -7,14 +7,14 @@ from fastapi import HTTPException
 from PIL import Image
 from starlette.responses import Response
 
-from wsi_service.image_utils import (
+from wsi_service.singletons import settings
+from wsi_service.utils.image_utils import (
     convert_narray_to_pil_image,
     convert_rgb_image_for_channels,
     get_requested_channels_as_array,
     get_requested_channels_as_rgb_array,
     save_rgb_image,
 )
-from wsi_service.singletons import settings
 
 supported_image_formats = {
     "bmp": "image/bmp",

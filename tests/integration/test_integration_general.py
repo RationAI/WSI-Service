@@ -6,7 +6,7 @@ from zipfile import ZipFile
 import pytest
 import requests
 
-from wsi_service.tests.integration.plugin_example_tests.helpers import get_image
+from tests.integration.plugin_example_tests.helpers import get_image
 
 
 def test_alive():
@@ -16,7 +16,7 @@ def test_alive():
 
 
 def test_get_cases_valid():
-    response = requests.get("http://localhost:8080/v1/cases/")
+    response = requests.get("http://localhost:8080/cases/")
     assert response.status_code == 200
     cases = response.json()
     assert len(cases) > 10
@@ -26,7 +26,7 @@ def test_get_cases_valid():
 
 
 def test_get_available_slides_valid():
-    response = requests.get("http://localhost:8080/v1/cases/4593f30c39d75d2385c6c8811c4ae7e0/slides/")
+    response = requests.get("http://localhost:8080/cases/4593f30c39d75d2385c6c8811c4ae7e0/slides/")
     assert response.status_code == 200
     slides = response.json()
     slide = list(
@@ -45,7 +45,7 @@ def test_get_available_slides_valid():
 
 
 def test_get_slide_valid():
-    response = requests.get("http://localhost:8080/v1/slides/f5f3a03b77fb5e0497b95eaff84e9a21")
+    response = requests.get("http://localhost:8080/slides/f5f3a03b77fb5e0497b95eaff84e9a21")
     assert response.status_code == 200
     slide = response.json()
     assert len(slide.keys()) == 3
@@ -60,24 +60,25 @@ def test_get_slide_valid():
 
 
 def test_get_available_slides_invalid_case_id():
-    response = requests.get("http://localhost:8080/v1/cases/invalid_id/slides/")
+    response = requests.get("http://localhost:8080/cases/invalid_id/slides/")
     assert response.status_code == 404
     assert response.json()["detail"] == "Case with case_id invalid_id does not exist"
 
 
 def test_get_slide_invalid_slide_id():
-    response = requests.get("http://localhost:8080/v1/slides/invalid_id")
+    response = requests.get("http://localhost:8080/slides/invalid_id")
     assert response.status_code == 404
     assert response.json()["detail"] == "Slide with slide_id invalid_id does not exist"
 
 
+@pytest.mark.parametrize("api_version", ["v1", "v3"])
 @pytest.mark.parametrize("slide_id", ["f5f3a03b77fb5e0497b95eaff84e9a21"])
 @pytest.mark.parametrize("tile_x, tile_y, level, expected_response, size", [(0, 0, 9, 200, (128, 128))])  # ok
-def test_get_slide_tile_padding_color(slide_id, tile_x, tile_y, level, expected_response, size):
+def test_get_slide_tile_padding_color(api_version, slide_id, tile_x, tile_y, level, expected_response, size):
 
     response = requests.get(
         (
-            f"http://localhost:8080/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}"
+            f"http://localhost:8080/{api_version}/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}"
             "?image_format=png&padding_color=%23AABBCC"
         ),
         stream=True,
@@ -91,6 +92,7 @@ def test_get_slide_tile_padding_color(slide_id, tile_x, tile_y, level, expected_
     assert image.getpixel((size[0] - 1, size[1] - 1)) == (170, 187, 204)
 
 
+@pytest.mark.parametrize("api_version", ["v1", "v3"])
 @pytest.mark.parametrize("slide_id", ["f5f3a03b77fb5e0497b95eaff84e9a21"])
 @pytest.mark.parametrize(
     "tile_x, level, expected_response",
@@ -102,32 +104,34 @@ def test_get_slide_tile_padding_color(slide_id, tile_x, tile_y, level, expected_
         (10, 16, 422),  # level fails
     ],
 )
-def test_get_slide_tile_invalid(slide_id, tile_x, level, expected_response):
+def test_get_slide_tile_invalid(api_version, slide_id, tile_x, level, expected_response):
 
-    response = requests.get(f"http://localhost:8080/v1/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_x}")
+    response = requests.get(
+        f"http://localhost:8080/{api_version}/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_x}"
+    )
     assert response.status_code == expected_response
 
 
-@pytest.mark.parametrize("tile_size", [-1, 0, 1, 256, 512, 10000])
-def test_get_region_maximum_extent(tile_size):
+@pytest.mark.parametrize("api_version", ["v1", "v3"])
+@pytest.mark.parametrize("region_size", [-1, 0, 1, 256, 512, 10000])
+def test_get_region_maximum_extent(api_version, region_size):
 
     level = 5
     start_x = 13
     start_y = 23
     slide_id = "45707118e3b55f1b8e03e1f19feee916"
     response = requests.get(
-        f"""
-        http://localhost:8080/v1/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{tile_size}/{tile_size}
-        """
+        f"http://localhost:8080/{api_version}/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{region_size}/{region_size}"
     )
-    if tile_size * tile_size > 25000000:
+    if region_size * region_size > 25000000:
         assert response.status_code == 422  # requested data too large
-    elif tile_size <= 0:
+    elif region_size <= 0:
         assert response.status_code == 422
     else:
         assert response.status_code == 200
 
 
+@pytest.mark.parametrize("api_version", ["v3"])
 @pytest.mark.parametrize(
     "slide_id, file_count, file_size",
     [
@@ -137,7 +141,7 @@ def test_get_region_maximum_extent(tile_size):
         # ("0f9083099777557b9c5c1083be953396", 10, 244418134),  # VSF
     ],
 )
-def test_download(slide_id, file_count, file_size):
+def test_download(api_version, slide_id, file_count, file_size):
     def download_file(url, download_folder):
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
@@ -171,7 +175,7 @@ def test_download(slide_id, file_count, file_size):
     # create temp dir
     tmp_dir = tempfile.mkdtemp()
     # download
-    file_path = download_file(f"http://localhost:8080/v1/slides/{slide_id}/download", tmp_dir)
+    file_path = download_file(f"http://localhost:8080/{api_version}/slides/{slide_id}/download", tmp_dir)
     assert os.path.exists(file_path)
     assert slide_id in file_path
     # unzip

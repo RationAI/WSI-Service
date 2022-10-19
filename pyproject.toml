@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wsi-service"
-version = "0.8.3"
+version = "0.9.0"
 description = "EMPAIA WSI Service to stream whole slide images"
 authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
@@ -64,7 +64,7 @@ disable = "R,C,W0613,E0213,W0603,W0231,E1136,W0707,W0622,W0201,E0401"
 [tool.pytest.ini_options]
 addopts = "--asyncio-mode=strict"
 testpaths = [
-    "wsi_service/tests",
+    "tests",
     "wsi_service_base_plugins/openslide/wsi_service_plugin_openslide/tests",
     "wsi_service_base_plugins/pil/wsi_service_plugin_pil/tests",
     "wsi_service_base_plugins/tifffile/wsi_service_plugin_tifffile/tests",

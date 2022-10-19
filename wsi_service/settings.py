@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     cors_allow_origins: Set[str] = None
     debug: bool = False
     data_dir: str = "/data"
-    mapper_address: str = "http://localhost:8080/v1/slides/{slide_id}/storage"
+    mapper_address: str = "http://localhost:8080/v3/slides/{slide_id}/storage"
     local_mode: bool = True
     enable_viewer_routes: bool = True
     inactive_histo_image_timeout_seconds: int = 600

@@ -117,7 +117,7 @@
                 let level = numLevels - tileCoord[0] - 1
                 let x = tileCoord[1]
                 let y = tileCoord[2]
-                return `tile/level/${level}/tile/${x}/${y}?z=${z}`
+                return `/v3/slides/REPLACE_SLIDE_ID/tile/level/${level}/tile/${x}/${y}?z=${z}`
             }
             let source = new ol.source.XYZ({
                 tileUrlFunction: tileUrlFunction,
@@ -165,7 +165,7 @@
                         let level = (numLevels - inverseLevel - 1).toString()
                         let text;
                         if (textTileCoord) {
-                            text = `level/${level}/tile/${x}/${y}?z=${z}`
+                            text = `${level}/${x}/${y}`
                         } else {
                             text = '';
                         }
@@ -196,7 +196,6 @@
             return resolutions
         }
 
-        let globalSlideId = "REPLACE_SLIDE_ID"
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
         const useDebugLayer = urlParams.get("debug") == 'true'
@@ -204,7 +203,7 @@
         const z = parseInt(zString)
 
 
-        axios.get(`info`)
+        axios.get(`/v3/slides/REPLACE_SLIDE_ID/info`)
             .then(function (response) {
                 wsiInfo = response.data
 

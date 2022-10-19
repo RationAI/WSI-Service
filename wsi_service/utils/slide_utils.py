@@ -1,10 +1,7 @@
-import glob
-import os
 from collections import OrderedDict
 
-from wsi_service.models.slide import SlideChannel, SlideColor, SlideExtent, SlideLevel
-
-from .singletons import logger
+from wsi_service.models.v3.slide import SlideChannel, SlideColor, SlideExtent, SlideLevel
+from wsi_service.singletons import logger
 
 
 class ExpiringSlide:
@@ -60,29 +57,3 @@ def get_rgb_channel_list():
     channels.append(SlideChannel(id=1, name="Green", color=SlideColor(r=0, g=255, b=0, a=0)))
     channels.append(SlideChannel(id=2, name="Blue", color=SlideColor(r=0, g=0, b=255, a=0)))
     return channels
-
-
-def get_zipfly_paths(filenames):
-    paths = []
-    parent_folder = get_parent_folder(filenames)
-    for filename in filenames:
-        paths.append({"fs": filename, "n": filename.replace(parent_folder, "")})
-    return paths
-
-
-def get_parent_folder(filenames):
-    parent_path = os.path.dirname(filenames[0])
-    while any([(parent_path not in os.path.dirname(filename)) for filename in filenames]):
-        parent_path = os.path.dirname(parent_path)
-    return parent_path + "/"
-
-
-def expand_folders(paths):
-    for path in paths:
-        if os.path.isdir(path):
-            paths += glob.glob(os.path.join(path, "*"))
-    return list(set(paths))
-
-
-def remove_folders(paths):
-    return [p for p in paths if not os.path.isdir(p)]

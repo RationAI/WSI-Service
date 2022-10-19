@@ -1,4 +1,4 @@
-from wsi_service.slide_utils import get_original_levels, get_rgb_channel_list
+from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list
 
 
 def test_get_original_levels():

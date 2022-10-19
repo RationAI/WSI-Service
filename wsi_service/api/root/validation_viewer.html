@@ -56,14 +56,14 @@
                 </v-container>
                 <v-subheader>
                     <v-icon medium>mdi-image-size-select-large</v-icon>&nbsp; Macro&nbsp; <v-icon v-if="!macroAvailable"
-                        medium></v-icon>
+                        medium>mdi-cancel</v-icon>
                 </v-subheader>
                 <v-container class="px-12 pt-0" v-if="macroAvailable">
                     <v-img contain :src="macroUrl" max-height="200" max-width="300"></v-img>
                 </v-container>
                 <v-subheader>
                     <v-icon medium>mdi-barcode-scan</v-icon>&nbsp; Label&nbsp; <v-icon v-if="!labelAvailable" medium>
-                    </v-icon>
+                        mdi-cancel</v-icon>
                 </v-subheader>
                 <v-container class="px-12 pt-0" v-if="labelAvailable">
                     <v-img contain :src="labelUrl" max-height="200" max-width="300"></v-img>
@@ -124,7 +124,7 @@
                     this.selectedSlideInfo = null
                     this.selectedSlideInfoItems = []
                     this.viewerUrl = ""
-                    axios.get(`slides/${this.selectedSlideId}/info`)
+                    axios.get(`v3/slides/${this.selectedSlideId}/info`)
                         .then(function (response) {
                             this.error = null
                             this.selectedSlideInfo = response.data
@@ -137,9 +137,9 @@
                     if (this.selectedSlideInfo) {
                         this.selectedSlideInfoItems = this.eachRecursive(this.selectedSlideInfo)
                         this.viewerUrl = `slides/${this.selectedSlideId}/viewer?debug=${this.debugLayer}&z=0`
-                        this.thumbnailUrl = `slides/${this.selectedSlideId}/thumbnail/max_size/300/200`
-                        this.macroUrl = `slides/${this.selectedSlideId}/macro/max_size/300/200`
-                        this.labelUrl = `slides/${this.selectedSlideId}/label/max_size/300/200`
+                        this.thumbnailUrl = `v3/slides/${this.selectedSlideId}/thumbnail/max_size/300/200`
+                        this.macroUrl = `v3/slides/${this.selectedSlideId}/macro/max_size/300/200`
+                        this.labelUrl = `v3/slides/${this.selectedSlideId}/label/max_size/300/200`
                         this.checkThumbnailMacroLabel()
                     }
                 },
@@ -201,7 +201,7 @@
                     return ""
                 },
                 getDownloadAddress() {
-                    return "slides/" + this.selectedSlideId + "/download"
+                    return "v3/slides/" + this.selectedSlideId + "/download"
                 },
                 getColor: function (item) {
                     if (item.children &&

@@ -1,6 +1,6 @@
 import logging
 
-from .settings import Settings
+from wsi_service.settings import Settings
 
 settings = Settings()
 
