@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.1
+
+- fixed default storage mapper address
+
 ## 0.9.0
 
 - introduced new structure to support different api versions
