@@ -64,7 +64,7 @@ disable = "R,C,W0613,E0213,W0603,W0231,E1136,W0707,W0622,W0201,E0401"
 [tool.pytest.ini_options]
 addopts = "--asyncio-mode=strict"
 testpaths = [
-    "tests",
+    "wsi_service/tests",
     "wsi_service_base_plugins/openslide/wsi_service_plugin_openslide/tests",
     "wsi_service_base_plugins/pil/wsi_service_plugin_pil/tests",
     "wsi_service_base_plugins/tifffile/wsi_service_plugin_tifffile/tests",

@@ -1,7 +1,7 @@
 import requests
 
-from tests.integration.plugin_example_tests.helpers import get_image, get_tiff_image
 from wsi_service.models.v3.slide import SlideInfo
+from wsi_service.tests.integration.plugin_example_tests.helpers import get_image, get_tiff_image
 
 
 def check_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y):
