@@ -4,8 +4,6 @@ import time
 import pytest
 import requests
 
-from wsi_service.tests.integration.plugin_example_tests.helpers import get_image
-
 
 def check_storage_mapper_is_available():
     available = False

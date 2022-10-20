@@ -17,12 +17,8 @@ from wsi_service.tests.integration.plugin_example_tests.plugin_example_tests imp
         ("035b26b0a0ab5b258cc0dafb91fb09cc", 3, 8, 1, -1, (500, 358), 500, 358),
     ],
 )
-def test_get_slide_info_valid(
-    slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y
-):
-    check_get_slide_info_valid(
-        slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y
-    )
+def test_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y):
+    check_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y)
 
 
 @pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90)])
@@ -70,12 +66,8 @@ def test_get_slide_thumbnail_valid(
         ("035b26b0a0ab5b258cc0dafb91fb09cc", (243, 243, 243), 0, 0, (500, 358)),
     ],
 )
-def test_get_slide_tile_valid(
-    image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size
-):
-    check_get_slide_tile_valid(
-        image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size
-    )
+def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size):
+    check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size)
 
 
 @pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90)])
