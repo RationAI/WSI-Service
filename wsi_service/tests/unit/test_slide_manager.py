@@ -3,7 +3,7 @@ import asyncio
 import pytest
 from fastapi.exceptions import HTTPException
 
-from tests.unit.test_client import get_client_and_slide_manager
+from wsi_service.tests.unit.test_client import get_client_and_slide_manager
 
 
 @pytest.mark.asyncio
