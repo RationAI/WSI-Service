@@ -1,6 +1,6 @@
 import pytest
 
-from tests.integration.plugin_example_tests.plugin_example_tests import (
+from wsi_service.tests.integration.plugin_example_tests.plugin_example_tests import (
     check_get_slide_info_valid,
     check_get_slide_label_valid,
     check_get_slide_macro_valid,
