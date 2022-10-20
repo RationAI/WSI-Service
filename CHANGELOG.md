@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.2
+
+- moved tests folder
+
 ## 0.9.1
 
 - fixed default storage mapper address
