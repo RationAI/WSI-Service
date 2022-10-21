@@ -240,7 +240,11 @@ class Slide(BaseSlide):
     def __adapt_base_size_for_edge_region(self, base_size, start_x, start_y, downsample_factor):
         end_x = int((start_x + base_size[0]) * downsample_factor)
         end_y = int((start_y + base_size[1]) * downsample_factor)
-        if end_x > self.slide.dimensions[0] or end_y > self.slide.dimensions[1]:
+        if (
+            (end_x > self.slide.dimensions[0] or end_y > self.slide.dimensions[1])
+            and start_x * downsample_factor < self.slide.dimensions[0]
+            and start_y * downsample_factor < self.slide.dimensions[1]
+        ):
             new_size_x = min(
                 int((int(base_size[0] * downsample_factor) - (end_x - self.slide.dimensions[0])) / downsample_factor),
                 base_size[0],

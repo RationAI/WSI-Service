@@ -1,4 +1,7 @@
 import numpy as np
+import pytest
+from PIL import Image
+from PIL.ImageStat import Stat
 
 from wsi_service.models.v3.slide import SlideColor
 from wsi_service.utils.image_utils import (
@@ -10,6 +13,7 @@ from wsi_service.utils.image_utils import (
     get_requested_channels_as_array,
     get_requested_channels_as_rgb_array,
     get_single_channel,
+    rgba_to_rgb_with_background_color,
 )
 
 ndarray = np.array(
@@ -75,3 +79,72 @@ def test_get_single_channel():
 def test_get_requested_channels_as_array():
     req_channels = get_requested_channels_as_array(ndarray, [0, 1])
     assert len(req_channels) == 2
+
+
+def test_rgba_to_rgb_with_background_color():
+    # expect completely transperant image to become white
+    image_rgba = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    image_rgb = rgba_to_rgb_with_background_color(image_rgba, padding_color=(255, 255, 255))
+    assert sum(Stat(image_rgb).mean) / 3 == 255
+    # expect intransperant image to not change
+    image_rgba = Image.new("RGBA", (256, 256), (0, 0, 0, 255))
+    image_rgb = rgba_to_rgb_with_background_color(image_rgba, padding_color=(255, 255, 255))
+    assert sum(Stat(image_rgb).mean) / 3 == 0
+    # expect partly transperant image to only change transparent part
+    image_rgba = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    image_rgba_half = Image.new("RGBA", (256, 128), (0, 0, 0, 255))
+    Image.Image.paste(image_rgba, image_rgba_half)
+    image_rgb = rgba_to_rgb_with_background_color(image_rgba, padding_color=(255, 255, 255))
+    # expect partly transperant image to only change transparent part
+    image_rgba = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    image_rgba_half = Image.new("RGBA", (256, 128), (0, 0, 0, 255))
+    Image.Image.paste(image_rgba, image_rgba_half)
+    image_rgb = rgba_to_rgb_with_background_color(image_rgba, padding_color=(255, 255, 255))
+    assert sum(Stat(image_rgb).mean) / 3 == 127.5
+    # expect image = None to return empty white image of defined size
+    image_rgba = None
+    image_rgb = rgba_to_rgb_with_background_color(image_rgba, padding_color=(255, 255, 255), size=(256, 256))
+    assert sum(Stat(image_rgb).mean) / 3 == 255
+    # expect image = None with missing size to return error
+    image_rgba = None
+    with pytest.raises(AttributeError):
+        image_rgb = rgba_to_rgb_with_background_color(image_rgba, padding_color=(255, 255, 255))
+    # expect smaller rgba image to be pasted in returned rgb image
+    image_rgba = Image.new("RGBA", (256, 128), (0, 0, 0, 255))
+    image_rgb = rgba_to_rgb_with_background_color(
+        image_rgba, padding_color=(255, 255, 255), size=(256, 256), paste_size=(256, 128)
+    )
+    assert sum(Stat(image_rgb).mean) / 3 == 127.5
+    # expect smaller rgb image to be pasted in returned rgb image
+    image_rgba = Image.new("RGB", (256, 128), (0, 0, 0))
+    image_rgb = rgba_to_rgb_with_background_color(
+        image_rgba, padding_color=(255, 255, 255), size=(256, 256), paste_size=(256, 128)
+    )
+    assert sum(Stat(image_rgb).mean) / 3 == 127.5
+    # expect smaller transperant rgba image to be white in returned rgb image
+    image_rgba = Image.new("RGBA", (256, 128), (0, 0, 0, 0))
+    image_rgb = rgba_to_rgb_with_background_color(
+        image_rgba, padding_color=(255, 255, 255), size=(256, 256), paste_size=(256, 128)
+    )
+    assert sum(Stat(image_rgb).mean) / 3 == 255
+    # expect smaller rgb image to be pasted in returned rgb image at certain position
+    image_rgba = Image.new("RGB", (256, 128), (0, 0, 0))
+    image_rgb = rgba_to_rgb_with_background_color(
+        image_rgba,
+        size=(256, 256),
+        paste_size=(256, 128),
+        paste_start=(0, 128),
+        padding_color=(255, 255, 255),
+    )
+    assert sum(Stat(image_rgb.crop((0, 0, 256, 128))).mean) / 3 == 255
+    assert sum(Stat(image_rgb).mean) / 3 == 127.5
+    # expect smaller rgb image to be pasted in returned rgb image at certain position (witout paste size)
+    image_rgba = Image.new("RGB", (256, 128), (0, 0, 0))
+    image_rgb = rgba_to_rgb_with_background_color(
+        image_rgba,
+        size=(256, 256),
+        paste_start=(0, 128),
+        padding_color=(255, 255, 255),
+    )
+    assert sum(Stat(image_rgb.crop((0, 0, 256, 128))).mean) / 3 == 255
+    assert sum(Stat(image_rgb).mean) / 3 == 127.5

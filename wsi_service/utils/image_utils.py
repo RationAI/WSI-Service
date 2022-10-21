@@ -8,15 +8,22 @@ from PIL import Image
 def rgba_to_rgb_with_background_color(image_rgba, padding_color, size=None, paste_size=None, paste_start=None):
     size = size if size else image_rgba.size
     paste_size = paste_size if paste_size else size
+    # no image, return empty image of size
+    if image_rgba is None and size is not None:
+        return Image.new("RGB", size, padding_color)
+    # image already rgb, return directly
+    if image_rgba.mode == "RGB" and size is image_rgba.size and paste_size is image_rgba.size and paste_start is None:
+        return image_rgba
+    # image has transparency, remove transparency and return rgb
+    # also covers the case if size > image_rgba.size, paste image_rgba into image_rgb
     image_rgb = Image.new("RGB", size, padding_color)
-    if image_rgba is None:
-        return image_rgb
-    elif image_rgba.info.get("transparency", None) is not None or image_rgba.mode == "RGBA":
+    if image_rgba.info.get("transparency", None) is not None or image_rgba.mode == "RGBA":
         image_rgb.paste(image_rgba, mask=image_rgba.split()[3], box=(0, 0, paste_size[0], paste_size[1]))
+    # image already rgb, but size != image_rgba.size, use paste_start to fit image, return rgb
     elif image_rgba.mode == "RGB":
         image_rgb.paste(image_rgba, box=paste_start)
     else:
-        raise HTTPException(400, "Raw image data has unsupported image format!")
+        raise HTTPException(400, "Raw image data has unsupported image format")
     return image_rgb
 
 
