@@ -31,9 +31,7 @@ class Slide(BaseSlide):
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(
-        self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0
-    ):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
         try:
@@ -60,9 +58,7 @@ class Slide(BaseSlide):
                     + f"{base_size[0] * base_size[1]} pixels."
                 ),
             )
-        base_size = self.__adapt_base_size_for_edge_region(
-            base_size, start_x, start_y, downsample_factor
-        )
+        base_size = self.__adapt_base_size_for_edge_region(base_size, start_x, start_y, downsample_factor)
         level_0_location = (
             (int)(start_x * downsample_factor),
             (int)(start_y * downsample_factor),
@@ -86,9 +82,7 @@ class Slide(BaseSlide):
             try:
                 self.thumbnail = self.__get_associated_image("thumbnail")
             except HTTPException:
-                self.thumbnail = await self.__get_thumbnail(
-                    settings.max_thumbnail_size, settings.max_thumbnail_size
-                )
+                self.thumbnail = await self.__get_thumbnail(settings.max_thumbnail_size, settings.max_thumbnail_size)
         thumbnail = self.thumbnail.copy()
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
@@ -131,10 +125,7 @@ class Slide(BaseSlide):
     def __get_pixel_size(self):
         if self.slide.properties[tiffslide.PROPERTY_NAME_VENDOR] == "generic-tiff":
             if self.slide.properties["tiff.ResolutionUnit"] == "centimeter":
-                if (
-                    "tiff.XResolution" not in self.slide.properties
-                    or "tiff.YResolution" not in self.slide.properties
-                ):
+                if "tiff.XResolution" not in self.slide.properties or "tiff.YResolution" not in self.slide.properties:
                     raise HTTPException(
                         status_code=404,
                         detail="Generic tiff file is missing valid values for x and y resolution.",
@@ -148,16 +139,9 @@ class Slide(BaseSlide):
                     status_code=404,
                     detail="Unable to extract pixel size from metadata.",
                 )
-        elif (
-            self.slide.properties[tiffslide.PROPERTY_NAME_VENDOR]
-            in self.supported_vendors
-        ):
-            pixel_size_nm_x = 1000.0 * float(
-                self.slide.properties[tiffslide.PROPERTY_NAME_MPP_X]
-            )
-            pixel_size_nm_y = 1000.0 * float(
-                self.slide.properties[tiffslide.PROPERTY_NAME_MPP_Y]
-            )
+        elif self.slide.properties[tiffslide.PROPERTY_NAME_VENDOR] in self.supported_vendors:
+            pixel_size_nm_x = 1000.0 * float(self.slide.properties[tiffslide.PROPERTY_NAME_MPP_X])
+            pixel_size_nm_y = 1000.0 * float(self.slide.properties[tiffslide.PROPERTY_NAME_MPP_Y])
         else:
             raise HTTPException(
                 status_code=404,
@@ -186,9 +170,7 @@ class Slide(BaseSlide):
         try:
             levels = self.__get_levels()
         except Exception as e:
-            raise HTTPException(
-                status_code=404, detail=f"Failed to retrieve slide level data. [{e}]"
-            )
+            raise HTTPException(status_code=404, detail=f"Failed to retrieve slide level data. [{e}]")
         try:
             slide_info = SlideInfo(
                 id="",
@@ -206,9 +188,7 @@ class Slide(BaseSlide):
             )
             return slide_info
         except Exception as e:
-            raise HTTPException(
-                status_code=404, detail=f"Failed to gather slide infos. [{e}]"
-            )
+            raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
 
     async def __get_thumbnail(self, max_x, max_y):
         level = self.__get_best_level_for_thumbnail(max_x, max_y)
@@ -238,30 +218,16 @@ class Slide(BaseSlide):
             best_level += 1
         return best_level - 1
 
-    def __adapt_base_size_for_edge_region(
-        self, base_size, start_x, start_y, downsample_factor
-    ):
+    def __adapt_base_size_for_edge_region(self, base_size, start_x, start_y, downsample_factor):
         end_x = int((start_x + base_size[0]) * downsample_factor)
         end_y = int((start_y + base_size[1]) * downsample_factor)
         if end_x > self.slide.dimensions[0] or end_y > self.slide.dimensions[1]:
             new_size_x = min(
-                int(
-                    (
-                        int(base_size[0] * downsample_factor)
-                        - (end_x - self.slide.dimensions[0])
-                    )
-                    / downsample_factor
-                ),
+                int((int(base_size[0] * downsample_factor) - (end_x - self.slide.dimensions[0])) / downsample_factor),
                 base_size[0],
             )
             new_size_y = min(
-                int(
-                    (
-                        int(base_size[1] * downsample_factor)
-                        - (end_y - self.slide.dimensions[1])
-                    )
-                    / downsample_factor
-                ),
+                int((int(base_size[1] * downsample_factor) - (end_y - self.slide.dimensions[1])) / downsample_factor),
                 base_size[1],
             )
             base_size = (new_size_x, new_size_y)
