@@ -69,5 +69,6 @@ testpaths = [
     "wsi_service_base_plugins/openslide/wsi_service_plugin_openslide/tests",
     "wsi_service_base_plugins/pil/wsi_service_plugin_pil/tests",
     "wsi_service_base_plugins/tifffile/wsi_service_plugin_tifffile/tests",
+    "wsi_service_base_plugins/tiffslide/wsi_service_plugin_tiffslide/tests",
     "wsi_service_base_plugins/wsidicom/wsi_service_plugin_wsidicom/tests"
 ]
