@@ -1,7 +1,4 @@
-import glob
-import os
-
-import openslide
+import tiffslide
 from fastapi import HTTPException
 
 from wsi_service.models.v3.slide import SlideExtent, SlideInfo, SlidePixelSizeNm
@@ -12,30 +9,21 @@ from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_l
 
 
 class Slide(BaseSlide):
-    supported_vendors = [
-        "aperio",
-        "mirax",
-        "hamamatsu",
-        "ventana",
-        "leica",
-        "trestle",
-        "philips",
-        "vsf",
-    ]
+    supported_vendors = ["aperio"]
 
     async def open(self, filepath):
-        self.filepath = self.__check_and_adapt_filepath(filepath)
+        self.filepath = filepath
         await self.open_slide()
         self.format = self.slide.detect_format(self.filepath)
-        self.slide_info = self.__get_slide_info_openslide()
+        self.slide_info = self.__get_slide_info()
         await self.close()
         await self.open_slide()
 
     async def open_slide(self):
         try:
-            self.slide = openslide.OpenSlide(self.filepath)
-        except openslide.OpenSlideError as e:
-            raise HTTPException(status_code=500, detail=f"OpenSlideError: {e}")
+            self.slide = tiffslide.TiffSlide(self.filepath)
+        except tiffslide.TiffFileError as e:
+            raise HTTPException(status_code=500, detail=f"TiffFileError: {e}")
 
     async def close(self):
         self.slide.close()
@@ -63,7 +51,6 @@ class Slide(BaseSlide):
                 detail=f"Downsample layer for requested base level {base_level} not available.",
             )
         base_size = (size_x, size_y)
-
         if base_size[0] * base_size[1] > settings.max_returned_region_size:
             raise HTTPException(
                 status_code=400,
@@ -82,8 +69,8 @@ class Slide(BaseSlide):
         )
         try:
             base_img = self.slide.read_region(level_0_location, base_level, base_size)
-        except openslide.OpenSlideError as e:
-            raise HTTPException(status_code=500, detail=f"OpenSlideError: {e}")
+        except tiffslide.TiffFileError as e:
+            raise HTTPException(status_code=500, detail=f"TiffFileError: {e}")
 
         rgb_img = rgba_to_rgb_with_background_color(
             base_img,
@@ -99,7 +86,7 @@ class Slide(BaseSlide):
             try:
                 self.thumbnail = self.__get_associated_image("thumbnail")
             except HTTPException:
-                self.thumbnail = await self.__get_thumbnail_openslide(
+                self.thumbnail = await self.__get_thumbnail(
                     settings.max_thumbnail_size, settings.max_thumbnail_size
                 )
         thumbnail = self.thumbnail.copy()
@@ -124,13 +111,6 @@ class Slide(BaseSlide):
 
     # private
 
-    def __check_and_adapt_filepath(self, filepath):
-        if os.path.isdir(filepath):
-            vsf_files = glob.glob(os.path.join(filepath, "*.vsf"))
-            if len(vsf_files) > 0:
-                filepath = vsf_files[0]
-        return filepath
-
     def __get_associated_image(self, associated_image_name):
         if associated_image_name not in self.slide.associated_images:
             raise HTTPException(
@@ -140,7 +120,7 @@ class Slide(BaseSlide):
         associated_image_rgba = self.slide.associated_images[associated_image_name]
         return associated_image_rgba.convert("RGB")
 
-    def __get_levels_openslide(self):
+    def __get_levels(self):
         original_levels = get_original_levels(
             self.slide.level_count,
             self.slide.level_dimensions,
@@ -149,7 +129,7 @@ class Slide(BaseSlide):
         return original_levels
 
     def __get_pixel_size(self):
-        if self.slide.properties[openslide.PROPERTY_NAME_VENDOR] == "generic-tiff":
+        if self.slide.properties[tiffslide.PROPERTY_NAME_VENDOR] == "generic-tiff":
             if self.slide.properties["tiff.ResolutionUnit"] == "centimeter":
                 if (
                     "tiff.XResolution" not in self.slide.properties
@@ -169,14 +149,14 @@ class Slide(BaseSlide):
                     detail="Unable to extract pixel size from metadata.",
                 )
         elif (
-            self.slide.properties[openslide.PROPERTY_NAME_VENDOR]
+            self.slide.properties[tiffslide.PROPERTY_NAME_VENDOR]
             in self.supported_vendors
         ):
             pixel_size_nm_x = 1000.0 * float(
-                self.slide.properties[openslide.PROPERTY_NAME_MPP_X]
+                self.slide.properties[tiffslide.PROPERTY_NAME_MPP_X]
             )
             pixel_size_nm_y = 1000.0 * float(
-                self.slide.properties[openslide.PROPERTY_NAME_MPP_Y]
+                self.slide.properties[tiffslide.PROPERTY_NAME_MPP_Y]
             )
         else:
             raise HTTPException(
@@ -189,21 +169,22 @@ class Slide(BaseSlide):
         tile_height = 256
         tile_width = 256
         if (
-            "openslide.level[0].tile-height" in self.slide.properties
-            and "openslide.level[0].tile-width" in self.slide.properties
+            "tiffslide.level[0].tile-height" in self.slide.properties
+            and "tiffslide.level[0].tile-width" in self.slide.properties
         ):
             # some tiles can have an unequal tile height and width that can cause problems in the slide viewer
             # since the tile route is used for viewing only, we provide the default tile width and height
-            temp_height = self.slide.properties["openslide.level[0].tile-height"]
-            temp_width = self.slide.properties["openslide.level[0].tile-width"]
+            temp_height = self.slide.properties["tiffslide.level[0].tile-height"]
+            temp_width = self.slide.properties["tiffslide.level[0].tile-width"]
             if temp_height == temp_width:
                 tile_height = temp_height
                 tile_width = temp_width
+
         return SlideExtent(x=tile_width, y=tile_height, z=1)
 
-    def __get_slide_info_openslide(self):
+    def __get_slide_info(self):
         try:
-            levels = self.__get_levels_openslide()
+            levels = self.__get_levels()
         except Exception as e:
             raise HTTPException(
                 status_code=404, detail=f"Failed to retrieve slide level data. [{e}]"
@@ -229,8 +210,9 @@ class Slide(BaseSlide):
                 status_code=404, detail=f"Failed to gather slide infos. [{e}]"
             )
 
-    async def __get_thumbnail_openslide(self, max_x, max_y):
+    async def __get_thumbnail(self, max_x, max_y):
         level = self.__get_best_level_for_thumbnail(max_x, max_y)
+
         try:
             thumbnail = await self.get_region(
                 level,
@@ -244,6 +226,7 @@ class Slide(BaseSlide):
                 status_code=500,
                 detail=f"Failed to extract thumbnail from WSI [{e.detail}].",
             )
+
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
 

@@ -15,7 +15,6 @@ def rgba_to_rgb_with_background_color(image_rgba, padding_color, size=None, past
         image_rgb.paste(image_rgba, mask=image_rgba.split()[3], box=(0, 0, paste_size[0], paste_size[1]))
     elif image_rgba.mode == "RGB":
         image_rgb.paste(image_rgba, box=paste_start)
-
     else:
         raise HTTPException(400, "Raw image data has unsupported image format!")
     return image_rgb
@@ -24,9 +23,9 @@ def rgba_to_rgb_with_background_color(image_rgba, padding_color, size=None, past
 def convert_narray_uintX_to_uint8(array, exp=16, lower=None, upper=None):
     if exp not in [8, 16, 32, 64]:
         raise ValueError("Only exponent in range [8, 16, 32, 64] supported")
-    if lower is not None and not (0 <= lower < 2**exp):
+    if lower is not None and not (0 <= lower < 2 ** exp):
         raise ValueError(f"lower bound must be between 0 and 2**{exp}")
-    if upper is not None and not (0 <= upper < 2**exp):
+    if upper is not None and not (0 <= upper < 2 ** exp):
         raise ValueError(f"upper bound must be between 0 and 2**{exp}")
     if lower is None:
         lower = 0
@@ -35,9 +34,9 @@ def convert_narray_uintX_to_uint8(array, exp=16, lower=None, upper=None):
         if exp == 8:
             return array
         elif exp == 16:
-            upper = (2**exp) / 4
+            upper = (2 ** exp) / 4
         else:
-            upper = (2**exp) / (exp / 2)
+            upper = (2 ** exp) / (exp / 2)
 
     temp_array = array / upper if upper != 0 else array
     temp_array = temp_array * 255
