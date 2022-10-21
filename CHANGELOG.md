@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.0
+
+- added tiffslide plugin
+
 ## 0.9.2
 
 - moved tests folder
