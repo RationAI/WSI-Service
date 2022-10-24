@@ -12,9 +12,9 @@ from wsi_service.tests.integration.plugin_example_tests.plugin_example_tests imp
     "slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y",
     [
         # JPG
-        ("7764a90026135d0f881c451d5bbf566a", 3, 8, 1, -1, (500, 358), 500, 358),
+        ("7764a90026135d0f881c451d5bbf566a", 3, 8, 1, -1, (256, 256), 500, 358),
         # PNG
-        ("035b26b0a0ab5b258cc0dafb91fb09cc", 3, 8, 1, -1, (500, 358), 500, 358),
+        ("035b26b0a0ab5b258cc0dafb91fb09cc", 3, 8, 1, -1, (256, 256), 500, 358),
     ],
 )
 def test_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y):
@@ -62,8 +62,22 @@ def test_get_slide_thumbnail_valid(
 @pytest.mark.parametrize(
     "slide_id, testpixel, tile_x, tile_y, tile_size",
     [
-        ("7764a90026135d0f881c451d5bbf566a", (243, 243, 243), 0, 0, (500, 358)),
-        ("035b26b0a0ab5b258cc0dafb91fb09cc", (243, 243, 243), 0, 0, (500, 358)),
+        ("7764a90026135d0f881c451d5bbf566a", (243, 243, 243), 0, 0, (256, 256)),
+        ("035b26b0a0ab5b258cc0dafb91fb09cc", (243, 243, 243), 0, 0, (256, 256)),
+        (
+            "7764a90026135d0f881c451d5bbf566a",
+            (255, 255, 255),
+            -1_000_000,
+            -1_000_000,
+            (256, 256),
+        ),
+        (
+            "7764a90026135d0f881c451d5bbf566a",
+            (255, 255, 255),
+            1_000_000,
+            1_000_000,
+            (256, 256),
+        ),
     ],
 )
 def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size):
@@ -81,7 +95,23 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
             0,
             0,
             128,
-        )
+        ),
+        (
+            "f5f3a03b77fb5e0497b95eaff84e9a21",
+            (0, 0),
+            (255, 255, 255),
+            -1_000_000,
+            -1_000_000,
+            128,
+        ),
+        (
+            "f5f3a03b77fb5e0497b95eaff84e9a21",
+            (0, 0),
+            (255, 255, 255),
+            1_000_000,
+            1_000_000,
+            128,
+        ),
     ],
 )
 def test_get_slide_region_valid_brightfield(

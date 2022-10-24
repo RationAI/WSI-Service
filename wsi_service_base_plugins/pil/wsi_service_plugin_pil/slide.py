@@ -23,7 +23,7 @@ class Slide(BaseSlide):
             extent=SlideExtent(x=width, y=height, z=1),
             num_levels=1,
             pixel_size_nm=SlidePixelSizeNm(x=-1, y=-1),  # pixel size unknown
-            tile_extent=SlideExtent(x=width, y=height, z=1),
+            tile_extent=SlideExtent(x=256, y=256, z=1),
             levels=[SlideLevel(extent=SlideExtent(x=width, y=height, z=1), downsample_factor=1.0)],
         )
 
@@ -43,12 +43,42 @@ class Slide(BaseSlide):
                     The coarsest available level is {len(self.slide_info.levels) - 1}.""",
             )
         region = Image.new("RGB", (size_x, size_y), padding_color)
-        if start_x + size_x >= self.slide_info.extent.x:
-            size_x = self.slide_info.extent.x - start_x
-        if start_y + size_y >= self.slide_info.extent.y:
-            size_y = self.slide_info.extent.y - start_y
-        cropped_image = self.slide_image.crop((start_x, start_y, size_x, size_y))
-        region.paste(cropped_image)
+        # check overlap of requested region with actual image
+        overlap = (start_x + size_x > 0 and start_x < self.slide_info.extent.x) and (
+            start_y + size_y > 0 and start_y < self.slide_info.extent.y
+        )
+        if overlap:
+            if start_x < 0:
+                crop_start_x = 0
+                overlap_start_x = abs(start_x)
+            else:
+                crop_start_x = start_x
+                overlap_start_x = 0
+            if start_y < 0:
+                crop_start_y = 0
+                overlap_start_y = abs(start_y)
+            else:
+                crop_start_y = start_y
+                overlap_start_y = 0
+            overlap_size_x = min(self.slide_info.extent.x - crop_start_x, size_x)
+            overlap_size_y = min(self.slide_info.extent.y - crop_start_y, size_y)
+            cropped_image = self.slide_image.crop(
+                (
+                    crop_start_x,
+                    crop_start_y,
+                    crop_start_x + overlap_size_x,
+                    crop_start_y + overlap_size_y,
+                )
+            )
+            region.paste(
+                cropped_image,
+                box=(
+                    overlap_start_x,
+                    overlap_start_y,
+                    overlap_start_x + overlap_size_x,
+                    overlap_start_y + overlap_size_y,
+                ),
+            )
         return region
 
     async def get_thumbnail(self, max_x, max_y):

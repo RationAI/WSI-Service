@@ -3,6 +3,8 @@
 ## 0.10.0
 
 - added tiffslide plugin
+- added tests for out of image region and tile requests
+- added out of image region and tile support to pil plugin
 
 ## 0.9.2
 

@@ -238,6 +238,22 @@ def test_get_slide_macro_valid(image_format, image_quality, slide_id, return_val
             345,
         ),
         ("a7a5a6840e625616b08e7bca6ee790ca", (0, 0), (131, 59, 122), 50000, 55000, 345),
+        (
+            "f5f3a03b77fb5e0497b95eaff84e9a21",
+            (0, 0),
+            (255, 255, 255),
+            -1_000_000,
+            -1_000_000,
+            1,
+        ),
+        (
+            "f5f3a03b77fb5e0497b95eaff84e9a21",
+            (0, 0),
+            (255, 255, 255),
+            1_000_000,
+            1_000_000,
+            1,
+        ),
     ],
 )
 def test_get_slide_region_valid_brightfield(
@@ -272,6 +288,20 @@ def test_get_slide_region_valid_brightfield(
         ("45707118e3b55f1b8e03e1f19feee916", (255, 255, 255), 60, 60, (256, 256)),
         ("1666fd894d23529dbb8129f27c796e14", (238, 238, 236), 210, 210, (256, 256)),
         ("a7a5a6840e625616b08e7bca6ee790ca", (137, 75, 138), 210, 210, (256, 256)),
+        (
+            "f5f3a03b77fb5e0497b95eaff84e9a21",
+            (255, 255, 255),
+            -1_000_000,
+            -1_000_000,
+            (128, 128),
+        ),
+        (
+            "f5f3a03b77fb5e0497b95eaff84e9a21",
+            (255, 255, 255),
+            1_000_000,
+            1_000_000,
+            (128, 128),
+        ),
     ],
 )
 def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size):
