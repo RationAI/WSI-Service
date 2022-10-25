@@ -126,17 +126,38 @@ def validate_hex_color_string(padding_color):
     return settings.padding_color
 
 
-def validate_image_channels(slide, image_channels):
+def validate_image_channels(slide_info, image_channels):
     if image_channels is None:
         return
     for i in image_channels:
-        if i >= len(slide.slide_info.channels):
+        if i >= len(slide_info.channels):
             raise HTTPException(
                 status_code=400,
                 detail=f"""
                 Selected image channel excceds channel bounds
-                (selected: {i} max: {len(slide.slide_info.channels)-1})
+                (selected: {i} max: {len(slide_info.channels)-1})
                 """,
             )
     if len(image_channels) != len(set(image_channels)):
         raise HTTPException(status_code=400, detail="No duplicates allowed in channels")
+
+
+def validate_image_size(size_x, size_y):
+    if size_x * size_y > settings.max_returned_region_size:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Requested region may not contain more than {settings.max_returned_region_size} pixels.",
+        )
+
+
+def validate_image_z(slide_info, z):
+    if z > 0 and (slide_info.extent.z == 1 or slide_info.extent.z is None):
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid ZStackQuery z={z}. The image does not support multiple z-layers.",
+        )
+    if z > 0 and z >= slide_info.extent.z:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid ZStackQuery z={z}. The image has only {slide_info.extent.z} z-layers.",
+        )

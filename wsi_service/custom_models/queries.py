@@ -23,4 +23,4 @@ ImagePaddingColorQuery = Query(
     """,
 )
 
-ZStackQuery = Query(0, description="Z-Stack layer index z")
+ZStackQuery = Query(0, ge=0, description="Z-Stack layer index z")

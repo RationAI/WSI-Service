@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import HTTPException, Path
+from fastapi import Path
 from fastapi.responses import StreamingResponse
 from PIL import Image
 
@@ -18,6 +18,8 @@ from wsi_service.utils.app_utils import (
     validate_hex_color_string,
     validate_image_channels,
     validate_image_request,
+    validate_image_size,
+    validate_image_z,
 )
 
 
@@ -171,23 +173,11 @@ def add_routes_slides(app, settings, slide_manager):
         e.g. for the jpeg format a value between 0 and 100 can be selected. Default is 90.
         """
         validate_image_request(image_format, image_quality)
-        if size_x * size_y > settings.max_returned_region_size:
-            raise HTTPException(
-                status_code=422,
-                detail=f"Requested region may not contain more than {settings.max_returned_region_size} pixels.",
-            )
-
+        validate_image_size(size_x, size_y)
+        slide_info = await slide_manager.get_slide_info()
+        validate_image_z(slide_info, z)
         slide = await slide_manager.get_slide(slide_id)
-        if z != 0:
-            try:
-                image_region = await slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None, z=z)
-            except TypeError as e:
-                raise HTTPException(
-                    status_code=422,
-                    detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers.""",
-                ) from e
-        else:
-            image_region = await slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None)
+        image_region = await slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None)
         validate_image_channels(slide, image_channels)
         return make_response(slide, image_region, image_format, image_quality, image_channels)
 
@@ -246,16 +236,9 @@ def add_routes_slides(app, settings, slide_manager):
         """
         vp_color = validate_hex_color_string(padding_color)
         validate_image_request(image_format, image_quality)
+        slide_info = await slide_manager.get_slide_info()
+        validate_image_z(slide_info, z)
         slide = await slide_manager.get_slide(slide_id)
-        if z != 0:
-            try:
-                image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
-            except TypeError as e:
-                raise HTTPException(
-                    status_code=422,
-                    detail=f"""Invalid ZStackQuery z={z}. The image does not support multiple z-layers.""",
-                ) from e
-        else:
-            image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color)
+        image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
         validate_image_channels(slide, image_channels)
         return make_response(slide, image_tile, image_format, image_quality, image_channels)
