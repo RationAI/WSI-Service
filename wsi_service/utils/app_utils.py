@@ -134,7 +134,7 @@ def validate_image_channels(slide_info, image_channels):
             raise HTTPException(
                 status_code=400,
                 detail=f"""
-                Selected image channel excceds channel bounds
+                Selected image channel exceeds channel bounds
                 (selected: {i} max: {len(slide_info.channels)-1})
                 """,
             )
