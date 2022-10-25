@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.3
+
+- Updated Dependencies
+
 ## 0.9.2
 
 - moved tests folder
