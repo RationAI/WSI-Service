@@ -161,3 +161,12 @@ def validate_image_z(slide_info, z):
             status_code=422,
             detail=f"Invalid ZStackQuery z={z}. The image has only {slide_info.extent.z} z-layers.",
         )
+
+
+def validate_image_level(slide_info, level):
+    if level >= len(slide_info.levels):
+        raise HTTPException(
+            status_code=422,
+            detail="The requested pyramid level is not available. "
+            + f"The coarsest available level is {len(slide_info.levels) - 1}.",
+        )

@@ -17,6 +17,7 @@ from wsi_service.utils.app_utils import (
     make_response,
     validate_hex_color_string,
     validate_image_channels,
+    validate_image_level,
     validate_image_request,
     validate_image_size,
     validate_image_z,
@@ -176,6 +177,7 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_size(size_x, size_y)
         slide = await slide_manager.get_slide(slide_id)
         slide_info = await slide.get_info()
+        validate_image_level(slide_info, level)
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
         image_region = await slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None)
@@ -238,6 +240,7 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_request(image_format, image_quality)
         slide = await slide_manager.get_slide(slide_id)
         slide_info = await slide.get_info()
+        validate_image_level(slide_info, level)
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
         image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)

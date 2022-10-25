@@ -46,48 +46,23 @@ class Slide(BaseSlide):
     async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
-        try:
-            downsample_factor = self.slide_info.levels[level].downsample_factor
-        except IndexError:
-            raise HTTPException(
-                status_code=422,
-                detail="The requested pyramid level is not available. "
-                + f"The coarsest available level is {len(self.slide_info.levels) - 1}.",
-            )
-        base_level = level
-        if base_level >= len(self.slide.level_downsamples):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Downsample layer for requested base level {base_level} not available.",
-            )
-        base_size = (size_x, size_y)
-
-        if base_size[0] * base_size[1] > settings.max_returned_region_size:
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "Requested image region is too large. Maximum number of pixels is set to "
-                    + f"{settings.max_returned_region_size}, your request is for "
-                    + f"{base_size[0] * base_size[1]} pixels."
-                ),
-            )
-        base_size = self.__adapt_base_size_for_edge_region(base_size, start_x, start_y, downsample_factor)
+        downsample_factor = self.slide_info.levels[level].downsample_factor
+        size = (size_x, size_y)
+        size = self.__adapt_base_size_for_edge_region(size, start_x, start_y, downsample_factor)
         level_0_location = (
             (int)(start_x * downsample_factor),
             (int)(start_y * downsample_factor),
         )
         try:
-            base_img = self.slide.read_region(level_0_location, base_level, base_size)
+            img = self.slide.read_region(level_0_location, level, size)
         except openslide.OpenSlideError as e:
             raise HTTPException(status_code=500, detail=f"OpenSlideError: {e}")
-
         rgb_img = rgba_to_rgb_with_background_color(
-            base_img,
+            img,
             padding_color,
             size=(size_x, size_y),
-            paste_size=base_size,
+            paste_size=size,
         )
-
         return rgb_img
 
     async def get_thumbnail(self, max_x, max_y):
@@ -190,9 +165,6 @@ class Slide(BaseSlide):
     def __get_slide_info_openslide(self):
         try:
             levels = self.__get_levels_openslide()
-        except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Failed to retrieve slide level data. [{e}]")
-        try:
             slide_info = SlideInfo(
                 id="",
                 channels=get_rgb_channel_list(),  # rgb channels
