@@ -25,7 +25,11 @@ class Settings(BaseSettings):
     root_path: str = None
 
     # define plugin defaults for specific formats
-    plugins_default = {".svs": "tiffslide", ".tiff": "openslide", ".tif": "openslide"}
+    plugins_default = {
+        ".svs": "tiffslide",
+        ".tiff": "tiffslide",
+        ".tif": "tiffslide",
+    }
 
     # default color for padding of image regions out of image extent
     padding_color = (255, 255, 255)

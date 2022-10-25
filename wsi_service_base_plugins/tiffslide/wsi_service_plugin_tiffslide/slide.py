@@ -9,7 +9,7 @@ from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_l
 
 
 class Slide(BaseSlide):
-    supported_vendors = ["aperio"]
+    supported_vendors = ["aperio", None]
 
     async def open(self, filepath):
         self.filepath = filepath
@@ -34,47 +34,23 @@ class Slide(BaseSlide):
     async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
-        try:
-            downsample_factor = self.slide_info.levels[level].downsample_factor
-        except IndexError:
-            raise HTTPException(
-                status_code=422,
-                detail="The requested pyramid level is not available. "
-                + f"The coarsest available level is {len(self.slide_info.levels) - 1}.",
-            )
-        base_level = level
-        if base_level >= len(self.slide.level_downsamples):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Downsample layer for requested base level {base_level} not available.",
-            )
-        base_size = (size_x, size_y)
-        if base_size[0] * base_size[1] > settings.max_returned_region_size:
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "Requested image region is too large. Maximum number of pixels is set to "
-                    + f"{settings.max_returned_region_size}, your request is for "
-                    + f"{base_size[0] * base_size[1]} pixels."
-                ),
-            )
-        base_size = self.__adapt_base_size_for_edge_region(base_size, start_x, start_y, downsample_factor)
+        downsample_factor = self.slide_info.levels[level].downsample_factor
+        size = (size_x, size_y)
+        size = self.__adapt_base_size_for_edge_region(size, start_x, start_y, downsample_factor)
         level_0_location = (
             (int)(start_x * downsample_factor),
             (int)(start_y * downsample_factor),
         )
         try:
-            base_img = self.slide.read_region(level_0_location, base_level, base_size)
+            img = self.slide.read_region(level_0_location, level, size)
         except tiffslide.TiffFileError as e:
             raise HTTPException(status_code=500, detail=f"TiffFileError: {e}")
-
         rgb_img = rgba_to_rgb_with_background_color(
-            base_img,
+            img,
             padding_color,
             size=(size_x, size_y),
-            paste_size=base_size,
+            paste_size=size,
         )
-
         return rgb_img
 
     async def get_thumbnail(self, max_x, max_y):
@@ -123,30 +99,11 @@ class Slide(BaseSlide):
         return original_levels
 
     def __get_pixel_size(self):
-        if self.slide.properties[tiffslide.PROPERTY_NAME_VENDOR] == "generic-tiff":
-            if self.slide.properties["tiff.ResolutionUnit"] == "centimeter":
-                if "tiff.XResolution" not in self.slide.properties or "tiff.YResolution" not in self.slide.properties:
-                    raise HTTPException(
-                        status_code=404,
-                        detail="Generic tiff file is missing valid values for x and y resolution.",
-                    )
-                pixel_per_cm_x = float(self.slide.properties["tiff.XResolution"])
-                pixel_per_cm_y = float(self.slide.properties["tiff.YResolution"])
-                pixel_size_nm_x = 1e7 / pixel_per_cm_x
-                pixel_size_nm_y = 1e7 / pixel_per_cm_y
-            else:
-                raise HTTPException(
-                    status_code=404,
-                    detail="Unable to extract pixel size from metadata.",
-                )
-        elif self.slide.properties[tiffslide.PROPERTY_NAME_VENDOR] in self.supported_vendors:
+        if self.slide.properties[tiffslide.PROPERTY_NAME_VENDOR] in self.supported_vendors:
             pixel_size_nm_x = 1000.0 * float(self.slide.properties[tiffslide.PROPERTY_NAME_MPP_X])
             pixel_size_nm_y = 1000.0 * float(self.slide.properties[tiffslide.PROPERTY_NAME_MPP_Y])
         else:
-            raise HTTPException(
-                status_code=404,
-                detail="Unable to extract pixel size from metadata.",
-            )
+            SlidePixelSizeNm()
         return SlidePixelSizeNm(x=pixel_size_nm_x, y=pixel_size_nm_y)
 
     def __get_tile_extent(self):
@@ -169,9 +126,6 @@ class Slide(BaseSlide):
     def __get_slide_info(self):
         try:
             levels = self.__get_levels()
-        except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Failed to retrieve slide level data. [{e}]")
-        try:
             slide_info = SlideInfo(
                 id="",
                 channels=get_rgb_channel_list(),  # rgb channels
@@ -187,6 +141,8 @@ class Slide(BaseSlide):
                 levels=levels,
             )
             return slide_info
+        except HTTPException as e:
+            raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e.detail}]")
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
 

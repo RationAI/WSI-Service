@@ -13,7 +13,6 @@ class Slide(BaseSlide):
     async def open(self, filepath):
         await self.open_slide()
         self.slide_info = self.__get_slide_info_dicom()
-        self.thumbnail = await self.__get_thumbnail_dicom(settings.max_thumbnail_size, settings.max_thumbnail_size)
         await self.close()
         await self.open_slide()
 
@@ -32,30 +31,12 @@ class Slide(BaseSlide):
     async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
-        if level >= len(self.dicom_slide.levels):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Downsample layer for requested base level {level} not available.",
-            )
-        try:
-            level_dicom = self.dicom_slide.levels[level].level
-        except IndexError:
-            raise HTTPException(
-                status_code=422,
-                detail=f"""The requested pyramid level is not available.
-                    The coarsest available level is {len(self.slide_info.levels) - 1}.""",
-            )
+        level_dicom = self.dicom_slide.levels[level].level
         size = (size_x, size_y)
         level_location = (
             (int)(start_x),
             (int)(start_y),
         )
-        if size[0] * size[1] > settings.max_returned_region_size:
-            raise HTTPException(
-                status_code=400,
-                detail=f"""Requested image region is too large. Maximum number of pixels is set to
-                    {settings.max_returned_region_size}, your request is for {size[0] * size[1]} pixels.""",
-            )
         try:
             level_size_x, level_size_y = self.dicom_slide.levels[level].size.to_tuple()
             paste_start = None
@@ -96,6 +77,8 @@ class Slide(BaseSlide):
         return rgb_img
 
     async def get_thumbnail(self, max_x, max_y):
+        if not hasattr(self, "thumbnail"):
+            self.thumbnail = await self.__get_thumbnail_dicom(settings.max_thumbnail_size, settings.max_thumbnail_size)
         thumbnail = self.thumbnail.copy()
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
@@ -190,9 +173,6 @@ class Slide(BaseSlide):
     def __get_slide_info_dicom(self):
         try:
             levels = self.__get_levels_dicom()
-        except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Failed to retrieve slide level data. [{e}]")
-        try:
             slide_info = SlideInfo(
                 id="",
                 channels=get_rgb_channel_list(),  # rgb channels

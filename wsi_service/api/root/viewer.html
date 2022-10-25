@@ -204,7 +204,7 @@
         const z = parseInt(zString)
 
 
-        axios.get(`/v3/slides/REPLACE_SLIDE_ID/info`)
+        axios.get(`/v3/slides/REPLACE_SLIDE_ID/info?plugin=${plugin}`)
             .then(function (response) {
                 wsiInfo = response.data
 

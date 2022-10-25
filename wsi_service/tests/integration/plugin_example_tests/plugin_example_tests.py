@@ -4,8 +4,10 @@ from wsi_service.models.v3.slide import SlideInfo
 from wsi_service.tests.integration.plugin_example_tests.helpers import get_image, get_tiff_image
 
 
-def check_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y):
-    response = requests.get(f"http://localhost:8080/v3/slides/{slide_id}/info")
+def check_get_slide_info_valid(
+    slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y, plugin=""
+):
+    response = requests.get(f"http://localhost:8080/v3/slides/{slide_id}/info?plugin={plugin}")
     assert response.status_code == 200
     slide_info = SlideInfo.parse_obj(response.json())
     assert slide_info.id == slide_id
@@ -21,7 +23,14 @@ def check_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pi
 
 
 def check_get_slide_thumbnail_valid(
-    image_format, image_quality, slide_id, return_value, pixel_location, testpixel_rgb, testpixel_multichannel
+    image_format,
+    image_quality,
+    slide_id,
+    return_value,
+    pixel_location,
+    testpixel_rgb,
+    testpixel_multichannel,
+    plugin="",
 ):
 
     max_size_x = 21
@@ -29,7 +38,7 @@ def check_get_slide_thumbnail_valid(
     response = requests.get(
         (
             f"http://localhost:8080/v3/slides/{slide_id}/thumbnail/max_size/{max_size_x}/{max_size_y}"
-            f"?image_format={image_format}&image_quality={image_quality}"
+            f"?image_format={image_format}&image_quality={image_quality}&plugin={plugin}"
         ),
         stream=True,
     )
@@ -51,13 +60,13 @@ def check_get_slide_thumbnail_valid(
             assert image.getpixel((pixel_location[0], pixel_location[1])) == testpixel_rgb
 
 
-def check_get_slide_label_valid(image_format, image_quality, slide_id, has_label, pixel_location, testpixel):
+def check_get_slide_label_valid(image_format, image_quality, slide_id, has_label, pixel_location, testpixel, plugin=""):
 
     max_x, max_y = 200, 200
     response = requests.get(
         (
             f"http://localhost:8080/v3/slides/{slide_id}/label/max_size/{max_x}/{max_y}"
-            f"?image_format={image_format}&image_quality={image_quality}"
+            f"?image_format={image_format}&image_quality={image_quality}&plugin={plugin}"
         ),
         stream=True,
     )
@@ -78,13 +87,15 @@ def check_get_slide_label_valid(image_format, image_quality, slide_id, has_label
         assert response.status_code == 404
 
 
-def check_get_slide_macro_valid(image_format, image_quality, slide_id, return_value, pixel_location, testpixel):
+def check_get_slide_macro_valid(
+    image_format, image_quality, slide_id, return_value, pixel_location, testpixel, plugin=""
+):
 
     max_x, max_y = 200, 200
     response = requests.get(
         (
             f"http://localhost:8080/v3/slides/{slide_id}/macro/max_size/{max_x}/{max_y}"
-            f"?image_format={image_format}&image_quality={image_quality}"
+            f"?image_format={image_format}&image_quality={image_quality}&plugin={plugin}"
         ),
         stream=True,
     )
@@ -103,7 +114,7 @@ def check_get_slide_macro_valid(image_format, image_quality, slide_id, return_va
 
 
 def check_get_slide_region_valid_brightfield(
-    image_format, image_quality, slide_id, pixel_location, testpixel, start_x, start_y, size
+    image_format, image_quality, slide_id, pixel_location, testpixel, start_x, start_y, size, plugin=""
 ):
 
     level = 0
@@ -113,7 +124,7 @@ def check_get_slide_region_valid_brightfield(
         (
             f"http://localhost:8080/v3/slides/{slide_id}/region/level/{level}/"
             f"start/{start_x}/{start_y}/size/{size_x}/{size_y}"
-            f"?image_format={image_format}&image_quality={image_quality}"
+            f"?image_format={image_format}&image_quality={image_quality}&plugin={plugin}"
         ),
         stream=True,
     )
@@ -146,6 +157,7 @@ def check_get_slide_region_valid_fluorescence(
     testpixel_rgb,
     image_format,
     image_quality,
+    plugin="",
 ):
 
     level = 2
@@ -153,7 +165,7 @@ def check_get_slide_region_valid_fluorescence(
         (
             f"http://localhost:8080/v3/slides/{slide_id}/region/level/{level}/"
             f"start/{start_point[0]}/{start_point[1]}/size/{size[0]}/{size[1]}"
-            f"?image_format={image_format}&image_quality={image_quality}"
+            f"?image_format={image_format}&image_quality={image_quality}&plugin={plugin}"
         ),
         stream=True,
     )
@@ -187,6 +199,7 @@ def check_get_slide_region_dedicated_channel(
     testpixel_rgb,
     image_format,
     image_quality,
+    plugin="",
 ):
 
     str_channels = "&".join([f"image_channels={str(ch)}" for ch in channels])
@@ -194,7 +207,7 @@ def check_get_slide_region_dedicated_channel(
         (
             f"http://localhost:8080/v3/slides/{slide_id}/region/level/{level}/"
             f"start/{start_point[0]}/{start_point[1]}/size/{size[0]}/{size[1]}"
-            f"?image_format={image_format}&image_quality={image_quality}&{str_channels}"
+            f"?image_format={image_format}&image_quality={image_quality}&{str_channels}&plugin={plugin}"
         ),
         stream=True,
     )
@@ -216,16 +229,17 @@ def check_get_slide_region_dedicated_channel(
             assert image.getpixel((pixel_location[0], pixel_location[1])) == testpixel_rgb
 
 
-def check_get_slide_region_invalid_channel(slide_id, channels, expected_response):
+def check_get_slide_region_invalid_channel(slide_id, channels, expected_response, plugin=""):
 
     str_channels = "&".join([f"image_channels={str(ch)}" for ch in channels])
     response = requests.get(
-        f"http://localhost:8080/v3/slides/{slide_id}/region/level/2/start/0/0/size/64/64?{str_channels}", stream=True
+        f"http://localhost:8080/v3/slides/{slide_id}/region/level/2/start/0/0/size/64/64?{str_channels}&plugin={plugin}",
+        stream=True,
     )
     assert response.status_code == expected_response
 
 
-def check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size, status_code):
+def check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size, status_code, plugin=""):
 
     level = 0
     size_x = size
@@ -233,20 +247,20 @@ def check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size, 
     response = requests.get(
         (
             f"http://localhost:8080/v3/slides/{slide_id}/region/level/{level}/"
-            f"start/{start_x}/{start_y}/size/{size_x}/{size_y}"
+            f"start/{start_x}/{start_y}/size/{size_x}/{size_y}?plugin={plugin}"
         ),
         stream=True,
     )
     assert response.status_code == status_code
 
 
-def check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size):
+def check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size, plugin=""):
 
     level = 0
     response = requests.get(
         (
             f"http://localhost:8080/v3/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}"
-            f"?image_format={image_format}&image_quality={image_quality}"
+            f"?image_format={image_format}&image_quality={image_quality}&plugin={plugin}"
         ),
         stream=True,
     )

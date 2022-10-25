@@ -18,7 +18,17 @@ from wsi_service.tests.integration.plugin_example_tests.plugin_example_tests imp
     ],
 )
 def test_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y):
-    check_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y)
+    check_get_slide_info_valid(
+        slide_id,
+        channels,
+        channel_depth,
+        num_levels,
+        pixel_size_nm,
+        tile_size,
+        x,
+        y,
+        plugin="pil",
+    )
 
 
 @pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90)])
@@ -55,6 +65,7 @@ def test_get_slide_thumbnail_valid(
         pixel_location,
         testpixel_rgb,
         (None, None, None),
+        plugin="pil",
     )
 
 
@@ -81,7 +92,16 @@ def test_get_slide_thumbnail_valid(
     ],
 )
 def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size):
-    check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size)
+    check_get_slide_tile_valid(
+        image_format,
+        image_quality,
+        slide_id,
+        testpixel,
+        tile_x,
+        tile_y,
+        tile_size,
+        plugin="pil",
+    )
 
 
 @pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90)])
@@ -89,7 +109,7 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
     "slide_id,  pixel_location, testpixel, start_x, start_y, size",
     [
         (
-            "f5f3a03b77fb5e0497b95eaff84e9a21",
+            "7764a90026135d0f881c451d5bbf566a",
             (0, 0),
             (243, 243, 243),
             0,
@@ -97,7 +117,7 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
             128,
         ),
         (
-            "f5f3a03b77fb5e0497b95eaff84e9a21",
+            "7764a90026135d0f881c451d5bbf566a",
             (0, 0),
             (255, 255, 255),
             -1_000_000,
@@ -105,7 +125,7 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
             128,
         ),
         (
-            "f5f3a03b77fb5e0497b95eaff84e9a21",
+            "7764a90026135d0f881c451d5bbf566a",
             (0, 0),
             (255, 255, 255),
             1_000_000,
@@ -133,4 +153,5 @@ def test_get_slide_region_valid_brightfield(
         start_x,
         start_y,
         size,
+        plugin="pil",
     )
