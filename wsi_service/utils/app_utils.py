@@ -47,7 +47,7 @@ def process_image_region(slide, image_tile, image_channels):
             rgb_image = convert_narray_to_pil_image(result, np.min(result), np.max(result), mode=mode)
             return rgb_image
     else:
-        raise HTTPException(status_code=400, detail="Failed to read region in an apropriate internal representation.")
+        raise HTTPException(status_code=400, detail="Failed to read region in an appropriate internal representation.")
 
 
 def process_image_region_raw(image_tile, image_channels):

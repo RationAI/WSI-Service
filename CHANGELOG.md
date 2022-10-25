@@ -6,6 +6,7 @@
 - added tests for out of image region and tile requests
 - added out of image region and tile support to pil plugin
 - added z-stack parameter validation
+- added possibility to add a plugin query to v3 routes
 
 ## 0.9.2
 

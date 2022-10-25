@@ -23,4 +23,6 @@ ImagePaddingColorQuery = Query(
     """,
 )
 
+PluginQuery = Query(None, description="Select a specific WSI Service Plugin.")
+
 ZStackQuery = Query(0, ge=0, description="Z-Stack layer index z")

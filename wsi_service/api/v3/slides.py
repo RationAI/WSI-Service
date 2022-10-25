@@ -10,6 +10,7 @@ from wsi_service.custom_models.queries import (
     ImageFormatsQuery,
     ImagePaddingColorQuery,
     ImageQualityQuery,
+    PluginQuery,
     ZStackQuery,
 )
 from wsi_service.custom_models.responses import ImageRegionResponse, ImageResponses
@@ -27,11 +28,11 @@ from wsi_service.utils.download_utils import expand_folders, get_zipfly_paths, r
 
 def add_routes_slides(app, settings, slide_manager):
     @app.get("/slides/{slide_id}/info", response_model=SlideInfo, tags=["Main Routes"])
-    async def _(slide_id: str):
+    async def _(slide_id: str, plugin: str = PluginQuery):
         """
         Get metadata information for a slide given its ID
         """
-        return await slide_manager.get_slide_info(slide_id, slide_info_model=SlideInfo)
+        return await slide_manager.get_slide_info(slide_id, slide_info_model=SlideInfo, plugin=plugin)
 
     @app.get(
         "/slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}",
@@ -49,6 +50,7 @@ def add_routes_slides(app, settings, slide_manager):
         ),
         image_format: str = ImageFormatsQuery,
         image_quality: int = ImageQualityQuery,
+        plugin: str = PluginQuery,
     ):
         """
         Get slide thumbnail image  given its ID.
@@ -60,7 +62,7 @@ def add_routes_slides(app, settings, slide_manager):
         When tiff is specified as output format the raw data of the image is returned.
         """
         validate_image_request(image_format, image_quality)
-        slide = await slide_manager.get_slide(slide_id)
+        slide = await slide_manager.get_slide(slide_id, plugin=plugin)
         thumbnail = await slide.get_thumbnail(max_x, max_y)
         return make_response(slide, thumbnail, image_format, image_quality)
 
@@ -76,6 +78,7 @@ def add_routes_slides(app, settings, slide_manager):
         max_y: int = Path(None, example=100, description="Maximum height of label image"),
         image_format: str = ImageFormatsQuery,
         image_quality: int = ImageQualityQuery,
+        plugin: str = PluginQuery,
     ):
         """
         Get the label image of a slide given its ID.
@@ -87,7 +90,7 @@ def add_routes_slides(app, settings, slide_manager):
         When tiff is specified as output format the raw data of the image is returned.
         """
         validate_image_request(image_format, image_quality)
-        slide = await slide_manager.get_slide(slide_id)
+        slide = await slide_manager.get_slide(slide_id, plugin=plugin)
         label = await slide.get_label()
         label.thumbnail((max_x, max_y), Image.ANTIALIAS)
         return make_response(slide, label, image_format, image_quality)
@@ -104,6 +107,7 @@ def add_routes_slides(app, settings, slide_manager):
         max_y: int = Path(None, example=100, description="Maximum height of macro image"),
         image_format: str = ImageFormatsQuery,
         image_quality: int = ImageQualityQuery,
+        plugin: str = PluginQuery,
     ):
         """
         Get the macro image of a slide given its ID.
@@ -115,7 +119,7 @@ def add_routes_slides(app, settings, slide_manager):
         When tiff is specified as output format the raw data of the image is returned.
         """
         validate_image_request(image_format, image_quality)
-        slide = await slide_manager.get_slide(slide_id)
+        slide = await slide_manager.get_slide(slide_id, plugin=plugin)
         macro = await slide.get_macro()
         macro.thumbnail((max_x, max_y), Image.ANTIALIAS)
         return make_response(slide, macro, image_format, image_quality)
@@ -137,6 +141,7 @@ def add_routes_slides(app, settings, slide_manager):
         z: int = ZStackQuery,
         image_format: str = ImageFormatsQuery,
         image_quality: int = ImageQualityQuery,
+        plugin: str = PluginQuery,
     ):
         """
         Get a region of a slide given its ID and by providing the following parameters:
@@ -176,7 +181,7 @@ def add_routes_slides(app, settings, slide_manager):
         """
         validate_image_request(image_format, image_quality)
         validate_image_size(size_x, size_y)
-        slide = await slide_manager.get_slide(slide_id)
+        slide = await slide_manager.get_slide(slide_id, plugin=plugin)
         slide_info = await slide.get_info()
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
@@ -199,6 +204,7 @@ def add_routes_slides(app, settings, slide_manager):
         padding_color: str = ImagePaddingColorQuery,
         image_format: str = ImageFormatsQuery,
         image_quality: int = ImageQualityQuery,
+        plugin: str = PluginQuery,
     ):
         """
         Get a tile of a slide given its ID and by providing the following parameters:
@@ -238,7 +244,7 @@ def add_routes_slides(app, settings, slide_manager):
         """
         vp_color = validate_hex_color_string(padding_color)
         validate_image_request(image_format, image_quality)
-        slide = await slide_manager.get_slide(slide_id)
+        slide = await slide_manager.get_slide(slide_id, plugin=plugin)
         slide_info = await slide.get_info()
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
