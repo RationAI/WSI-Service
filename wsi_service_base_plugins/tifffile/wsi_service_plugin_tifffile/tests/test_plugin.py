@@ -131,6 +131,24 @@ def test_get_slide_macro_valid(image_format, image_quality, slide_id, return_val
             (4, 0, 0),
             (4, 0, 0),
         ),
+        (
+            "80f38182247757799ad732bf6d035ac0",
+            3,
+            (-1_000_000, -1_000_000),
+            (256, 256),
+            (0, 0),
+            (0, 0, 0),
+            (0, 0, 0),
+        ),
+        (
+            "80f38182247757799ad732bf6d035ac0",
+            3,
+            (1_000_000, 1_000_000),
+            (256, 256),
+            (0, 0),
+            (0, 0, 0),
+            (0, 0, 0),
+        ),
     ],
 )
 def test_get_slide_region_valid_fluorescence(
@@ -160,7 +178,23 @@ def test_get_slide_region_valid_fluorescence(
 @pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
 @pytest.mark.parametrize(
     "slide_id, testpixel, tile_x, tile_y, tile_size",
-    [("37b5c722d1425395b1817474dd41b946", (30, 7, 6), 21, 22, (512, 512))],
+    [
+        ("37b5c722d1425395b1817474dd41b946", (30, 7, 6), 21, 22, (512, 512)),
+        (
+            "37b5c722d1425395b1817474dd41b946",
+            (0, 0, 0),
+            -1_000_000,
+            -1_000_000,
+            (512, 512),
+        ),
+        (
+            "37b5c722d1425395b1817474dd41b946",
+            (0, 0, 0),
+            1_000_000,
+            1_000_000,
+            (512, 512),
+        ),
+    ],
 )
 def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size):
     check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size)

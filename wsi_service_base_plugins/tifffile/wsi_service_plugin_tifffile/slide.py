@@ -85,10 +85,10 @@ class Slide(BaseSlide):
         return thumbnail_resized
 
     async def get_label(self):
-        self._get_associated_image("label")
+        self.__get_associated_image("label")
 
     async def get_macro(self):
-        self._get_associated_image("macro")
+        self.__get_associated_image("macro")
 
     async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
         # implement extracting of tile without de/encoding of tile data
@@ -101,9 +101,9 @@ class Slide(BaseSlide):
             padding_color,
         )
 
-    # private members
+    # private
 
-    def _get_associated_image(self, associated_image_name):
+    def __get_associated_image(self, associated_image_name):
         raise HTTPException(
             status_code=404,
             detail=f"Associated image {associated_image_name} does not exist.",
