@@ -55,8 +55,6 @@ Different formats are supported by plugins for accessing image data. Three base 
 
 - [openslide](./wsi_service_base_plugins/openslide/)
   - 3DHISTECH (\*.mrxs)
-  - APERIO (\*.svs)
-  - GENERIC TIF (\*.tif / \*.tiff)
   - HAMAMATSU (\*.ndpi)
   - LEICA (\*.scn)
   - VENTANA (\*.bif)
@@ -66,8 +64,12 @@ Different formats are supported by plugins for accessing image data. Three base 
   - JPEG (\*.jpeg, \*.jpg)
   - PNG (\*.png)
 
-- [tiffile](./wsi_service_base_plugins/tifffile/)
+- [tifffile](./wsi_service_base_plugins/tifffile/)
   - OME-TIFF (\*.ome.tif, \*.ome.tif, \*.ome.tiff, \*.ome.tf2, \*.ome.tf8, \*.ome.btf)
+
+- [tiffslide](./wsi_service_base_plugins/tifffile/)
+  - APERIO (\*.svs)
+  - GENERIC TIF (\*.tif / \*.tiff)
 
 - [wsidicom](./wsi_service_base_plugins/wsidicom/)
   - DICOM FOLDER
