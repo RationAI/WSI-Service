@@ -223,7 +223,7 @@ def check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
 async def get_extended_tile(get_tile, slide_info, level, tile_x, tile_y, padding_color=None, z=0):
     overlap_size_x = slide_info.levels[level].extent.x - tile_x * slide_info.tile_extent.x
     overlap_size_y = slide_info.levels[level].extent.y - tile_y * slide_info.tile_extent.y
-    overlap = overlap_size_x > 0 and overlap_size_y > 0
+    overlap = tile_x >= 0 and tile_y >= 0 and overlap_size_x > 0 and overlap_size_y > 0
     # get overlapping tile if there is an overlap
     if overlap:
         image_tile_overlap = await get_tile(level, tile_x, tile_y, padding_color=padding_color, z=z)

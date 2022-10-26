@@ -6,8 +6,8 @@
 - added tests for out of image region and tile requests
 - added out of image region and tile support to wsi service
 - added z-stack parameter validation
-- added possibility to add a plugin query to v3 routes
-- added padding color query to v3 region route
+- added possibility to add a plugin query
+- added padding color query
 - added level validation for region and tile requests
 
 ## 0.9.2

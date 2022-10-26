@@ -180,6 +180,7 @@ def add_routes_slides(app, settings, slide_manager):
 
         * `padding_color` - Background color as 24bit-hex-string with leading #,
         that is used when image region contains whitespace when out of image extent. Default is white.
+        Only works for 8-bit RGB slides, otherwise the background color is black.
 
         * `image_format` - The image format can be selected. Formats include jpeg, png, tiff, bmp, gif.
         When tiff is specified as output format the raw data of the image is returned.
@@ -250,6 +251,7 @@ def add_routes_slides(app, settings, slide_manager):
 
         * `padding_color` - Background color as 24bit-hex-string with leading #,
         that is used when image tile contains whitespace when out of image extent. Default is white.
+        Only works for 8-bit RGB slides, otherwise the background color is black.
 
         * `image_format` - The image format can be selected. Formats include jpeg, png, tiff, bmp, gif.
         When tiff is specified as output format the raw data of the image is returned.
