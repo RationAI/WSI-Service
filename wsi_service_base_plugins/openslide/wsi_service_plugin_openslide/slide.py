@@ -47,22 +47,15 @@ class Slide(BaseSlide):
         if padding_color is None:
             padding_color = settings.padding_color
         downsample_factor = self.slide_info.levels[level].downsample_factor
-        size = (size_x, size_y)
-        size = self.__adapt_base_size_for_edge_region(size, start_x, start_y, downsample_factor)
         level_0_location = (
             (int)(start_x * downsample_factor),
             (int)(start_y * downsample_factor),
         )
         try:
-            img = self.slide.read_region(level_0_location, level, size)
+            img = self.slide.read_region(level_0_location, level, (size_x, size_y))
         except openslide.OpenSlideError as e:
             raise HTTPException(status_code=500, detail=f"OpenSlideError: {e}")
-        rgb_img = rgba_to_rgb_with_background_color(
-            img,
-            padding_color,
-            size=(size_x, size_y),
-            paste_size=size,
-        )
+        rgb_img = rgba_to_rgb_with_background_color(img, padding_color)
         return rgb_img
 
     async def get_thumbnail(self, max_x, max_y):
@@ -208,22 +201,3 @@ class Slide(BaseSlide):
                 return best_level - 1
             best_level += 1
         return best_level - 1
-
-    def __adapt_base_size_for_edge_region(self, base_size, start_x, start_y, downsample_factor):
-        end_x = int((start_x + base_size[0]) * downsample_factor)
-        end_y = int((start_y + base_size[1]) * downsample_factor)
-        if (
-            (end_x > self.slide.dimensions[0] or end_y > self.slide.dimensions[1])
-            and start_x * downsample_factor < self.slide.dimensions[0]
-            and start_y * downsample_factor < self.slide.dimensions[1]
-        ):
-            new_size_x = min(
-                int((int(base_size[0] * downsample_factor) - (end_x - self.slide.dimensions[0])) / downsample_factor),
-                base_size[0],
-            )
-            new_size_y = min(
-                int((int(base_size[1] * downsample_factor) - (end_y - self.slide.dimensions[1])) / downsample_factor),
-                base_size[1],
-            )
-            base_size = (new_size_x, new_size_y)
-        return base_size

@@ -25,7 +25,12 @@ from wsi_service.utils.app_utils import (
     validate_image_z,
 )
 from wsi_service.utils.download_utils import expand_folders, get_zipfly_paths, remove_folders
-from wsi_service.utils.image_utils import check_complete_overlap, get_extended_region
+from wsi_service.utils.image_utils import (
+    check_complete_region_overlap,
+    check_complete_tile_overlap,
+    get_extended_region,
+    get_extended_tile,
+)
 
 
 def add_routes_slides(app, settings, slide_manager):
@@ -193,7 +198,7 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_level(slide_info, level)
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
-        if check_complete_overlap(slide_info, level, start_x, start_y, size_x, size_y):
+        if check_complete_region_overlap(slide_info, level, start_x, start_y, size_x, size_y):
             image_region = await slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=vp_color, z=z)
         else:
             image_region = await get_extended_region(
@@ -262,7 +267,12 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_level(slide_info, level)
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
-        image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
+        if check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
+            image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
+        else:
+            image_tile = await get_extended_tile(
+                slide.get_tile, slide_info, level, tile_x, tile_y, padding_color=vp_color, z=z
+            )
         return make_response(slide, image_tile, image_format, image_quality, image_channels)
 
     @app.get("/slides/{slide_id}/download", tags=["Main Routes"])

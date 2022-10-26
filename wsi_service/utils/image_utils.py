@@ -5,25 +5,12 @@ from fastapi import HTTPException
 from PIL import Image
 
 
-def rgba_to_rgb_with_background_color(image_rgba, padding_color, size=None, paste_size=None, paste_start=None):
-    size = size if size else image_rgba.size
-    paste_size = paste_size if paste_size else size
-    # no image, return empty image of size
-    if image_rgba is None and size is not None:
-        return Image.new("RGB", size, padding_color)
-    # image already rgb, return directly
-    if image_rgba.mode == "RGB" and size is image_rgba.size and paste_size is image_rgba.size and paste_start is None:
-        return image_rgba
-    # image has transparency, remove transparency and return rgb
-    # also covers the case if size > image_rgba.size, paste image_rgba into image_rgb
-    image_rgb = Image.new("RGB", size, padding_color)
+def rgba_to_rgb_with_background_color(image_rgba, padding_color):
+    if image_rgba.mode == "RGB":
+        image_rgb = image_rgba
     if image_rgba.info.get("transparency", None) is not None or image_rgba.mode == "RGBA":
-        image_rgb.paste(image_rgba, mask=image_rgba.split()[3], box=(0, 0, paste_size[0], paste_size[1]))
-    # image already rgb, but size != image_rgba.size, use paste_start to fit image, return rgb
-    elif image_rgba.mode == "RGB":
-        image_rgb.paste(image_rgba, box=paste_start)
-    else:
-        raise HTTPException(400, "Raw image data has unsupported image format")
+        image_rgb = Image.new("RGB", image_rgba.size, padding_color)
+        image_rgb.paste(image_rgba, mask=image_rgba.split()[3])
     return image_rgb
 
 
@@ -158,7 +145,7 @@ def get_requested_channels_as_array(narray, image_channels):
     return result
 
 
-def check_complete_overlap(slide_info, level, start_x, start_y, size_x, size_y):
+def check_complete_region_overlap(slide_info, level, start_x, start_y, size_x, size_y):
     return (
         start_x >= 0
         and start_y >= 0
@@ -225,3 +212,49 @@ async def get_extended_region(get_region, slide_info, level, start_x, start_y, s
                 overlap_start_x : overlap_start_x + overlap_size_x,
             ] = image_region_overlap
     return image_region
+
+
+def check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
+    tile_count_x = int(slide_info.levels[level].extent.x / slide_info.tile_extent.x)
+    tile_count_y = int(slide_info.levels[level].extent.y / slide_info.tile_extent.y)
+    return tile_x >= 0 and tile_y >= 0 and tile_x < tile_count_x and tile_y < tile_count_y
+
+
+async def get_extended_tile(get_tile, slide_info, level, tile_x, tile_y, padding_color=None, z=0):
+    overlap_size_x = slide_info.levels[level].extent.x - tile_x * slide_info.tile_extent.x
+    overlap_size_y = slide_info.levels[level].extent.y - tile_y * slide_info.tile_extent.y
+    overlap = overlap_size_x > 0 and overlap_size_y > 0
+    # get overlapping tile if there is an overlap
+    if overlap:
+        image_tile_overlap = await get_tile(level, tile_x, tile_y, padding_color=padding_color, z=z)
+    # create empty tile based on returned tile data type
+    if overlap:
+        image_tile_sample = image_tile_overlap
+    else:
+        image_tile_sample = await get_tile(0, 0, 0)
+    if isinstance(image_tile_sample, Image.Image):
+        image_tile = Image.new("RGB", (slide_info.tile_extent.x, slide_info.tile_extent.y), padding_color)
+    else:
+        image_tile = np.zeros(
+            (image_tile_sample.shape[0], slide_info.tile_extent.x, slide_info.tile_extent.y),
+            dtype=image_tile_sample.dtype,
+        )
+    # insert overlapping tile into empty tile
+    if overlap:
+        if isinstance(image_tile_sample, Image.Image):
+            image_tile.paste(
+                image_tile_overlap.crop((0, 0, overlap_size_x, overlap_size_y)),
+                box=(
+                    0,
+                    0,
+                    overlap_size_x,
+                    overlap_size_y,
+                ),
+            )
+        else:
+            image_tile[
+                :,
+                0:overlap_size_y,
+                0:overlap_size_x,
+            ] = image_tile_overlap[:, 0:overlap_size_y, 0:overlap_size_x]
+    return image_tile
