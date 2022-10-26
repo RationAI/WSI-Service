@@ -27,22 +27,22 @@ supported_image_formats = {
 alternative_spellings = {"jpg": "jpeg", "tif": "tiff"}
 
 
-def process_image_region(slide, image_tile, image_channels):
-    if isinstance(image_tile, Image.Image):
+def process_image_region(slide, image_region, image_channels):
+    if isinstance(image_region, Image.Image):
         # pillow image
         if image_channels is None:
-            return image_tile
+            return image_region
         else:
-            return convert_rgb_image_for_channels(image_tile, image_channels)
-    elif isinstance(image_tile, (np.ndarray, np.generic)):
+            return convert_rgb_image_for_channels(image_region, image_channels)
+    elif isinstance(image_region, (np.ndarray, np.generic)):
         # numpy array
         if image_channels is None:
             # workaround for now: we return first three channels as rgb
-            result = get_requested_channels_as_rgb_array(image_tile, None, slide)
+            result = get_requested_channels_as_rgb_array(image_region, None, slide)
             rgb_image = convert_narray_to_pil_image(result)
             return rgb_image
         else:
-            result = get_requested_channels_as_rgb_array(image_tile, image_channels, slide)
+            result = get_requested_channels_as_rgb_array(image_region, image_channels, slide)
             mode = "L" if len(image_channels) == 1 else "RGB"
             rgb_image = convert_narray_to_pil_image(result, np.min(result), np.max(result), mode=mode)
             return rgb_image
@@ -50,18 +50,18 @@ def process_image_region(slide, image_tile, image_channels):
         raise HTTPException(status_code=400, detail="Failed to read region in an appropriate internal representation.")
 
 
-def process_image_region_raw(image_tile, image_channels):
-    if isinstance(image_tile, Image.Image):
+def process_image_region_raw(image_region, image_channels):
+    if isinstance(image_region, Image.Image):
         # pillow image
-        narray = np.asarray(image_tile)
+        narray = np.asarray(image_region)
         narray = np.ascontiguousarray(narray.transpose(2, 0, 1))
         return narray
-    elif isinstance(image_tile, (np.ndarray, np.generic)):
+    elif isinstance(image_region, (np.ndarray, np.generic)):
         # numpy array
         if image_channels is None:
-            return image_tile
+            return image_region
         else:
-            result = get_requested_channels_as_array(image_tile, image_channels)
+            result = get_requested_channels_as_array(image_region, image_channels)
             return result
     else:
         raise HTTPException(status_code=400, detail="Failed to read region in an apropriate internal representation.")

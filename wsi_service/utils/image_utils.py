@@ -156,3 +156,72 @@ def get_requested_channels_as_array(narray, image_channels):
         temp_array.append(separate_channels[i])
     result = np.concatenate(temp_array, axis=0)
     return result
+
+
+def check_complete_overlap(slide_info, level, start_x, start_y, size_x, size_y):
+    return (
+        start_x >= 0
+        and start_y >= 0
+        and start_x + size_x < slide_info.levels[level].extent.x
+        and start_y + size_y < slide_info.levels[level].extent.y
+    )
+
+
+async def get_extended_region(get_region, slide_info, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    # check overlap of requested region and slide
+    overlap = (start_x + size_x > 0 and start_x < slide_info.levels[level].extent.x) and (
+        start_y + size_y > 0 and start_y < slide_info.levels[level].extent.y
+    )
+    # get overlapping region if there is an overlap
+    if overlap:
+        if start_x < 0:
+            region_request_start_x = 0
+            overlap_start_x = abs(start_x)
+        else:
+            region_request_start_x = start_x
+            overlap_start_x = 0
+        if start_y < 0:
+            region_request_start_y = 0
+            overlap_start_y = abs(start_y)
+        else:
+            region_request_start_y = start_y
+            overlap_start_y = 0
+        overlap_size_x = min(slide_info.levels[level].extent.x - region_request_start_x, size_x - overlap_start_x)
+        overlap_size_y = min(slide_info.levels[level].extent.y - region_request_start_y, size_y - overlap_start_y)
+        image_region_overlap = await get_region(
+            level,
+            region_request_start_x,
+            region_request_start_y,
+            overlap_size_x,
+            overlap_size_y,
+            padding_color=padding_color,
+            z=z,
+        )
+    # create empty region based on returned region data type
+    if overlap:
+        image_region_sample = image_region_overlap
+    else:
+        image_region_sample = await get_region(0, 0, 0, 1, 1)
+    if isinstance(image_region_sample, Image.Image):
+        image_region = Image.new("RGB", (size_x, size_y), padding_color)
+    else:
+        image_region = np.zeros((image_region_sample.shape[0], size_y, size_x), dtype=image_region_sample.dtype)
+    # insert overlapping region into empty region
+    if overlap:
+        if isinstance(image_region_sample, Image.Image):
+            image_region.paste(
+                image_region_overlap,
+                box=(
+                    overlap_start_x,
+                    overlap_start_y,
+                    overlap_start_x + overlap_size_x,
+                    overlap_start_y + overlap_size_y,
+                ),
+            )
+        else:
+            image_region[
+                :,
+                overlap_start_y : overlap_start_y + overlap_size_y,
+                overlap_start_x : overlap_start_x + overlap_size_x,
+            ] = image_region_overlap
+    return image_region

@@ -25,6 +25,7 @@ from wsi_service.utils.app_utils import (
     validate_image_z,
 )
 from wsi_service.utils.download_utils import expand_folders, get_zipfly_paths, remove_folders
+from wsi_service.utils.image_utils import check_complete_overlap, get_extended_region
 
 
 def add_routes_slides(app, settings, slide_manager):
@@ -140,6 +141,7 @@ def add_routes_slides(app, settings, slide_manager):
         size_y: int = Path(None, gt=0, example=1024, description="Height of requested region"),
         image_channels: List[int] = ImageChannelQuery,
         z: int = ZStackQuery,
+        padding_color: str = ImagePaddingColorQuery,
         image_format: str = ImageFormatsQuery,
         image_quality: int = ImageQualityQuery,
         plugin: str = PluginQuery,
@@ -171,6 +173,9 @@ def add_routes_slides(app, settings, slide_manager):
         * `z` - The region endpoint also offers the selection of a layer in a Z-Stack by setting the index z.
         Default is z=0.
 
+        * `padding_color` - Background color as 24bit-hex-string with leading #,
+        that is used when image region contains whitespace when out of image extent. Default is white.
+
         * `image_format` - The image format can be selected. Formats include jpeg, png, tiff, bmp, gif.
         When tiff is specified as output format the raw data of the image is returned.
         Multi-channel images can also be represented as RGB-images (mostly for displaying reasons in the viewer).
@@ -180,6 +185,7 @@ def add_routes_slides(app, settings, slide_manager):
         * `image_quality` - The image quality can be set for specific formats,
         e.g. for the jpeg format a value between 0 and 100 can be selected. Default is 90.
         """
+        vp_color = validate_hex_color_string(padding_color)
         validate_image_request(image_format, image_quality)
         validate_image_size(size_x, size_y)
         slide = await slide_manager.get_slide(slide_id, plugin=plugin)
@@ -187,7 +193,12 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_level(slide_info, level)
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
-        image_region = await slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=None, z=z)
+        if check_complete_overlap(slide_info, level, start_x, start_y, size_x, size_y):
+            image_region = await slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=vp_color, z=z)
+        else:
+            image_region = await get_extended_region(
+                slide.get_region, slide_info, level, start_x, start_y, size_x, size_y, padding_color=vp_color, z=z
+            )
         return make_response(slide, image_region, image_format, image_quality, image_channels)
 
     @app.get(

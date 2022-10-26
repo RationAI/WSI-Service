@@ -4,9 +4,10 @@
 
 - added tiffslide plugin
 - added tests for out of image region and tile requests
-- added out of image region and tile support to pil plugin
+- added out of image region and tile support to wsi service
 - added z-stack parameter validation
 - added possibility to add a plugin query to v3 routes
+- added padding color query to v3 region route
 - added level validation for region and tile requests
 
 ## 0.9.2
