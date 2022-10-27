@@ -2,7 +2,6 @@ import aiofiles
 import numpy as np
 import tiffslide
 from fastapi import HTTPException
-from PIL import Image
 
 from wsi_service.models.v3.slide import SlideExtent, SlideInfo, SlidePixelSizeNm
 from wsi_service.singletons import settings
@@ -222,10 +221,8 @@ class Slide(BaseSlide):
         # add huffman tables
         pos = data.find(jpeg_tags.start_of_scan)
         data[pos:pos] = huffman_tables
-        # add APP0 data (chrome, firefox broken if both APP0 and APP14 are present)
-        # pos = data.find(b"\xff\xdb")
-        # data = data[:pos] + bytes.fromhex("ffe000104a46494600010100000100010000") + data[pos:]
         # add APP14 data
+        #
         # Marker: ff ee
         # Length (14 bytes): 00 0e
         # Adobe (ASCI): 41 64 6f 62 65

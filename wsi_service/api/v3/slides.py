@@ -3,7 +3,6 @@ from typing import List
 from fastapi import Path
 from fastapi.responses import StreamingResponse
 from PIL import Image
-from starlette.responses import Response
 from zipfly import ZipFly
 
 from wsi_service.custom_models.queries import (
@@ -18,7 +17,6 @@ from wsi_service.custom_models.responses import ImageRegionResponse, ImageRespon
 from wsi_service.models.v3.slide import SlideInfo
 from wsi_service.utils.app_utils import (
     make_response,
-    supported_image_formats,
     validate_hex_color_string,
     validate_image_channels,
     validate_image_level,
