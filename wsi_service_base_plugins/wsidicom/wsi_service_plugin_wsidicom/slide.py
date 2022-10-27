@@ -81,7 +81,7 @@ class Slide(BaseSlide):
 
         for level in levels:
             level_dimensions.append(level.size.to_tuple())
-            level_downsamples.append(2**level.level)
+            level_downsamples.append(2 ** level.level)
 
         original_levels = get_original_levels(
             level_count=level_count,

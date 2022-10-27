@@ -3,6 +3,7 @@ from typing import List
 from fastapi import Path
 from fastapi.responses import StreamingResponse
 from PIL import Image
+from starlette.responses import Response
 from zipfly import ZipFly
 
 from wsi_service.custom_models.queries import (
@@ -17,6 +18,7 @@ from wsi_service.custom_models.responses import ImageRegionResponse, ImageRespon
 from wsi_service.models.v3.slide import SlideInfo
 from wsi_service.utils.app_utils import (
     make_response,
+    supported_image_formats,
     validate_hex_color_string,
     validate_image_channels,
     validate_image_level,
@@ -270,7 +272,10 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
         if check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
-            image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
+            if hasattr(slide, "get_tile_raw"):
+                image_tile = await slide.get_tile_raw(level, tile_x, tile_y, padding_color=vp_color, z=z)
+            else:
+                image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
         else:
             image_tile = await get_extended_tile(
                 slide.get_tile, slide_info, level, tile_x, tile_y, padding_color=vp_color, z=z

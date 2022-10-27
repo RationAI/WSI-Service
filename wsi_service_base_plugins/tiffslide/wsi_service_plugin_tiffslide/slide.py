@@ -1,11 +1,22 @@
+import aiofiles
+import numpy as np
 import tiffslide
 from fastapi import HTTPException
+from PIL import Image
 
 from wsi_service.models.v3.slide import SlideExtent, SlideInfo, SlidePixelSizeNm
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
 from wsi_service.utils.image_utils import rgba_to_rgb_with_background_color
 from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list
+
+
+class jpeg_tags:
+    quantization_tables = b"\xff\xdb"
+    huffman_tables = b"\xff\xc4"
+    end_of_image = b"\xff\xd9"
+    start_of_frame = b"\xff\xc0"
+    start_of_scan = b"\xff\xda"
 
 
 class Slide(BaseSlide):
@@ -72,7 +83,20 @@ class Slide(BaseSlide):
             padding_color,
         )
 
+    async def get_tile_raw(self, level, tile_x, tile_y, padding_color=None, z=0):
+        tif_level = self.__get_tif_level_for_slide_level(level)
+        page = tif_level.pages[0]
+        tile_data = await self.__read_raw_tile(page, tile_x, tile_y)
+        tile_data = self.__add_jpeg_headers(page, tile_data)
+        return bytes(tile_data)
+
     # private
+
+    def __get_tif_level_for_slide_level(self, level):
+        slide_level = self.slide_info.levels[level]
+        for level in self.slide._tifffile.series[0].levels:
+            if level.shape[1] == slide_level.extent.x and level.shape[0] == slide_level.extent.y:
+                return level
 
     def __get_associated_image(self, associated_image_name):
         if associated_image_name not in self.slide.associated_images:
@@ -166,3 +190,52 @@ class Slide(BaseSlide):
                 return best_level - 1
             best_level += 1
         return best_level - 1
+
+    def __get_quantization_and_huffman_tables(self, jpegtables):
+        start_quantization_tables = jpegtables.find(jpeg_tags.quantization_tables)
+        start_huffman_tables = jpegtables.find(jpeg_tags.huffman_tables)
+        end_of_image = jpegtables.find(jpeg_tags.end_of_image)
+        quantization_tables = jpegtables[start_quantization_tables:start_huffman_tables]
+        huffman_tables = jpegtables[start_huffman_tables:end_of_image]
+        return quantization_tables, huffman_tables
+
+    async def __read_raw_tile(self, page, tile_x, tile_y):
+        image_width = page.keyframe.imagewidth
+        tile_width = page.keyframe.tilewidth
+        tile_per_line = int(np.ceil(image_width / tile_width))
+        index = int(tile_y * tile_per_line + tile_x)
+        offset = page.dataoffsets[index]
+        bytecount = page.databytecounts[index]
+        async with aiofiles.open(self.filepath, mode="rb") as f:
+            await f.seek(offset)
+            data = bytearray(await f.read(bytecount))
+        return data
+
+    def __add_jpeg_headers(self, page, data):
+        (
+            quantization_tables,
+            huffman_tables,
+        ) = self.__get_quantization_and_huffman_tables(page.jpegtables)
+        # add quantization tables
+        pos = data.find(jpeg_tags.start_of_frame)
+        data[pos:pos] = quantization_tables
+        # add huffman tables
+        pos = data.find(jpeg_tags.start_of_scan)
+        data[pos:pos] = huffman_tables
+        # add APP0 data (chrome, firefox broken if both APP0 and APP14 are present)
+        # pos = data.find(b"\xff\xdb")
+        # data = data[:pos] + bytes.fromhex("ffe000104a46494600010100000100010000") + data[pos:]
+        # add APP14 data
+        # Marker: ff ee
+        # Length (14 bytes): 00 0e
+        # Adobe (ASCI): 41 64 6f 62 65
+        # Version (100): 00 64
+        # Flags0: 00 00
+        # Flags1: 00 00
+        # Color transform:
+        # 00 = Unknown (RGB or CMYK)
+        # 01 = YCbCr
+        # 02 = YCCK
+        pos = data.find(jpeg_tags.quantization_tables)
+        data[pos:pos] = bytearray.fromhex("ff ee 00 0e 41 64 6f 62 65 0064 00 00 00 00 00")
+        return data

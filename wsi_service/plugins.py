@@ -28,7 +28,7 @@ async def load_slide(filepath, plugin=None):
             status_code=500, detail=f"There is no plugin available for file extension {file_extension}."
         )
 
-    if plugin is None and file_extension in settings.plugins_default:
+    if not plugin and file_extension in settings.plugins_default:
         plugin = settings.plugins_default[file_extension]
 
     if plugin:

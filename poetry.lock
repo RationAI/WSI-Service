@@ -1,4 +1,12 @@
 [[package]]
+name = "aiofiles"
+version = "22.1.0"
+description = "File support for asyncio."
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[[package]]
 name = "aiohttp"
 version = "3.8.3"
 description = "Async http client/server framework (asyncio)"
@@ -911,7 +919,7 @@ url = "wsi_service_base_plugins/openslide"
 
 [[package]]
 name = "wsi-service-plugin-pil"
-version = "0.2.0"
+version = "0.3.0"
 description = ""
 category = "dev"
 optional = false
@@ -1029,9 +1037,10 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<4.0"
-content-hash = "d8eb033aa45ee1c9cffc08466cdf419a77416fd2cd082787b669646af835d096"
+content-hash = "6ca629189bcbab9734b3a9a6cdd7653ac0394125a04587f7aefb46a40c73a650"
 
 [metadata.files]
+aiofiles = []
 aiohttp = []
 aioresponses = []
 aiosignal = []

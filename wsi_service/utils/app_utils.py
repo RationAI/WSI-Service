@@ -68,6 +68,8 @@ def process_image_region_raw(image_region, image_channels):
 
 
 def make_response(slide, image_region, image_format, image_quality, image_channels=None):
+    if isinstance(image_region, (bytes, bytearray)):
+        return Response(image_region, media_type=supported_image_formats[image_format])
     if image_format == "tiff":
         # return raw image region as tiff
         narray = process_image_region_raw(image_region, image_channels)
