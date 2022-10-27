@@ -259,6 +259,7 @@ def add_routes_slides(app, settings, slide_manager):
 
         * `image_quality` - The image quality can be set for specific formats,
         e.g. for the jpeg format a value between 0 and 100 can be selected. Default is 90.
+        It is ignored if raw jpeg tiles are available through a WSI service plugin.
         """
         vp_color = validate_hex_color_string(padding_color)
         validate_image_request(image_format, image_quality)
@@ -268,7 +269,10 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
         if check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
-            image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
+            if hasattr(slide, "get_tile_raw") and image_format == "jpeg":
+                image_tile = await slide.get_tile_raw(level, tile_x, tile_y, padding_color=vp_color, z=z)
+            else:
+                image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
         else:
             image_tile = await get_extended_tile(
                 slide.get_tile, slide_info, level, tile_x, tile_y, padding_color=vp_color, z=z
