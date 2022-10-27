@@ -261,6 +261,7 @@ def add_routes_slides(app, settings, slide_manager):
 
         * `image_quality` - The image quality can be set for specific formats,
         e.g. for the jpeg format a value between 0 and 100 can be selected. Default is 90.
+        It is ignored if raw jpeg tiles are available through a WSI service plugin.
         """
         vp_color = validate_hex_color_string(padding_color)
         validate_image_request(image_format, image_quality)
