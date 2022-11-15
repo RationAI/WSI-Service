@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     enable_viewer_routes: bool = True
     inactive_histo_image_timeout_seconds: int = 600
     image_handle_cache_size: int = 50
-    max_returned_region_size: int = 4 * 6250000  # 5000 x 5000
+    max_returned_region_size: int = 25_000_000  # e.g. 5000 x 5000
     max_thumbnail_size: int = 500
     root_path: str = None
 

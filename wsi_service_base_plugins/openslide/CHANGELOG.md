@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- Removed parameter validation (already part of wsi service)
+- Removed special handling for vsf
+
 ## 1.2.0
 
 - Updated to v3 models

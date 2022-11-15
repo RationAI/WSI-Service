@@ -2,7 +2,8 @@
 
 ## 0.3.0
 
-- Added support for regions outside of the image
+- Removed parameter validation (already part of wsi service)
+- Changed default tile size to 256 x 256
 
 ## 0.2.0
 
