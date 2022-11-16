@@ -10,14 +10,6 @@ from wsi_service.utils.image_utils import rgba_to_rgb_with_background_color
 from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list
 
 
-class jpeg_tags:
-    quantization_tables = b"\xff\xdb"
-    huffman_tables = b"\xff\xc4"
-    end_of_image = b"\xff\xd9"
-    start_of_frame = b"\xff\xc0"
-    start_of_scan = b"\xff\xda"
-
-
 class Slide(BaseSlide):
     supported_vendors = ["aperio", None]
 
@@ -26,7 +18,7 @@ class Slide(BaseSlide):
         await self.open_slide()
         self.format = self.slide.detect_format(self.filepath)
         self.slide_info = self.__get_slide_info()
-        self.is_jpeg_compression = await self.__is_jpeg_compression()
+        self.is_jpeg_compression = self.__is_jpeg_compression()
 
     async def open_slide(self):
         try:
@@ -76,7 +68,7 @@ class Slide(BaseSlide):
             tif_level = self.__get_tif_level_for_slide_level(level)
             page = tif_level.pages[0]
             tile_data = await self.__read_raw_tile(page, tile_x, tile_y)
-            tile_data = self.__add_jpeg_headers(page, tile_data)
+            self.__add_jpeg_headers(page, tile_data)
             return bytes(tile_data)
         else:
             return await self.get_region(
@@ -189,18 +181,10 @@ class Slide(BaseSlide):
             best_level += 1
         return best_level - 1
 
-    async def __is_jpeg_compression(self):
+    def __is_jpeg_compression(self):
         tif_level = self.__get_tif_level_for_slide_level(0)
         page = tif_level.pages[0]
         return page.jpegtables is not None
-
-    def __get_quantization_and_huffman_tables(self, jpegtables):
-        start_quantization_tables = jpegtables.find(jpeg_tags.quantization_tables)
-        start_huffman_tables = jpegtables.find(jpeg_tags.huffman_tables)
-        end_of_image = jpegtables.find(jpeg_tags.end_of_image)
-        quantization_tables = jpegtables[start_quantization_tables:start_huffman_tables]
-        huffman_tables = jpegtables[start_huffman_tables:end_of_image]
-        return quantization_tables, huffman_tables
 
     async def __read_raw_tile(self, page, tile_x, tile_y):
         image_width = page.keyframe.imagewidth
@@ -211,22 +195,15 @@ class Slide(BaseSlide):
         bytecount = page.databytecounts[index]
         # async with aiofiles.open(self.filepath, mode="rb") as f:
         #     await f.seek(offset)
-        #     data = bytearray(await f.read(bytecount))
+        #     data = await f.read(bytecount)
         self.slide._tifffile.filehandle.seek(offset)
-        data = bytearray(self.slide._tifffile.filehandle.read(bytecount))
-        return data
+        data = self.slide._tifffile.filehandle.read(bytecount)
+        return bytearray(data)
 
     def __add_jpeg_headers(self, page, data):
-        (
-            quantization_tables,
-            huffman_tables,
-        ) = self.__get_quantization_and_huffman_tables(page.jpegtables)
-        # add quantization tables
-        pos = data.find(jpeg_tags.start_of_frame)
-        data[pos:pos] = quantization_tables
-        # add huffman tables
-        pos = data.find(jpeg_tags.start_of_scan)
-        data[pos:pos] = huffman_tables
+        # add jpeg tables
+        pos = data.find(b"\xff\xda")
+        data[pos:pos] = page.jpegtables[2:-2]
         # add APP14 data
         #
         # Marker: ff ee
@@ -239,6 +216,4 @@ class Slide(BaseSlide):
         # 00 = Unknown (RGB or CMYK)
         # 01 = YCbCr
         # 02 = YCCK
-        pos = data.find(jpeg_tags.quantization_tables)
-        data[pos:pos] = bytearray.fromhex("ff ee 00 0e 41 64 6f 62 65 0064 00 00 00 00 00")
-        return data
+        data[pos:pos] = b"\xFF\xEE\x00\x0E\x41\x64\x6F\x62\x65\x00\x64\x00\x00\x00\x00\x00"
