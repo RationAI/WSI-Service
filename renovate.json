@@ -3,13 +3,16 @@
   "extends": [
     "config:base"
   ],
-  "assignees": ["michael.franz.sy"],
+  "assignees": [
+    "michael.franz.sy",
+    "nweiss"
+  ],
   "packageRules": [
-        {
-            "matchPackageNames": [
-                "ubuntu"
-            ],
-            "allowedVersions": "20.04"
-        }
-    ]
+    {
+      "matchPackageNames": [
+        "ubuntu"
+      ],
+      "allowedVersions": "20.04"
+    }
+  ]
 }
