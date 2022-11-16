@@ -9,7 +9,7 @@
     "editor.codeActionsOnSave": {
         "source.organizeImports": true
     },
-    "python.sortImports.args": [
+    "isort.args": [
         "--profile",
         "black",
     ],
