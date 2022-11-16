@@ -1,6 +1,4 @@
-import time
-
-import aiofiles
+# import aiofiles
 import numpy as np
 import tiffslide
 from fastapi import HTTPException
@@ -42,9 +40,7 @@ class Slide(BaseSlide):
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(
-        self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0
-    ):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
         downsample_factor = self.slide_info.levels[level].downsample_factor
@@ -64,9 +60,7 @@ class Slide(BaseSlide):
             try:
                 self.thumbnail = self.__get_associated_image("thumbnail")
             except HTTPException:
-                self.thumbnail = await self.__get_thumbnail(
-                    settings.max_thumbnail_size, settings.max_thumbnail_size
-                )
+                self.thumbnail = await self.__get_thumbnail(settings.max_thumbnail_size, settings.max_thumbnail_size)
         thumbnail = self.thumbnail.copy()
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
@@ -99,10 +93,7 @@ class Slide(BaseSlide):
     def __get_tif_level_for_slide_level(self, level):
         slide_level = self.slide_info.levels[level]
         for level in self.slide._tifffile.series[0].levels:
-            if (
-                level.shape[1] == slide_level.extent.x
-                and level.shape[0] == slide_level.extent.y
-            ):
+            if level.shape[1] == slide_level.extent.x and level.shape[0] == slide_level.extent.y:
                 return level
 
     def __get_associated_image(self, associated_image_name):
@@ -123,16 +114,9 @@ class Slide(BaseSlide):
         return original_levels
 
     def __get_pixel_size(self):
-        if (
-            self.slide.properties[tiffslide.PROPERTY_NAME_VENDOR]
-            in self.supported_vendors
-        ):
-            pixel_size_nm_x = 1000.0 * float(
-                self.slide.properties[tiffslide.PROPERTY_NAME_MPP_X]
-            )
-            pixel_size_nm_y = 1000.0 * float(
-                self.slide.properties[tiffslide.PROPERTY_NAME_MPP_Y]
-            )
+        if self.slide.properties[tiffslide.PROPERTY_NAME_VENDOR] in self.supported_vendors:
+            pixel_size_nm_x = 1000.0 * float(self.slide.properties[tiffslide.PROPERTY_NAME_MPP_X])
+            pixel_size_nm_y = 1000.0 * float(self.slide.properties[tiffslide.PROPERTY_NAME_MPP_Y])
         else:
             SlidePixelSizeNm()
         return SlidePixelSizeNm(x=pixel_size_nm_x, y=pixel_size_nm_y)
@@ -173,13 +157,9 @@ class Slide(BaseSlide):
             )
             return slide_info
         except HTTPException as e:
-            raise HTTPException(
-                status_code=404, detail=f"Failed to gather slide infos. [{e.detail}]"
-            )
+            raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e.detail}]")
         except Exception as e:
-            raise HTTPException(
-                status_code=404, detail=f"Failed to gather slide infos. [{e}]"
-            )
+            raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
 
     async def __get_thumbnail(self, max_x, max_y):
         level = self.__get_best_level_for_thumbnail(max_x, max_y)
@@ -260,7 +240,5 @@ class Slide(BaseSlide):
         # 01 = YCbCr
         # 02 = YCCK
         pos = data.find(jpeg_tags.quantization_tables)
-        data[pos:pos] = bytearray.fromhex(
-            "ff ee 00 0e 41 64 6f 62 65 0064 00 00 00 00 00"
-        )
+        data[pos:pos] = bytearray.fromhex("ff ee 00 0e 41 64 6f 62 65 0064 00 00 00 00 00")
         return data
