@@ -17,9 +17,9 @@ def rgba_to_rgb_with_background_color(image_rgba, padding_color):
 def convert_narray_uintX_to_uint8(array, exp=16, lower=None, upper=None):
     if exp not in [8, 16, 32, 64]:
         raise ValueError("Only exponent in range [8, 16, 32, 64] supported")
-    if lower is not None and not (0 <= lower < 2**exp):
+    if lower is not None and not (0 <= lower < 2 ** exp):
         raise ValueError(f"lower bound must be between 0 and 2**{exp}")
-    if upper is not None and not (0 <= upper < 2**exp):
+    if upper is not None and not (0 <= upper < 2 ** exp):
         raise ValueError(f"upper bound must be between 0 and 2**{exp}")
     if lower is None:
         lower = 0
@@ -28,9 +28,9 @@ def convert_narray_uintX_to_uint8(array, exp=16, lower=None, upper=None):
         if exp == 8:
             return array
         elif exp == 16:
-            upper = (2**exp) / 4
+            upper = (2 ** exp) / 4
         else:
-            upper = (2**exp) / (exp / 2)
+            upper = (2 ** exp) / (exp / 2)
 
     temp_array = array / upper if upper != 0 else array
     temp_array = temp_array * 255
@@ -227,11 +227,15 @@ async def get_extended_tile(get_tile, slide_info, level, tile_x, tile_y, padding
     # get overlapping tile if there is an overlap
     if overlap:
         image_tile_overlap = await get_tile(level, tile_x, tile_y, padding_color=padding_color, z=z)
+        if isinstance(image_tile_overlap, (bytes, bytearray)):
+            image_tile_overlap = Image.open(BytesIO(image_tile_overlap))
     # create empty tile based on returned tile data type
     if overlap:
         image_tile_sample = image_tile_overlap
     else:
         image_tile_sample = await get_tile(0, 0, 0)
+        if isinstance(image_tile_sample, (bytes, bytearray)):
+            image_tile_sample = Image.open(BytesIO(image_tile_sample))
     if isinstance(image_tile_sample, Image.Image):
         image_tile = Image.new("RGB", (slide_info.tile_extent.x, slide_info.tile_extent.y), padding_color)
     else:

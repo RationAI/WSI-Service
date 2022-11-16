@@ -32,12 +32,5 @@ class Slide(object):
         raise NotImplementedError
 
     async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
-        # allowed to return pil image or numpy array
+        # allowed to return pil image or numpy array or bytes object or bytes array
         raise NotImplementedError
-
-    # Optional:
-    # async def get_tile_raw(self, level, tile_x, tile_y, padding_color=None, z=0):
-    #     raise NotImplementedError
-    # Note:
-    # WSI Service checks if it is available and
-    # uses it for tile requests for fully overlapping tiles

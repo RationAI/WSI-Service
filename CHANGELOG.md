@@ -7,7 +7,7 @@
 - added out of image region and tile support to wsi service
 - added z-stack parameter validation
 - added possibility to add a plugin query
-- added padding color query
+- added padding color query for tile requests
 - added level validation for region and tile requests
 - updated viewer to openlayers 7.1.0
 
