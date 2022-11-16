@@ -69,6 +69,9 @@ class Slide(BaseSlide):
             page = tif_level.pages[0]
             tile_data = await self.__read_raw_tile(page, tile_x, tile_y)
             self.__add_jpeg_headers(page, tile_data)
+            # Image.open(BytesIO(tile_data)).save(f"{level}_{tile_x}_{tile_y}.png")
+            # with open(f"{level}_{tile_x}_{tile_y}.jpg", "wb") as f:
+            #     f.write(tile_data)
             return bytes(tile_data)
         else:
             return await self.get_region(
