@@ -32,5 +32,5 @@ class Slide(object):
         raise NotImplementedError
 
     async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
-        # allowed to return pil image or numpy array or bytes object or bytes array
+        # allowed to return pil image or numpy array or bytes object
         raise NotImplementedError

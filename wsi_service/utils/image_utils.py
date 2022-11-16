@@ -227,14 +227,14 @@ async def get_extended_tile(get_tile, slide_info, level, tile_x, tile_y, padding
     # get overlapping tile if there is an overlap
     if overlap:
         image_tile_overlap = await get_tile(level, tile_x, tile_y, padding_color=padding_color, z=z)
-        if isinstance(image_tile_overlap, (bytes, bytearray)):
+        if isinstance(image_tile_overlap, bytes):
             image_tile_overlap = Image.open(BytesIO(image_tile_overlap))
     # create empty tile based on returned tile data type
     if overlap:
         image_tile_sample = image_tile_overlap
     else:
         image_tile_sample = await get_tile(0, 0, 0)
-        if isinstance(image_tile_sample, (bytes, bytearray)):
+        if isinstance(image_tile_sample, bytes):
             image_tile_sample = Image.open(BytesIO(image_tile_sample))
     if isinstance(image_tile_sample, Image.Image):
         image_tile = Image.new("RGB", (slide_info.tile_extent.x, slide_info.tile_extent.y), padding_color)
