@@ -1,4 +1,3 @@
-# import aiofiles
 import numpy as np
 import tiffslide
 from fastapi import HTTPException
@@ -69,9 +68,6 @@ class Slide(BaseSlide):
             page = tif_level.pages[0]
             tile_data = await self.__read_raw_tile(page, tile_x, tile_y)
             self.__add_jpeg_headers(page, tile_data)
-            # Image.open(BytesIO(tile_data)).save(f"{level}_{tile_x}_{tile_y}.png")
-            # with open(f"{level}_{tile_x}_{tile_y}.jpg", "wb") as f:
-            #     f.write(tile_data)
             return bytes(tile_data)
         else:
             return await self.get_region(
@@ -196,9 +192,6 @@ class Slide(BaseSlide):
         index = int(tile_y * tile_per_line + tile_x)
         offset = page.dataoffsets[index]
         bytecount = page.databytecounts[index]
-        # async with aiofiles.open(self.filepath, mode="rb") as f:
-        #     await f.seek(offset)
-        #     data = await f.read(bytecount)
         self.slide._tifffile.filehandle.seek(offset)
         data = self.slide._tifffile.filehandle.read(bytecount)
         return bytearray(data)

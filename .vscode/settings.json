@@ -13,4 +13,8 @@
         "--profile",
         "black",
     ],
+    "python.formatting.blackArgs": [
+        "--line-length",
+        "120"
+    ],
 }
