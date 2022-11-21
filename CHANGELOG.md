@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.7
+
+- Updated Dependencies
+
 ## 0.9.6
 
 - Updated Dependencies
