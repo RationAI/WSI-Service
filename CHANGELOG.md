@@ -11,6 +11,10 @@
 - added level validation for region and tile requests
 - updated viewer to openlayers 7.1.0
 
+## 0.9.7
+
+- Updated Dependencies
+
 ## 0.9.6
 
 - Updated Dependencies
