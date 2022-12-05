@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- Removed parameter validation (already part of wsi service)
+
 ## 0.2.0
 
 - Updated to v3 models

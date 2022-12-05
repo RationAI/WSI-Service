@@ -1,4 +1,6 @@
 import numpy as np
+from PIL import Image
+from PIL.ImageStat import Stat
 
 from wsi_service.models.v3.slide import SlideColor
 from wsi_service.utils.image_utils import (
@@ -10,6 +12,7 @@ from wsi_service.utils.image_utils import (
     get_requested_channels_as_array,
     get_requested_channels_as_rgb_array,
     get_single_channel,
+    rgba_to_rgb_with_background_color,
 )
 
 ndarray = np.array(
@@ -25,12 +28,12 @@ ndarray = np.array(
 def test_convert_narray_uintX_to_uint8():
     c_array = convert_narray_uintX_to_uint8(ndarray, 16)
     assert c_array.dtype == np.uint8
-    result = c_array == np.array([[71, 110, 3], [125, 36, 83], [17, 233, 3]])
+    result = c_array == np.array([[71, 255, 3], [255, 36, 83], [255, 255, 3]])
     assert result.all()
 
-    c_array = convert_narray_uintX_to_uint8(ndarray, 16, 2, 3)
+    c_array = convert_narray_uintX_to_uint8(ndarray, 16, 100, 10000)
     assert c_array.dtype == np.uint8
-    result = c_array == np.array([[97, 129, 185], [189, 240, 97], [97, 142, 178]])
+    result = c_array == np.array([[115, 255, 2], [255, 58, 134], [255, 255, 3]])
     assert result.all()
 
 
@@ -75,3 +78,25 @@ def test_get_single_channel():
 def test_get_requested_channels_as_array():
     req_channels = get_requested_channels_as_array(ndarray, [0, 1])
     assert len(req_channels) == 2
+
+
+def test_rgba_to_rgb_with_background_color():
+    # expect completely transperant image to become white
+    image_rgba = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    image_rgb = rgba_to_rgb_with_background_color(image_rgba, padding_color=(255, 255, 255))
+    assert sum(Stat(image_rgb).mean) / 3 == 255
+    # expect intransperant image to not change
+    image_rgba = Image.new("RGBA", (256, 256), (0, 0, 0, 255))
+    image_rgb = rgba_to_rgb_with_background_color(image_rgba, padding_color=(255, 255, 255))
+    assert sum(Stat(image_rgb).mean) / 3 == 0
+    # expect partly transperant image to only change transparent part
+    image_rgba = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    image_rgba_half = Image.new("RGBA", (256, 128), (0, 0, 0, 255))
+    Image.Image.paste(image_rgba, image_rgba_half)
+    image_rgb = rgba_to_rgb_with_background_color(image_rgba, padding_color=(255, 255, 255))
+    # expect partly transperant image to only change transparent part
+    image_rgba = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    image_rgba_half = Image.new("RGBA", (256, 128), (0, 0, 0, 255))
+    Image.Image.paste(image_rgba, image_rgba_half)
+    image_rgb = rgba_to_rgb_with_background_color(image_rgba, padding_color=(255, 255, 255))
+    assert sum(Stat(image_rgb).mean) / 3 == 127.5

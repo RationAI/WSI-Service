@@ -5,6 +5,8 @@ from zipfile import ZipFile
 
 import pytest
 import requests
+from PIL import Image
+from PIL.ImageStat import Stat
 
 from wsi_service.tests.integration.plugin_example_tests.helpers import get_image
 
@@ -110,6 +112,88 @@ def test_get_slide_tile_invalid(api_version, slide_id, tile_x, level, expected_r
         f"http://localhost:8080/{api_version}/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_x}"
     )
     assert response.status_code == expected_response
+
+
+@pytest.mark.parametrize("api_version", ["v1", "v3"])
+@pytest.mark.parametrize("slide_id", ["f5f3a03b77fb5e0497b95eaff84e9a21"])
+@pytest.mark.parametrize(
+    "tile_x, tile_y, level, expected_response, expected_mean",
+    [
+        (-1, -1, 0, 200, 255),
+        (1_000_000, 1_000_000, 0, 200, 255),
+    ],
+)
+def test_get_slide_tile_out_of_image(api_version, slide_id, tile_x, tile_y, level, expected_response, expected_mean):
+    response = requests.get(
+        f"http://localhost:8080/{api_version}/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}", stream=True
+    )
+    assert response.status_code == expected_response
+    image = get_image(response)
+    assert sum(Stat(image).mean) / 3 == expected_mean
+
+
+@pytest.mark.parametrize("api_version", ["v1", "v3"])
+@pytest.mark.parametrize("slide_id", ["f5f3a03b77fb5e0497b95eaff84e9a21"])
+@pytest.mark.parametrize(
+    "start_x, start_y, size_x, size_y, level, expected_response, expected_mean",
+    [
+        (-1_000_000, -1_000_000, 100, 200, 0, 200, 255),
+        (1_000_000, 1_000_000, 100, 200, 0, 200, 255),
+    ],
+)
+def test_get_slide_region_out_of_image(
+    api_version, slide_id, start_x, start_y, size_x, size_y, level, expected_response, expected_mean
+):
+    response = requests.get(
+        f"http://localhost:8080/{api_version}/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}",
+        stream=True,
+    )
+    assert response.status_code == expected_response
+    image = get_image(response)
+    assert sum(Stat(image).mean) / 3 == expected_mean
+
+
+@pytest.mark.parametrize("api_version", ["v1", "v3"])
+@pytest.mark.parametrize("slide_id", ["f5f3a03b77fb5e0497b95eaff84e9a21"])
+@pytest.mark.parametrize(
+    "start_x, start_y, size_x, size_y, level, expected_response, expected_mean, white_patch_size, white_patch_position",
+    [
+        (-100, -200, 1024, 1024, 0, 200, 246, (924, 824), (100, 200)),
+        (-100, -200, 1024, 1024, 9, 200, 254, (89, 64), (100, 200)),
+        (10, 20, 1024, 1024, 9, 200, 254, (79, 44), (0, 0)),
+    ],
+)
+def test_get_slide_region_partly_out_of_image(
+    api_version,
+    slide_id,
+    start_x,
+    start_y,
+    size_x,
+    size_y,
+    level,
+    expected_response,
+    expected_mean,
+    white_patch_size,
+    white_patch_position,
+):
+    response = requests.get(
+        f"http://localhost:8080/{api_version}/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?image_format=png",
+        stream=True,
+    )
+    assert response.status_code == expected_response
+    image = get_image(response)
+    assert sum(Stat(image).mean) / 3 > expected_mean
+    white_patch = Image.new("RGB", white_patch_size, (255, 255, 255))
+    image.paste(
+        white_patch,
+        box=(
+            white_patch_position[0],
+            white_patch_position[1],
+            white_patch_position[0] + white_patch_size[0],
+            white_patch_position[1] + white_patch_size[1],
+        ),
+    )
+    assert sum(Stat(image).mean) / 3 == 255
 
 
 @pytest.mark.parametrize("api_version", ["v1", "v3"])

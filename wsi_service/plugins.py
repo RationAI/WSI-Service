@@ -5,6 +5,8 @@ import pathlib
 import pkgutil
 from importlib.metadata import version as version_from_name
 
+from fastapi import HTTPException
+
 from wsi_service.custom_models.service_status import PluginInfo
 from wsi_service.singletons import settings
 
@@ -16,32 +18,35 @@ plugins = {
 }
 
 
-async def load_slide(filepath):
+async def load_slide(filepath, plugin=None):
     if not (os.path.exists(filepath)):
-        raise FileNotFoundError(f"File {filepath} not found.")
+        raise HTTPException(status_code=500, detail=f"File {filepath} not found.")
     file_extension = _get_file_extension(filepath)
     available_plugins_for_image_file_extension = _get_available_plugins_for_image_file_extension(file_extension)
     if len(available_plugins_for_image_file_extension) == 0:
-        raise ModuleNotFoundError(f"There is no plugin available for file extension {file_extension}.")
+        raise HTTPException(
+            status_code=500, detail=f"There is no plugin available for file extension {file_extension}."
+        )
 
-    selected_plugin_name = ""
-    if file_extension in settings.plugins_default:
-        selected_plugin_name = settings.plugins_default[file_extension]
+    if not plugin and file_extension in settings.plugins_default:
+        plugin = settings.plugins_default[file_extension]
 
-    if selected_plugin_name:
-        if selected_plugin_name in available_plugins_for_image_file_extension:
-            seletected_plugin = available_plugins_for_image_file_extension[selected_plugin_name]
+    if plugin:
+        if plugin in available_plugins_for_image_file_extension:
+            seletected_plugin = available_plugins_for_image_file_extension[plugin]
         else:
-            raise ModuleNotFoundError(
-                f"Selected plugin {selected_plugin_name} is not available. Please install or specify another plugin."
+            raise HTTPException(
+                status_code=500,
+                detail=f"Selected plugin {plugin} is not available or does not support this slide. Please specify another plugin.",
             )
     else:
-        selected_plugin_name, seletected_plugin = next(iter(available_plugins_for_image_file_extension.items()))
+        plugin, seletected_plugin = next(iter(available_plugins_for_image_file_extension.items()))
     try:
         slide = await seletected_plugin.open(filepath)
+    except HTTPException as e:
+        raise HTTPException(status_code=500, detail=f"Plugin {plugin} unable to open image ({e.detail})")
     except Exception as e:
-        print(f"Plugin {selected_plugin_name} unable to open image")
-        raise e
+        raise HTTPException(status_code=500, detail=f"Plugin {plugin} unable to open image ({e})")
     return slide
 
 

@@ -16,16 +16,21 @@ class Slide(object):
         raise NotImplementedError
 
     async def get_thumbnail(self, max_x, max_y):
+        # allowed to return pil image or numpy array
         raise NotImplementedError
 
     async def get_label(self):
+        # allowed to return pil image or numpy array
         raise NotImplementedError
 
     async def get_macro(self):
+        # allowed to return pil image or numpy array
         raise NotImplementedError
 
     async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+        # allowed to return pil image or numpy array
         raise NotImplementedError
 
     async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+        # allowed to return pil image or numpy array or bytes object
         raise NotImplementedError

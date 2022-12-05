@@ -41,7 +41,17 @@ from wsi_service.tests.integration.plugin_example_tests.plugin_example_tests imp
     ],
 )
 def test_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y):
-    check_get_slide_info_valid(slide_id, channels, channel_depth, num_levels, pixel_size_nm, tile_size, x, y)
+    check_get_slide_info_valid(
+        slide_id,
+        channels,
+        channel_depth,
+        num_levels,
+        pixel_size_nm,
+        tile_size,
+        x,
+        y,
+        plugin="wsidicom",
+    )
 
 
 @pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
@@ -81,6 +91,7 @@ def test_get_slide_thumbnail_valid(
         pixel_location,
         testpixel_rgb,
         testpixel_multichannel,
+        plugin="wsidicom",
     )
 
 
@@ -95,7 +106,15 @@ def test_get_slide_thumbnail_valid(
     ],
 )
 def test_get_slide_label_valid(image_format, image_quality, slide_id, has_label, pixel_location, testpixel):
-    check_get_slide_label_valid(image_format, image_quality, slide_id, has_label, pixel_location, testpixel)
+    check_get_slide_label_valid(
+        image_format,
+        image_quality,
+        slide_id,
+        has_label,
+        pixel_location,
+        testpixel,
+        plugin="wsidicom",
+    )
 
 
 @pytest.mark.parametrize("image_format, image_quality", [("jpeg", 90), ("png", 0), ("tiff", 100)])
@@ -109,7 +128,15 @@ def test_get_slide_label_valid(image_format, image_quality, slide_id, has_label,
     ],
 )
 def test_get_slide_macro_valid(image_format, image_quality, slide_id, return_value, pixel_location, testpixel):
-    check_get_slide_macro_valid(image_format, image_quality, slide_id, return_value, pixel_location, testpixel)
+    check_get_slide_macro_valid(
+        image_format,
+        image_quality,
+        slide_id,
+        return_value,
+        pixel_location,
+        testpixel,
+        plugin="wsidicom",
+    )
 
 
 @pytest.mark.parametrize("image_format, image_quality", [("jpeg", 100), ("png", 100), ("tiff", 100)])
@@ -132,6 +159,22 @@ def test_get_slide_macro_valid(image_format, image_quality, slide_id, return_val
             15000,
             345,
         ),
+        (
+            "50f3010ed9a55f04b2e0d88cd19c6923",
+            (0, 0),
+            (255, 255, 255),
+            -1_000_000,
+            -1_000_000,
+            1,
+        ),
+        (
+            "50f3010ed9a55f04b2e0d88cd19c6923",
+            (0, 0),
+            (255, 255, 255),
+            1_000_000,
+            1_000_000,
+            1,
+        ),
     ],
 )
 def test_get_slide_region_valid_brightfield(
@@ -153,6 +196,7 @@ def test_get_slide_region_valid_brightfield(
         start_x,
         start_y,
         size,
+        plugin="wsidicom",
     )
 
 
@@ -162,10 +206,33 @@ def test_get_slide_region_valid_brightfield(
     [
         ("50f3010ed9a55f04b2e0d88cd19c6923", (246, 246, 243), 21, 22, (256, 256)),
         ("d3fc669ff08d57a4a409340d54d6bf4f", (229, 163, 225), 60, 60, (512, 512)),
+        (
+            "50f3010ed9a55f04b2e0d88cd19c6923",
+            (255, 255, 255),
+            -1_000_000,
+            -1_000_000,
+            (256, 256),
+        ),
+        (
+            "50f3010ed9a55f04b2e0d88cd19c6923",
+            (255, 255, 255),
+            1_000_000,
+            1_000_000,
+            (256, 256),
+        ),
     ],
 )
 def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size):
-    check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size)
+    check_get_slide_tile_valid(
+        image_format,
+        image_quality,
+        slide_id,
+        testpixel,
+        tile_x,
+        tile_y,
+        tile_size,
+        plugin="wsidicom",
+    )
 
 
 @pytest.mark.parametrize(
@@ -173,7 +240,7 @@ def test_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, 
     [("50f3010ed9a55f04b2e0d88cd19c6923", (223, 217, 222), 15000, 15000, 30045, 422)],
 )
 def test_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size, status_code):
-    check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size, status_code)
+    check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size, status_code, plugin="wsidicom")
 
 
 @pytest.mark.parametrize("image_format, image_quality", [("png", 100), ("tiff", 100)])
@@ -215,6 +282,7 @@ def test_get_slide_region_dedicated_channel(
         testpixel_rgb,
         image_format,
         image_quality,
+        plugin="wsidicom",
     )
 
 
@@ -226,4 +294,4 @@ def test_get_slide_region_dedicated_channel(
     ],
 )
 def test_get_slide_region_invalid_channel(slide_id, channels, expected_response):
-    check_get_slide_region_invalid_channel(slide_id, channels, expected_response)
+    check_get_slide_region_invalid_channel(slide_id, channels, expected_response, plugin="wsidicom")

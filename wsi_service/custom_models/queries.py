@@ -20,7 +20,10 @@ ImagePaddingColorQuery = Query(
     example="#FFFFFF",
     description="""Background color as 24bit-hex-string with leading #,
     that is used when image tile contains whitespace when out of image extent. Default is white.
+    Only works for 8-bit RGB slides, otherwise the background color is black.
     """,
 )
 
-ZStackQuery = Query(0, description="Z-Stack layer index z")
+PluginQuery = Query(None, description="Select a specific WSI Service Plugin.")
+
+ZStackQuery = Query(0, ge=0, description="Z-Stack layer index z")

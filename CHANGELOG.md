@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.0
+
+- added tiffslide plugin with raw tile support for svs and tiff
+- added tests for out of image region and tile requests
+- added out of image region and tile support to wsi service
+- added z-stack parameter validation
+- added possibility to add a plugin query
+- added padding color query for tile requests
+- added level validation for region and tile requests
+- updated viewer to openlayers 7.1.0
+
 ## 0.9.7
 
 - Updated Dependencies

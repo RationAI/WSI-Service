@@ -45,24 +45,12 @@ class Slide(BaseSlide):
     async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
         if padding_color is None:
             padding_color = settings.padding_color
-        try:
-            level_slide = self.slide_info.levels[level]
-        except IndexError:
-            raise HTTPException(
-                status_code=422,
-                detail=f"""The requested pyramid level is not available.
-                    The coarsest available level is {len(self.slide_info.levels) - 1}.""",
-            )
-
-        if size_x < 1 or size_y < 1 or start_x < 0 or start_y < 0:
-            raise HTTPException(status_code=400, detail="Requested image region invalid.")
-
+        level_slide = self.slide_info.levels[level]
         result_array = []
         tif_level = self.__get_tif_level_for_slide_level(level_slide)
         for i, page in enumerate(tif_level.pages):
             temp_channel = self.__read_region_of_page(page, i, start_y, start_x, size_y, size_x, padding_color)
             result_array.append(temp_channel)
-
         result = np.concatenate(result_array, axis=0)[:, :, :, 0]
         return result
 
@@ -79,19 +67,17 @@ class Slide(BaseSlide):
             max_y = max_y * (level_extent_y / level_extent_x)
         else:
             max_x = max_x * (level_extent_x / level_extent_y)
-
         thumbnail_org = await self.get_region(thumb_level, 0, 0, level_extent_x, level_extent_y, settings.padding_color)
         thumbnail_resized = util.img_as_uint(transform.resize(thumbnail_org, (thumbnail_org.shape[0], max_y, max_x)))
         return thumbnail_resized
 
     async def get_label(self):
-        self._get_associated_image("label")
+        self.__get_associated_image("label")
 
     async def get_macro(self):
-        self._get_associated_image("macro")
+        self.__get_associated_image("macro")
 
     async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
-        # implement extracting of tile without de/encoding of tile data
         return await self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
@@ -101,9 +87,9 @@ class Slide(BaseSlide):
             padding_color,
         )
 
-    # private members
+    # private
 
-    def _get_associated_image(self, associated_image_name):
+    def __get_associated_image(self, associated_image_name):
         raise HTTPException(
             status_code=404,
             detail=f"Associated image {associated_image_name} does not exist.",
@@ -229,7 +215,7 @@ class Slide(BaseSlide):
                     if fh.tell() != offset:
                         raise HTTPException(status_code=500, detail="Failed reading to tile offset")
                     data = fh.read(bytecount)
-                    tile, _indices, _shape = page.decode(data, index, jpegtables=jpegtables)
+                    tile, _, _ = page.decode(data, index, jpegtables=jpegtables)
 
                     # insert tile in temporary output array
                     tile_position_i = (i - start_tile_x0) * tile_height

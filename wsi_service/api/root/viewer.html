@@ -2,8 +2,7 @@
 <html lang="en">
 
 <head>
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/css/ol.css" type="text/css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.1.0/ol.css" type="text/css">
     <style>
         .map {
             display: block;
@@ -35,7 +34,7 @@
             text-align: center;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ol@7.1.0/dist/ol.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         class LabeledTile extends ol.Tile {
@@ -88,7 +87,7 @@
 <body>
     <div id="map" class="map"></div>
     <script type="text/javascript">
-        function setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions, minZoom, z, useDebugLayer) {
+        function setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions, minZoom, z, useDebugLayer, plugin) {
             let projection = new ol.proj.Projection({
                 code: 'pixels',
                 units: 'pixels',
@@ -117,7 +116,7 @@
                 let level = numLevels - tileCoord[0] - 1
                 let x = tileCoord[1]
                 let y = tileCoord[2]
-                return `/v3/slides/REPLACE_SLIDE_ID/tile/level/${level}/tile/${x}/${y}?z=${z}`
+                return `/v3/slides/REPLACE_SLIDE_ID/tile/level/${level}/tile/${x}/${y}?z=${z}&plugin=${plugin}`
             }
             let source = new ol.source.XYZ({
                 tileUrlFunction: tileUrlFunction,
@@ -200,10 +199,11 @@
         const urlParams = new URLSearchParams(queryString);
         const useDebugLayer = urlParams.get("debug") == 'true'
         const zString = urlParams.get("z") ? urlParams.get("z") : '0';
+        const plugin = urlParams.get("plugin") ? urlParams.get("plugin") : '';
         const z = parseInt(zString)
 
 
-        axios.get(`/v3/slides/REPLACE_SLIDE_ID/info`)
+        axios.get(`/v3/slides/REPLACE_SLIDE_ID/info?plugin=${plugin}`)
             .then(function (response) {
                 wsiInfo = response.data
 
@@ -214,7 +214,7 @@
                 let numLevels = resolutions.length
                 let minZoom = numLevels - wsiInfo.levels.length
 
-                setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions, minZoom, z, useDebugLayer)
+                setupViewer(pixelSizeNm, extent, tileSize, numLevels, resolutions, minZoom, z, useDebugLayer, plugin)
             })
     </script>
 </body>

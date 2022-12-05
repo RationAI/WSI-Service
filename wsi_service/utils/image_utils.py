@@ -5,19 +5,12 @@ from fastapi import HTTPException
 from PIL import Image
 
 
-def rgba_to_rgb_with_background_color(image_rgba, padding_color, size=None, paste_size=None, paste_start=None):
-    size = size if size else image_rgba.size
-    paste_size = paste_size if paste_size else size
-    image_rgb = Image.new("RGB", size, padding_color)
-    if image_rgba is None:
-        return image_rgb
-    elif image_rgba.info.get("transparency", None) is not None or image_rgba.mode == "RGBA":
-        image_rgb.paste(image_rgba, mask=image_rgba.split()[3], box=(0, 0, paste_size[0], paste_size[1]))
-    elif image_rgba.mode == "RGB":
-        image_rgb.paste(image_rgba, box=paste_start)
-
-    else:
-        raise HTTPException(400, "Raw image data has unsupported image format!")
+def rgba_to_rgb_with_background_color(image_rgba, padding_color):
+    if image_rgba.mode == "RGB":
+        image_rgb = image_rgba
+    if image_rgba.info.get("transparency", None) is not None or image_rgba.mode == "RGBA":
+        image_rgb = Image.new("RGB", image_rgba.size, padding_color)
+        image_rgb.paste(image_rgba, mask=image_rgba.split()[3])
     return image_rgb
 
 
@@ -28,19 +21,18 @@ def convert_narray_uintX_to_uint8(array, exp=16, lower=None, upper=None):
         raise ValueError(f"lower bound must be between 0 and 2**{exp}")
     if upper is not None and not (0 <= upper < 2**exp):
         raise ValueError(f"upper bound must be between 0 and 2**{exp}")
+    if not lower and not upper and exp == 8:
+        return array
     if lower is None:
         lower = 0
     if upper is None:
-        # default color mapping
-        if exp == 8:
-            return array
-        elif exp == 16:
-            upper = (2**exp) / 4
-        else:
-            upper = (2**exp) / (exp / 2)
+        upper = (2**exp) - 1
+        # default upper bound for bitness > 8 to enhance contrast/brightness
+        if exp > 8:
+            upper = (2**exp) / (exp / 4)
 
-    temp_array = array / upper if upper != 0 else array
-    temp_array = temp_array * 255
+    temp_array = np.divide((array - lower), (upper - lower))
+    temp_array = np.clip(temp_array * 255, 0, 255)
     return temp_array.astype(np.uint8)
 
 
@@ -150,3 +142,122 @@ def get_requested_channels_as_array(narray, image_channels):
         temp_array.append(separate_channels[i])
     result = np.concatenate(temp_array, axis=0)
     return result
+
+
+def check_complete_region_overlap(slide_info, level, start_x, start_y, size_x, size_y):
+    return (
+        start_x >= 0
+        and start_y >= 0
+        and start_x + size_x < slide_info.levels[level].extent.x
+        and start_y + size_y < slide_info.levels[level].extent.y
+    )
+
+
+async def get_extended_region(get_region, slide_info, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    # check overlap of requested region and slide
+    overlap = (start_x + size_x > 0 and start_x < slide_info.levels[level].extent.x) and (
+        start_y + size_y > 0 and start_y < slide_info.levels[level].extent.y
+    )
+    # get overlapping region if there is an overlap
+    if overlap:
+        if start_x < 0:
+            region_request_start_x = 0
+            overlap_start_x = abs(start_x)
+        else:
+            region_request_start_x = start_x
+            overlap_start_x = 0
+        if start_y < 0:
+            region_request_start_y = 0
+            overlap_start_y = abs(start_y)
+        else:
+            region_request_start_y = start_y
+            overlap_start_y = 0
+        overlap_size_x = min(slide_info.levels[level].extent.x - region_request_start_x, size_x - overlap_start_x)
+        overlap_size_y = min(slide_info.levels[level].extent.y - region_request_start_y, size_y - overlap_start_y)
+        image_region_overlap = await get_region(
+            level,
+            region_request_start_x,
+            region_request_start_y,
+            overlap_size_x,
+            overlap_size_y,
+            padding_color=padding_color,
+            z=z,
+        )
+    # create empty region based on returned region data type
+    if overlap:
+        image_region_sample = image_region_overlap
+    else:
+        image_region_sample = await get_region(0, 0, 0, 1, 1)
+    if isinstance(image_region_sample, Image.Image):
+        image_region = Image.new("RGB", (size_x, size_y), padding_color)
+    else:
+        image_region = np.zeros((image_region_sample.shape[0], size_y, size_x), dtype=image_region_sample.dtype)
+    # insert overlapping region into empty region
+    if overlap:
+        if isinstance(image_region_sample, Image.Image):
+            image_region.paste(
+                image_region_overlap,
+                box=(
+                    overlap_start_x,
+                    overlap_start_y,
+                    overlap_start_x + overlap_size_x,
+                    overlap_start_y + overlap_size_y,
+                ),
+            )
+        else:
+            image_region[
+                :,
+                overlap_start_y : overlap_start_y + overlap_size_y,
+                overlap_start_x : overlap_start_x + overlap_size_x,
+            ] = image_region_overlap
+    return image_region
+
+
+def check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
+    tile_count_x = int(slide_info.levels[level].extent.x / slide_info.tile_extent.x)
+    tile_count_y = int(slide_info.levels[level].extent.y / slide_info.tile_extent.y)
+    return tile_x >= 0 and tile_y >= 0 and tile_x < tile_count_x and tile_y < tile_count_y
+
+
+async def get_extended_tile(get_tile, slide_info, level, tile_x, tile_y, padding_color=None, z=0):
+    overlap_size_x = slide_info.levels[level].extent.x - tile_x * slide_info.tile_extent.x
+    overlap_size_y = slide_info.levels[level].extent.y - tile_y * slide_info.tile_extent.y
+    overlap = tile_x >= 0 and tile_y >= 0 and overlap_size_x > 0 and overlap_size_y > 0
+    # get overlapping tile if there is an overlap
+    if overlap:
+        image_tile_overlap = await get_tile(level, tile_x, tile_y, padding_color=padding_color, z=z)
+        if isinstance(image_tile_overlap, bytes):
+            image_tile_overlap = Image.open(BytesIO(image_tile_overlap))
+    # create empty tile based on returned tile data type
+    if overlap:
+        image_tile_sample = image_tile_overlap
+    else:
+        image_tile_sample = await get_tile(0, 0, 0)
+        if isinstance(image_tile_sample, bytes):
+            image_tile_sample = Image.open(BytesIO(image_tile_sample))
+    if isinstance(image_tile_sample, Image.Image):
+        image_tile = Image.new("RGB", (slide_info.tile_extent.x, slide_info.tile_extent.y), padding_color)
+    else:
+        image_tile = np.zeros(
+            (image_tile_sample.shape[0], slide_info.tile_extent.x, slide_info.tile_extent.y),
+            dtype=image_tile_sample.dtype,
+        )
+    # insert overlapping tile into empty tile
+    if overlap:
+        if isinstance(image_tile_sample, Image.Image):
+            image_tile.paste(
+                image_tile_overlap.crop((0, 0, overlap_size_x, overlap_size_y)),
+                box=(
+                    0,
+                    0,
+                    overlap_size_x,
+                    overlap_size_y,
+                ),
+            )
+        else:
+            image_tile[
+                :,
+                0:overlap_size_y,
+                0:overlap_size_x,
+            ] = image_tile_overlap[:, 0:overlap_size_y, 0:overlap_size_x]
+    return image_tile
