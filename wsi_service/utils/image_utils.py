@@ -21,19 +21,18 @@ def convert_narray_uintX_to_uint8(array, exp=16, lower=None, upper=None):
         raise ValueError(f"lower bound must be between 0 and 2**{exp}")
     if upper is not None and not (0 <= upper < 2**exp):
         raise ValueError(f"upper bound must be between 0 and 2**{exp}")
+    if not lower and not upper and exp == 8:
+        return array
     if lower is None:
         lower = 0
     if upper is None:
-        # default color mapping
-        if exp == 8:
-            return array
-        elif exp == 16:
-            upper = (2**exp) / 4
-        else:
-            upper = (2**exp) / (exp / 2)
+        upper = (2**exp) - 1
+        # default upper bound for bitness > 8 to enhance contrast/brightness
+        if exp > 8:
+            upper = (2**exp) / (exp / 4)
 
-    temp_array = array / upper if upper != 0 else array
-    temp_array = temp_array * 255
+    temp_array = np.divide((array - lower), (upper - lower))
+    temp_array = np.clip(temp_array * 255, 0, 255)
     return temp_array.astype(np.uint8)
 
 

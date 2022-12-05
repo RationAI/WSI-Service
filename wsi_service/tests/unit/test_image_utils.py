@@ -28,12 +28,12 @@ ndarray = np.array(
 def test_convert_narray_uintX_to_uint8():
     c_array = convert_narray_uintX_to_uint8(ndarray, 16)
     assert c_array.dtype == np.uint8
-    result = c_array == np.array([[71, 110, 3], [125, 36, 83], [17, 233, 3]])
+    result = c_array == np.array([[71, 255, 3], [255, 36, 83], [255, 255, 3]])
     assert result.all()
 
-    c_array = convert_narray_uintX_to_uint8(ndarray, 16, 2, 3)
+    c_array = convert_narray_uintX_to_uint8(ndarray, 16, 100, 10000)
     assert c_array.dtype == np.uint8
-    result = c_array == np.array([[97, 129, 185], [189, 240, 97], [97, 142, 178]])
+    result = c_array == np.array([[115, 255, 2], [255, 58, 134], [255, 255, 3]])
     assert result.all()
 
 
