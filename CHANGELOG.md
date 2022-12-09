@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.1
+
+- tiffslide and openslide compatibility fix
+
 ## 0.10.0
 
 - added tiffslide plugin with raw tile support for svs and tiff
