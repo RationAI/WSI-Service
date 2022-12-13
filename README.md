@@ -20,7 +20,7 @@ The _WSI Service_ enables users to stream Whole Slide Images (WSI) tile-based vi
 
 Regarding the slide's metadata, it provides the extent of the base level (original image, level=0), its pixel size in nm (level=0), general tile extent, the total count of levels and a list of levels with information about its extent, downsampling factor in relation to the base level. Furthermore, the channel depth is given along with a list of all available channels.
 
-Regions of the WSI can be requested on any of the available levels. There is also a way to access tiles of a predefined size of each level (e.g. useful for a [viewer](wsi_service/viewer.html)). Furthermore, it is possible to get a thumbnail, label and macro image.
+Regions of the WSI can be requested on any of the available levels. There is also a way to access tiles of a predefined size of each level (e.g. useful for a [viewer](wsi_service/api/root/viewer.html)). Furthermore, it is possible to get a thumbnail, label and macro image.
 
 There are several endpoints made available by this service:
 
@@ -38,7 +38,7 @@ When tiff is specified as output format for the region and tile endpoint the raw
 
 The region and the tile endpoint also offer the selection of a layer with the index z in a Z-Stack.
 
-Get a detailed description of each endpoint by running the WSI Service (see _Getting started_ section) and accessing the included Swagger UI [http://localhost:8080/docs](http://localhost:8080/docs).
+Get a detailed description of each endpoint by running the WSI Service (see _Getting started_ section) and accessing the included Swagger UI [http://localhost:8080/v3/docs](http://localhost:8080/v3/docs).
 
 ### Standalone version
 
@@ -49,9 +49,11 @@ The WSI Service relies on the [Storage Mapper Service](https://www.gitlab.com/em
 - `GET /slides/{slide_id}` - Get slide
 - `GET /slides/{slide_id}/storage` - Get slide storage information
 
+Get a detailed description of each endpoint by running the WSI Service (see _Getting started_ section) and accessing the included Swagger UI [http://localhost:8080/docs](http://localhost:8080/docs).
+
 ### Supported formats
 
-Different formats are supported by plugins for accessing image data. Three base plugins are included and support the following formats:
+Different formats are supported by plugins for accessing image data. Five base plugins are included and support the following formats:
 
 - [openslide](./wsi_service_base_plugins/openslide/)
   - 3DHISTECH (\*.mrxs)
@@ -224,6 +226,6 @@ COPY wsi-service-plugin-PLUGINNAME.whl /tmp/wsi-service-plugin-PLUGINNAME.whl
 RUN pip3 install /tmp/wsi-service-plugin-PLUGINNAME.whl
 ```
 
-There are four base plugins ([openslide](./wsi_service_base_plugins/openslide/), [pil](./wsi_service_base_plugins/pil/), [tiffile](./wsi_service_base_plugins/tifffile/), [wsidicom](./wsi_service_base_plugins/wsidicom/)) that can be used as templates for new plugins. Additionally to the mentioned minimal requirements these plugins use poetry to manage and create the python package. This is highly recommended when creating a plugin. Furthermore, these plugins implement tests based on pytest by defining a number of parameters on top of example integration test functions defined as part of the WSI Service ([plugin_example_tests](./wsi_service/tests/integration/plugin_example_tests)).
+There are five base plugins ([openslide](./wsi_service_base_plugins/openslide/), [pil](./wsi_service_base_plugins/pil/), [tiffile](./wsi_service_base_plugins/tifffile/), [tiffslide](./wsi_service_base_plugins/tiffslide/), [wsidicom](./wsi_service_base_plugins/wsidicom/)) that can be used as templates for new plugins. Additionally to the mentioned minimal requirements these plugins use poetry to manage and create the python package. This is highly recommended when creating a plugin. Furthermore, these plugins implement tests based on pytest by defining a number of parameters on top of example integration test functions defined as part of the WSI Service ([plugin_example_tests](./wsi_service/tests/integration/plugin_example_tests)).
 
 A more complete example of an external plugin integration can be found in the iSyntax integration repository ([wsi-service-plugin-isyntax](https://www.gitlab.com/empaia/services/wsi-service-plugin-isyntax)). That example includes the usage of an external service that is run in an additional docker container due to runtime limitations.
