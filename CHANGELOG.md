@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.2
+
+- Updated Dependencies
+
 ## 0.10.1
 
 - tiffslide and openslide compatibility fix
