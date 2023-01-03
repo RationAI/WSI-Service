@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- updated wsidicom
+
 ## 0.3.0
 
 - Removed parameter validation (already part of wsi service)
