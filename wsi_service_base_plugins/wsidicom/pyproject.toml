@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wsi-service-plugin-wsidicom"
-version = "0.3.0"
+version = "0.3.1"
 description = ""
 authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
