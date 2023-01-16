@@ -3,7 +3,7 @@
 ## 0.10.6
 
 - Added python package release
-- Added tests that show direct slide access
+- Added SyncSlide for direct slide access
 
 ## 0.10.5
 
