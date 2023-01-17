@@ -62,3 +62,22 @@ docker-build-and-push:
     - job: poetry-codecheck-plugins
     - job: docker-based-pytest
     - job: docker-based-pytest-storage-mapper
+
+python-package-release:
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
+  image: registry.gitlab.com/empaia/integration/ci-docker-images/test-runner
+  script:
+    - poetry build
+    - cd wsi_service_base_plugins/openslide && poetry build && cp dist/*.whl ../../dist/ && cd ../../
+    - cd wsi_service_base_plugins/pil && poetry build && cp dist/*.whl ../../dist/ && cd ../../
+    - cd wsi_service_base_plugins/tifffile && poetry build && cp dist/*.whl ../../dist/ && cd ../../
+    - cd wsi_service_base_plugins/tiffslide && poetry build && cp dist/*.whl ../../dist/ && cd ../../
+    - cd wsi_service_base_plugins/wsidicom && poetry build && cp dist/*.whl ../../dist/ && cd ../../
+    - pip3 install twine
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python3 -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/wsi_service*.whl
+  needs:
+    - !reference [.docker-build-and-push-default-needs, needs]
+    - job: poetry-codecheck-plugins
+    - job: docker-based-pytest
+    - job: docker-based-pytest-storage-mapper

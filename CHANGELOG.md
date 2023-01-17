@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.6
+
+- Added python package release
+- Added SyncSlide for direct slide access
+
 ## 0.10.5
 
 - Updated Dependencies
