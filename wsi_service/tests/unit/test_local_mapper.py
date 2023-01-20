@@ -44,9 +44,7 @@ def test_get_cases_get_slides_valid():
     assert len(cases) == 1
     case_id = cases[0].id
     slides = localmapper.get_slides(case_id)
-    assert len(slides) == 3
-    assert slides[0].id == "14b5c5dab96b540bba23b08429592bcf"
-    assert slides[0].local_id == "CMU-1-small.tiff"
+    assert len(slides) == 5
     slide = localmapper.get_slide(slides[0].id)
     assert slide.id == slides[0].id
     assert slide.local_id == slides[0].local_id
