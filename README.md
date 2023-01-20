@@ -69,7 +69,7 @@ Different formats are supported by plugins for accessing image data. Five base p
 - [tifffile](./wsi_service_base_plugins/tifffile/)
   - OME-TIFF (\*.ome.tif, \*.ome.tif, \*.ome.tiff, \*.ome.tf2, \*.ome.tf8, \*.ome.btf)
 
-- [tiffslide](./wsi_service_base_plugins/tifffile/)
+- [tiffslide](./wsi_service_base_plugins/tiffslide/)
   - APERIO (\*.svs)
   - GENERIC TIF (\*.tif / \*.tiff)
 
