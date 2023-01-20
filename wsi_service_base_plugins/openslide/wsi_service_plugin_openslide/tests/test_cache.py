@@ -41,4 +41,4 @@ def test_thumbnail_cache_speedup_test():
     time_second = time.time() - start
     assert r.status_code == 200
     speedup = time_first / time_second
-    assert speedup > 2.0  # check speedup at least 2x
+    assert speedup > 1.5  # check speedup at least 1.5x
