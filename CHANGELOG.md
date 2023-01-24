@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.8
+
+- Fixed direct tile access for YCbCr
+
 ## 0.10.6
 
 - Added python package release
