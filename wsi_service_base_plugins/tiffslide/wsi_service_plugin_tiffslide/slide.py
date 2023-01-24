@@ -193,7 +193,7 @@ class Slide(BaseSlide):
         page = tif_level.pages[0]
         color_transform = "Unknown"
         if page.photometric == 6:
-            return "YCbCr"
+            color_transform = "YCbCr"
         return color_transform
 
     async def __read_raw_tile(self, page, tile_x, tile_y):
