@@ -4,6 +4,10 @@
 
 - Fixed direct tile access for YCbCr
 
+## 0.10.7
+
+- Fixed support for grayscale images
+
 ## 0.10.6
 
 - Added python package release

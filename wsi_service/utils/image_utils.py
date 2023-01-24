@@ -6,11 +6,11 @@ from PIL import Image
 
 
 def rgba_to_rgb_with_background_color(image_rgba, padding_color):
-    if image_rgba.mode == "RGB":
-        image_rgb = image_rgba
     if image_rgba.info.get("transparency", None) is not None or image_rgba.mode == "RGBA":
         image_rgb = Image.new("RGB", image_rgba.size, padding_color)
         image_rgb.paste(image_rgba, mask=image_rgba.split()[3])
+    else:
+        image_rgb = image_rgba.convert("RGB")
     return image_rgb
 
 
