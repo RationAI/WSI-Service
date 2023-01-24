@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Fixed direct tile access for YCbCr
+
 ## 0.1.1
 
 - tiffslide and openslide compatibility fix
