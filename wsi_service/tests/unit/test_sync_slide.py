@@ -1,4 +1,5 @@
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 
 import numpy as np
@@ -7,6 +8,11 @@ from PIL import Image
 
 from wsi_service import Slide
 from wsi_service.plugins import load_slide
+
+
+def get_data_path():
+    file_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(file_dir, "data")
 
 
 def test_sync_slide_access():
@@ -47,9 +53,24 @@ def test_sync_slide_access():
     assert info_default == info_openslide
 
 
-def get_data_path():
-    file_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(file_dir, "data")
+def test_sync_slide_access_in_thread():
+    slide_path = os.path.join(get_data_path(), "testcase/CMU-1-small.tiff")
+    slide = Slide(slide_path)
+
+    def get_tile(level, x, y):
+        return slide.get_tile(level, x, y)
+
+    with ThreadPoolExecutor() as pool:
+        futures = []
+        test_tiles = [(0, 0, 0), (1, 0, 0), (2, 0, 0)]
+        for level, x, y in test_tiles:
+            f = pool.submit(get_tile, level, x, y)
+            futures.append(f)
+
+        for future in as_completed(futures):
+            tile = future.result()
+            assert isinstance(tile, np.ndarray)
+            assert isinstance(Image.fromarray(tile), Image.Image)
 
 
 @pytest.mark.asyncio
