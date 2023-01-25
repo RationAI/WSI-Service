@@ -5,37 +5,67 @@ import numpy as np
 from PIL import Image
 
 from wsi_service.plugins import load_slide
+from wsi_service.utils.image_utils import (
+    check_complete_region_overlap,
+    check_complete_tile_overlap,
+    get_extended_region,
+    get_extended_tile,
+)
 
 
 class SyncSlide:
     def __init__(self, filepath, plugin=None):
-        self.loop = asyncio.get_event_loop()
-        self.async_slide = self.loop.run_until_complete(load_slide(filepath, plugin=plugin))
+        self.async_slide = asyncio.run(load_slide(filepath, plugin=plugin))
+        self.slide_info = asyncio.run(self.async_slide.get_info())
 
     def get_info(self):
-        return self.loop.run_until_complete(self.async_slide.get_info())
+        return self.slide_info
 
     def get_thumbnail(self, max_x, max_y):
-        return self._get_pil(self.loop.run_until_complete(self.async_slide.get_thumbnail(max_x, max_y)))
+        return self._to_numpy_array(asyncio.run(self.async_slide.get_thumbnail(max_x, max_y)))
 
     def get_label(self):
-        return self._get_pil(self.loop.run_until_complete(self.async_slide.get_label()))
+        return self._to_numpy_array(asyncio.run(self.async_slide.get_label()))
 
     def get_macro(self):
-        return self._get_pil(self.loop.run_until_complete(self.async_slide.get_macro()))
+        return self._to_numpy_array(asyncio.run(self.async_slide.get_macro()))
 
-    def get_region(self, level, start_x, start_y, size_x, size_y, z=0):
-        return self._get_pil(
-            self.loop.run_until_complete(self.async_slide.get_region(level, start_x, start_y, size_x, size_y, z=z))
-        )
+    def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+        if check_complete_region_overlap(self.slide_info, level, start_x, start_y, size_x, size_y):
+            region = asyncio.run(
+                self.async_slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=padding_color, z=z)
+            )
+        else:
+            region = asyncio.run(
+                get_extended_region(
+                    self.async_slide.get_region,
+                    self.slide_info,
+                    level,
+                    start_x,
+                    start_y,
+                    size_x,
+                    size_y,
+                    padding_color=padding_color,
+                    z=z,
+                )
+            )
+        return self._to_numpy_array(region)
 
-    def get_tile(self, level, tile_x, tile_y, z=0):
-        return self._get_pil(self.loop.run_until_complete(self.async_slide.get_tile(level, tile_x, tile_y, z=z)))
+    def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+        if check_complete_tile_overlap(self.slide_info, level, tile_x, tile_y):
+            tile = asyncio.run(self.async_slide.get_tile(level, tile_x, tile_y, padding_color=padding_color, z=z))
+        else:
+            tile = asyncio.run(
+                get_extended_tile(
+                    self.async_slide.get_tile, self.slide_info, level, tile_x, tile_y, padding_color=padding_color, z=z
+                )
+            )
+        return self._to_numpy_array(tile)
 
-    def _get_pil(self, image):
-        if isinstance(image, Image.Image):
-            return image
-        if isinstance(image, bytes):
-            return Image.open(BytesIO(image))
-        if isinstance(image, (np.ndarray, np.generic)):
-            return Image.fromarray(image)
+    def _to_numpy_array(self, data):
+        if isinstance(data, Image.Image):
+            return np.array(data)
+        if isinstance(data, bytes):
+            return np.array(Image.open(BytesIO(data)))
+        if isinstance(data, (np.ndarray, np.generic)):
+            return data
