@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.9
+
+- Adapted SyncSlide to include border handling and return numpy arrays as default
+
 ## 0.10.8
 
 - Fixed direct tile access for YCbCr

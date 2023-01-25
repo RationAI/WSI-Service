@@ -17,7 +17,8 @@ def test_sync_slide_access():
     max_x = 512
     max_y = 512
     thumbnail = slide.get_thumbnail(max_x, max_y)
-    assert isinstance(thumbnail, Image.Image)
+    assert isinstance(thumbnail, np.ndarray)
+    assert isinstance(Image.fromarray(thumbnail), Image.Image)
     with pytest.raises(Exception):
         slide.get_label()
     with pytest.raises(Exception):
@@ -28,15 +29,17 @@ def test_sync_slide_access():
     size_x = 256
     size_y = 256
     region = slide.get_region(level, start_x, start_y, size_x, size_y)
-    assert isinstance(region, Image.Image)
+    assert isinstance(region, np.ndarray)
+    assert isinstance(Image.fromarray(region), Image.Image)
     level = 0
     tile_x = 0
     tile_y = 0
     tile = slide.get_tile(level, tile_x, tile_y)
-    assert isinstance(tile, Image.Image)
-    region_numpy = np.array(region).astype(np.float64)
-    tile_numpy = np.array(tile).astype(np.float64)
-    diff = np.abs(region_numpy[tile_numpy > 0] - tile_numpy[tile_numpy > 0])
+    assert isinstance(tile, np.ndarray)
+    assert isinstance(Image.fromarray(tile), Image.Image)
+    region_numpy = region.astype(np.float64)
+    tile_numpy = tile.astype(np.float64)
+    diff = np.abs(region_numpy - tile_numpy)
     assert np.sum(diff) == 0.0
     # specific plugin
     slide = Slide(slide_path, plugin="openslide")
