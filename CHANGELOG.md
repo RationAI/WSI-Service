@@ -1,8 +1,12 @@
 # Changelog
 
-## 0.10.9
+## 0.10.10
 
 - Adapted SyncSlide to include border handling and return numpy arrays as default
+
+## 0.10.9
+
+- Updated Dependencies
 
 ## 0.10.8
 
