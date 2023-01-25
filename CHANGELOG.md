@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.8
+
+- Fixed direct tile access for YCbCr
+
 ## 0.10.7
 
 - Fixed support for grayscale images

@@ -18,6 +18,7 @@ class Slide(BaseSlide):
         self.format = self.slide.detect_format(self.filepath)
         self.slide_info = self.__get_slide_info()
         self.is_jpeg_compression = self.__is_jpeg_compression()
+        self.color_transform = self.__get_color_transform()
 
     async def open_slide(self):
         try:
@@ -69,7 +70,7 @@ class Slide(BaseSlide):
             tif_level = self.__get_tif_level_for_slide_level(level)
             page = tif_level.pages[0]
             tile_data = await self.__read_raw_tile(page, tile_x, tile_y)
-            self.__add_jpeg_headers(page, tile_data)
+            self.__add_jpeg_headers(page, tile_data, self.color_transform)
             return bytes(tile_data)
         else:
             return await self.get_region(
@@ -187,6 +188,14 @@ class Slide(BaseSlide):
         page = tif_level.pages[0]
         return page.jpegtables is not None
 
+    def __get_color_transform(self):
+        tif_level = self.__get_tif_level_for_slide_level(0)
+        page = tif_level.pages[0]
+        color_transform = "Unknown"
+        if page.photometric == 6:
+            color_transform = "YCbCr"
+        return color_transform
+
     async def __read_raw_tile(self, page, tile_x, tile_y):
         image_width = page.keyframe.imagewidth
         tile_width = page.keyframe.tilewidth
@@ -198,7 +207,7 @@ class Slide(BaseSlide):
         data = self.slide._tifffile.filehandle.read(bytecount)
         return bytearray(data)
 
-    def __add_jpeg_headers(self, page, data):
+    def __add_jpeg_headers(self, page, data, color_transform):
         # add jpeg tables
         pos = data.find(b"\xff\xda")
         data[pos:pos] = page.jpegtables[2:-2]
@@ -212,9 +221,11 @@ class Slide(BaseSlide):
         # Flags1: 00 00
         # Color transform:
         # 00 = Unknown (RGB or CMYK)
+        color_transform_value = b"\x00"
         # 01 = YCbCr
-        # 02 = YCCK
-        data[pos:pos] = b"\xFF\xEE\x00\x0E\x41\x64\x6F\x62\x65\x00\x64\x00\x00\x00\x00\x00"
+        if color_transform == "YCbCr":
+            color_transform_value = b"\x01"
+        data[pos:pos] = b"\xFF\xEE\x00\x0E\x41\x64\x6F\x62\x65\x00\x64\x00\x00\x00\x00" + color_transform_value
 
     def __adapt_downsample_factors(self):
         # adapting downsample factors to maintain compatibility with openslide
