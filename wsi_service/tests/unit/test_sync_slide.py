@@ -6,8 +6,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from wsi_service import Slide
 from wsi_service.plugins import load_slide
+from wsi_service.sync_slide import Slide
 
 
 def get_data_path():

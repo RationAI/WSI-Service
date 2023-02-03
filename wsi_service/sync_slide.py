@@ -13,7 +13,7 @@ from wsi_service.utils.image_utils import (
 )
 
 
-class SyncSlide:
+class Slide:
     def __init__(self, filepath, plugin=None):
         self.async_slide = asyncio.run(load_slide(filepath, plugin=plugin))
         self.slide_info = asyncio.run(self.async_slide.get_info())
