@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.13
+
+- Updated Dependencies
+
 ## 0.10.12
 
 - Fixed circular import error in plugins
