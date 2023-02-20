@@ -21,7 +21,7 @@ class Slide(BaseSlide):
         self.locker = Lock()
         try:
             self.tif_slide = tifffile.TiffFile(filepath)
-            if self.tif_slide.series[0].kind not in self.format_kinds:
+            if str(self.tif_slide.series[0].kind).upper() not in self.format_kinds:
                 raise HTTPException(
                     status_code=500,
                     detail=f"Unsupported file format ({self.tif_slide.series[0].kind})",
