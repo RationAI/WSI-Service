@@ -32,7 +32,6 @@ def check_get_slide_thumbnail_valid(
     testpixel_multichannel,
     plugin="",
 ):
-
     max_size_x = 21
     max_size_y = 22
     response = requests.get(
@@ -61,7 +60,6 @@ def check_get_slide_thumbnail_valid(
 
 
 def check_get_slide_label_valid(image_format, image_quality, slide_id, has_label, pixel_location, testpixel, plugin=""):
-
     max_x, max_y = 200, 200
     response = requests.get(
         (
@@ -90,7 +88,6 @@ def check_get_slide_label_valid(image_format, image_quality, slide_id, has_label
 def check_get_slide_macro_valid(
     image_format, image_quality, slide_id, return_value, pixel_location, testpixel, plugin=""
 ):
-
     max_x, max_y = 200, 200
     response = requests.get(
         (
@@ -116,7 +113,6 @@ def check_get_slide_macro_valid(
 def check_get_slide_region_valid_brightfield(
     image_format, image_quality, slide_id, pixel_location, testpixel, start_x, start_y, size, plugin=""
 ):
-
     level = 0
     size_x = size
     size_y = size + 198
@@ -159,7 +155,6 @@ def check_get_slide_region_valid_fluorescence(
     image_quality,
     plugin="",
 ):
-
     level = 2
     response = requests.get(
         (
@@ -201,7 +196,6 @@ def check_get_slide_region_dedicated_channel(
     image_quality,
     plugin="",
 ):
-
     str_channels = "&".join([f"image_channels={str(ch)}" for ch in channels])
     response = requests.get(
         (
@@ -230,7 +224,6 @@ def check_get_slide_region_dedicated_channel(
 
 
 def check_get_slide_region_invalid_channel(slide_id, channels, expected_response, plugin=""):
-
     str_channels = "&".join([f"image_channels={str(ch)}" for ch in channels])
     response = requests.get(
         f"http://localhost:8080/v3/slides/{slide_id}/region/level/2/start/0/0/size/64/64?{str_channels}&plugin={plugin}",
@@ -240,7 +233,6 @@ def check_get_slide_region_invalid_channel(slide_id, channels, expected_response
 
 
 def check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size, status_code, plugin=""):
-
     level = 0
     size_x = size
     size_y = size + 198
@@ -255,7 +247,6 @@ def check_get_slide_region_invalid(slide_id, testpixel, start_x, start_y, size, 
 
 
 def check_get_slide_tile_valid(image_format, image_quality, slide_id, testpixel, tile_x, tile_y, tile_size, plugin=""):
-
     level = 0
     response = requests.get(
         (
