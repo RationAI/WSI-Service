@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-tiffslide = "^1.10.0"
+tiffslide = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 psutil = "^5.9.0"

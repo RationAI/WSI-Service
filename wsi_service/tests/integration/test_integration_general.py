@@ -77,7 +77,6 @@ def test_get_slide_invalid_slide_id():
 @pytest.mark.parametrize("slide_id", ["f5f3a03b77fb5e0497b95eaff84e9a21"])
 @pytest.mark.parametrize("tile_x, tile_y, level, expected_response, size", [(0, 0, 9, 200, (128, 128))])  # ok
 def test_get_slide_tile_padding_color(api_version, slide_id, tile_x, tile_y, level, expected_response, size):
-
     response = requests.get(
         (
             f"http://localhost:8080/{api_version}/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}"
@@ -107,7 +106,6 @@ def test_get_slide_tile_padding_color(api_version, slide_id, tile_x, tile_y, lev
     ],
 )
 def test_get_slide_tile_invalid(api_version, slide_id, tile_x, level, expected_response):
-
     response = requests.get(
         f"http://localhost:8080/{api_version}/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_x}"
     )
@@ -199,7 +197,6 @@ def test_get_slide_region_partly_out_of_image(
 @pytest.mark.parametrize("api_version", ["v1", "v3"])
 @pytest.mark.parametrize("region_size", [-1, 0, 1, 256, 512, 10000])
 def test_get_region_maximum_extent(api_version, region_size):
-
     level = 5
     start_x = 13
     start_y = 23
