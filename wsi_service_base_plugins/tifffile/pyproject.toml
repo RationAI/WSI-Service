@@ -9,7 +9,7 @@ license = "MIT"
 python = "^3.8"
 numpy = "^1.22.3"
 Pillow = "^9.0.0"
-scikit-image = "^0.19.2"
+scikit-image = "^0.20.0"
 tifffile = "^2023.0.0"
 
 [tool.poetry.dev-dependencies]
