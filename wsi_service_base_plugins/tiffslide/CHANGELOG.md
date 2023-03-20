@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Updated Dependencies
+
 ## 0.1.2
 
 - Fixed direct tile access for YCbCr
