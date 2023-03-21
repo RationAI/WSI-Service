@@ -118,12 +118,16 @@ def _validate_plugins_default():
         available_plugins_for_image_file_extension = _get_available_plugins_for_image_file_extension(file_extension)
         if len(available_plugins_for_image_file_extension) > 1 and file_extension not in settings.plugins_default:
             other_plugin_options = "\n".join(["- " + p for p in available_plugins_for_image_file_extension])
-            raise Exception(
+            raise PluginConflictError(
                 f"""
                 There is more than one plugin available for file extension {file_extension}.\n
                 Please specify one of the following plugins as default in the settings:\n{other_plugin_options}
                 """
             )
+
+
+class PluginConflictError(Exception):
+    pass
 
 
 _validate_plugins_default()
