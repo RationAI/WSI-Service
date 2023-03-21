@@ -23,7 +23,6 @@ class Slide(BaseSlide):
     async def open_slide(self):
         try:
             self.slide = tiffslide.TiffSlide(self.filepath)
-            self.__adapt_downsample_factors()
         except tiffslide.TiffFileError as e:
             raise HTTPException(status_code=500, detail=f"TiffFileError: {e}")
 
@@ -41,7 +40,7 @@ class Slide(BaseSlide):
             (int)(start_x * downsample_factor),
             (int)(start_y * downsample_factor),
         )
-        level_0_location = self.__adapt_level_0_location(level_0_location, downsample_factor, start_x, start_y, level)
+        level_0_location = self.__adapt_level_0_location(level_0_location, downsample_factor, start_x, start_y)
         try:
             img = self.slide.read_region(level_0_location, level, (size_x, size_y))
         except tiffslide.TiffFileError as e:
@@ -227,30 +226,11 @@ class Slide(BaseSlide):
             color_transform_value = b"\x01"
         data[pos:pos] = b"\xFF\xEE\x00\x0E\x41\x64\x6F\x62\x65\x00\x64\x00\x00\x00\x00" + color_transform_value
 
-    def __adapt_downsample_factors(self):
-        # adapting downsample factors to maintain compatibility with openslide
-        # for more details check openslide code:
-        # https://github.com/openslide/openslide/blob/v3.4.1/src/openslide.c#L271
-        # and compare with tiffslide code:
-        # https://github.com/bayer-science-for-a-better-life/tiffslide/blob/v1.10.0/tiffslide/tiffslide.py#L228
-        level_downsamples = []
-        base_extent_x, base_extent_y = self.slide.level_dimensions[0]
-        for extent_x, extent_y in self.slide.level_dimensions:
-            level_downsamples.append(((base_extent_x / extent_x) + (base_extent_y / extent_y)) / 2.0)
-        self.slide.level_downsamples = tuple(level_downsamples)
-
-    def __adapt_level_0_location(self, level_0_location, downsample_factor, start_x, start_y, level):
-        # adapting level_0_location to maintain compatibility with openslide
-        # check tiffslide conversion code (base level to level):
-        # https://github.com/bayer-science-for-a-better-life/tiffslide/blob/v1.10.0/tiffslide/tiffslide.py#L354
-        # and compare with openslide, e.g. aperio reader uses the downsample factor for same conversion
-        # https://github.com/openslide/openslide/blob/v3.4.1/src/openslide-vendor-aperio.c#L259
-        tiffslide_start_x = (level_0_location[0] * self.slide_info.levels[level].extent.x) // self.slide_info.levels[
-            0
-        ].extent.x
-        tiffslide_start_y = (level_0_location[1] * self.slide_info.levels[level].extent.y) // self.slide_info.levels[
-            0
-        ].extent.y
+    def __adapt_level_0_location(self, level_0_location, downsample_factor, start_x, start_y):
+        # adapting level_0_location to maintain better compatibility with openslide
+        # check issue: https://github.com/bayer-science-for-a-better-life/tiffslide/issues/63
+        tiffslide_start_x = int(level_0_location[0] / downsample_factor)
+        tiffslide_start_y = int(level_0_location[1] / downsample_factor)
         if tiffslide_start_x != start_x:
             level_0_location = (
                 (int)(level_0_location[0] + abs(tiffslide_start_x - start_x) * downsample_factor),
