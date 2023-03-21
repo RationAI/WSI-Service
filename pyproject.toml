@@ -6,7 +6,7 @@ authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0"
+python = ">=3.8,<3.12"
 pydantic = {extras = ["dotenv"], version = "^1.9.0"}
 fastapi = "^0.92.0"
 requests = "^2.27.1"
