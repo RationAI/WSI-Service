@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.19
+
+- Updated Dependencies
+
 ## 0.10.18
 
 - Updated Dependencies
