@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.0
+
+- New plugin concept
+
 ## 0.10.19
 
 - Updated Dependencies
