@@ -49,12 +49,8 @@ def add_routes_slides(app, settings, slide_manager):
     )
     async def _(
         slide_id: str,
-        max_x: int = Path(
-            None, example=100, ge=1, le=settings.max_thumbnail_size, description="Maximum width of thumbnail"
-        ),
-        max_y: int = Path(
-            None, example=100, ge=1, le=settings.max_thumbnail_size, description="Maximum height of thumbnail"
-        ),
+        max_x: int = Path(example=100, ge=1, le=settings.max_thumbnail_size, description="Maximum width of thumbnail"),
+        max_y: int = Path(example=100, ge=1, le=settings.max_thumbnail_size, description="Maximum height of thumbnail"),
         image_format: str = ImageFormatsQuery,
         image_quality: int = ImageQualityQuery,
         plugin: str = PluginQuery,
@@ -81,8 +77,8 @@ def add_routes_slides(app, settings, slide_manager):
     )
     async def _(
         slide_id: str,
-        max_x: int = Path(None, example=100, description="Maximum width of label image"),
-        max_y: int = Path(None, example=100, description="Maximum height of label image"),
+        max_x: int = Path(example=100, description="Maximum width of label image"),
+        max_y: int = Path(example=100, description="Maximum height of label image"),
         image_format: str = ImageFormatsQuery,
         image_quality: int = ImageQualityQuery,
         plugin: str = PluginQuery,
@@ -110,8 +106,8 @@ def add_routes_slides(app, settings, slide_manager):
     )
     async def _(
         slide_id: str,
-        max_x: int = Path(None, example=100, description="Maximum width of macro image"),
-        max_y: int = Path(None, example=100, description="Maximum height of macro image"),
+        max_x: int = Path(example=100, description="Maximum width of macro image"),
+        max_y: int = Path(example=100, description="Maximum height of macro image"),
         image_format: str = ImageFormatsQuery,
         image_quality: int = ImageQualityQuery,
         plugin: str = PluginQuery,
@@ -139,11 +135,11 @@ def add_routes_slides(app, settings, slide_manager):
     )
     async def _(
         slide_id: str,
-        level: int = Path(None, ge=0, example=0, description="Pyramid level of region"),
-        start_x: int = Path(None, example=0, description="x component of start coordinate of requested region"),
-        start_y: int = Path(None, example=0, description="y component of start coordinate of requested region"),
-        size_x: int = Path(None, gt=0, example=1024, description="Width of requested region"),
-        size_y: int = Path(None, gt=0, example=1024, description="Height of requested region"),
+        level: int = Path(ge=0, example=0, description="Pyramid level of region"),
+        start_x: int = Path(example=0, description="x component of start coordinate of requested region"),
+        start_y: int = Path(example=0, description="y component of start coordinate of requested region"),
+        size_x: int = Path(gt=0, example=1024, description="Width of requested region"),
+        size_y: int = Path(gt=0, example=1024, description="Height of requested region"),
         image_channels: List[int] = ImageChannelQuery,
         z: int = ZStackQuery,
         padding_color: str = ImagePaddingColorQuery,
@@ -215,9 +211,9 @@ def add_routes_slides(app, settings, slide_manager):
     )
     async def _(
         slide_id: str,
-        level: int = Path(None, ge=0, example=0, description="Pyramid level of region"),
-        tile_x: int = Path(None, example=0, description="Request the tile_x-th tile in x dimension"),
-        tile_y: int = Path(None, example=0, description="Request the tile_y-th tile in y dimension"),
+        level: int = Path(ge=0, example=0, description="Pyramid level of region"),
+        tile_x: int = Path(example=0, description="Request the tile_x-th tile in x dimension"),
+        tile_y: int = Path(example=0, description="Request the tile_y-th tile in y dimension"),
         image_channels: List[int] = ImageChannelQuery,
         z: int = ZStackQuery,
         padding_color: str = ImagePaddingColorQuery,
