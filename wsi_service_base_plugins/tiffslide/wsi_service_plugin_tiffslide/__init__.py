@@ -1,5 +1,7 @@
 from wsi_service_plugin_tiffslide.slide import Slide
 
+priority = 1
+
 supported_file_extensions = [".svs", ".tiff", ".tif"]
 
 

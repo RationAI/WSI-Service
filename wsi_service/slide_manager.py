@@ -1,12 +1,13 @@
 import asyncio
 import os
+import pathlib
 
 import aiohttp
 from fastapi import HTTPException
 
 from wsi_service.models.v1.slide import SlideInfo as SlideInfoV1
 from wsi_service.models.v3.slide import SlideInfo as SlideInfoV3
-from wsi_service.plugins import get_file_format_identifier, load_slide
+from wsi_service.plugins import load_slide
 from wsi_service.singletons import logger
 from wsi_service.utils.slide_utils import ExpiringSlide, LRUCache
 
@@ -66,8 +67,12 @@ class SlideManager:
         # slide info conversion
         slide_info = self._convert_slide_info_to_match_slide_info_model(slide_info, slide_info_model)
         if isinstance(slide_info, SlideInfoV3):
-            # set slide format identifier
-            slide_info.format = get_file_format_identifier(slide.filepath)
+            # set slide format identifier if empty
+            if not slide_info.format:
+                if os.path.isfile(slide.filepath):
+                    slide_info.format = pathlib.Path(slide.filepath).suffix[1:].upper()
+                else:
+                    slide_info.format = "FOLDER"
             # enable raw download if filepath exists on disk
             if os.path.exists(slide.filepath):
                 slide_info.raw_download = True

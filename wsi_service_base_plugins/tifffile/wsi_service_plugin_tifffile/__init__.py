@@ -3,11 +3,9 @@ from wsi_service_plugin_tifffile.slide import Slide
 supported_file_extensions = [
     ".tif",
     ".tiff",
-    ".ome.tif",
-    ".ome.tiff",
-    ".ome.tf2",
-    ".ome.tf8",
-    ".ome.btf",
+    ".tf2",
+    ".tf8",
+    ".btf",
 ]
 
 

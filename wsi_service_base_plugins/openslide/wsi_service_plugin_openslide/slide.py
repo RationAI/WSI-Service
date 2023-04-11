@@ -171,6 +171,7 @@ class Slide(BaseSlide):
                 tile_extent=self.__get_tile_extent(),
                 num_levels=len(levels),
                 levels=levels,
+                format=self.format.upper(),
             )
             return slide_info
         except Exception as e:
