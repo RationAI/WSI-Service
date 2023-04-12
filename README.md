@@ -208,9 +208,8 @@ Plugins are python packages following the naming scheme `wsi-service-plugin-PLUG
 ```python
 from .slide import Slide
 
-supported_file_extensions = [
-    ".tif"
-]
+def is_supported(filepath):
+    return filepath.endswith(".tif")
 
 async def open(filepath):
     return await Slide.create(filepath)

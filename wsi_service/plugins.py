@@ -21,11 +21,11 @@ async def load_slide(filepath, plugin=None):
 
     supported_plugins = _get_supported_plugins(filepath)
     if len(supported_plugins) == 0:
-        raise HTTPException(status_code=500, detail="There is no plugin available for that does support this slide.")
+        raise HTTPException(status_code=500, detail="There is no plugin available that does support this slide.")
 
     if plugin:
-        if supported_plugins[plugin].is_supported():
-            return await _open_slide(supported_plugins[plugin], filepath)
+        if plugin in supported_plugins.keys():
+            return await _open_slide(supported_plugins[plugin], plugin, filepath)
         else:
             raise HTTPException(
                 status_code=500,
@@ -33,9 +33,9 @@ async def load_slide(filepath, plugin=None):
             )
 
     exception_details = ""
-    for plugin in _get_sorted_plugins():
+    for plugin_name, plugin in _get_sorted_plugins():
         try:
-            return await _open_slide(plugin, filepath)
+            return await _open_slide(plugin, plugin_name, filepath)
         except HTTPException as e:
             exception_details += e.detail + ". "
     raise HTTPException(status_code=500, detail=exception_details)
@@ -45,7 +45,9 @@ def get_plugins_overview():
     plugins_overview = []
     for plugin_name, plugin in plugins.items():
         version = version_from_name("wsi_service_plugin_" + plugin_name)
-        plugin_info = PluginInfo(name=plugin_name, version=version, priority=_get_plugin_priority(plugin))
+        plugin_info = PluginInfo(
+            name=plugin_name, version=version, priority=_get_plugin_priority((plugin_name, plugin))
+        )
         plugins_overview.append(plugin_info)
     return plugins_overview
 
@@ -68,18 +70,23 @@ def _get_supported_plugins(filepath):
 
 
 def _get_sorted_plugins():
-    return sorted(plugins.values(), key=_get_plugin_priority, reverse=True)
+    return sorted(plugins.items(), key=_get_plugin_priority, reverse=True)
 
 
-def _get_plugin_priority(plugin):
-    return getattr(plugin, "priority", 0)
+def _get_plugin_priority(plugin_item):
+    plugin_name = plugin_item[0]
+    plugin = plugin_item[1]
+    priority = getattr(plugin, "priority", 0)
+    priority = os.environ.get(f"WS_PLUGIN_PRIORITY_{plugin_name.upper()}", priority)
+    return int(priority)
 
 
-async def _open_slide(plugin, filepath):
+async def _open_slide(plugin, plugin_name, filepath):
     try:
         slide = await plugin.open(filepath)
+        slide.plugin = plugin_name
     except HTTPException as e:
-        raise HTTPException(status_code=500, detail=f"Plugin {plugin} unable to open image ({e.detail})")
+        raise HTTPException(status_code=500, detail=f"Plugin {plugin_name} unable to open image ({e.detail})")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Plugin {plugin} unable to open image ({e})")
+        raise HTTPException(status_code=500, detail=f"Plugin {plugin_name} unable to open image ({e})")
     return slide

@@ -3,6 +3,7 @@
 ## 0.11.0
 
 - New plugin concept
+- Extended slide info format content
 
 ## 0.10.20
 

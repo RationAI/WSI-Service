@@ -2,7 +2,7 @@
 
 ## 1.4.0
 
-- updated for new plugin concept
+- Updated for new plugin concept
 
 ## 1.3.1
 

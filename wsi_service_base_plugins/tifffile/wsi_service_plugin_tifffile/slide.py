@@ -328,7 +328,7 @@ class Slide(BaseSlide):
                 ),
                 num_levels=len(levels),
                 levels=levels,
-                format="OME-TIFF",
+                format="ome-tiff",
             )
             return slide_info
         except Exception as e:

@@ -67,12 +67,19 @@ class SlideManager:
         # slide info conversion
         slide_info = self._convert_slide_info_to_match_slide_info_model(slide_info, slide_info_model)
         if isinstance(slide_info, SlideInfoV3):
-            # set slide format identifier if empty
+            # set and extend slide format identifier
             if not slide_info.format:
+                slide_info.format = ""
+            if "file" not in slide_info.format and "folder" not in slide_info.format:
                 if os.path.isfile(slide.filepath):
-                    slide_info.format = pathlib.Path(slide.filepath).suffix[1:].upper()
-                else:
-                    slide_info.format = "FOLDER"
+                    slide_info.format = "file-" + pathlib.Path(slide.filepath).suffix[1:] + "-" + slide_info.format
+                elif os.path.isdir(slide.filepath):
+                    slide_info.format = "folder-" + slide_info.format
+            if slide.plugin not in slide_info.format:
+                if slide_info.format and not slide_info.format.endswith("-"):
+                    slide_info.format += "-"
+                slide_info.format += f"{slide.plugin}"
+            slide_info.format = slide_info.format.lower()
             # enable raw download if filepath exists on disk
             if os.path.exists(slide.filepath):
                 slide_info.raw_download = True
