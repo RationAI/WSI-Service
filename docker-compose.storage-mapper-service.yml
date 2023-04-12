@@ -23,7 +23,7 @@ services:
       - ${COMPOSE_WS_PORT}:8080
 
   storage-mapper-service:
-    image: registry.gitlab.com/empaia/services/storage-mapper-service:0.2.11@sha256:bbc2a0c8bdbab617a156ba65b76c925ae327eaecfa48a4456eee7955ba8246b5
+    image: registry.gitlab.com/empaia/services/storage-mapper-service:0.2.12@sha256:31c2ff1e4e3fdcadee161b2a5431d1c2d798e39b7fb29e062f7623960d9706bd
     environment:
       SM_DB_USERNAME: empaia_test
       SM_DB_PASSWORD: A6tP3osxByeM
