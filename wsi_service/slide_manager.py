@@ -139,7 +139,7 @@ class SlideManager:
         return slide_info
 
     def _extend_slide_format_identifier(self, slide, slide_info):
-        # slide format identifier assembeld to have the following format
+        # slide format identifier assembled to have the following format
         # {file or folder, if any}-{file extension, if any}-{identifier set by plugin, if any}-{plugin name}
         # e.g.
         # file-svs-aperio-openslide
