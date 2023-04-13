@@ -24,13 +24,6 @@ class Settings(BaseSettings):
     max_thumbnail_size: int = 500
     root_path: str = None
 
-    # define plugin defaults for specific formats
-    plugins_default = {
-        ".svs": "tiffslide",
-        ".tiff": "tiffslide",
-        ".tif": "tiffslide",
-    }
-
     # default color for padding of image regions out of image extent
     padding_color = (255, 255, 255)
 

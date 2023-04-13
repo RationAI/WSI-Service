@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0
+
+- Updated for new plugin concept
+
 ## 1.3.1
 
 - Updated dependencies

@@ -1,8 +1,12 @@
 # Changelog
 
+## 0.4.0
+
+- Updated for new plugin concept
+
 ## 0.3.1
 
-- updated wsidicom
+- Updated wsidicom
 
 ## 0.3.0
 
@@ -15,4 +19,4 @@
 
 ## 0.1.0
 
-- added wsidocom based plugin
+- Added wsidocom based plugin
