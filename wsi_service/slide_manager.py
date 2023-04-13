@@ -67,19 +67,7 @@ class SlideManager:
         # slide info conversion
         slide_info = self._convert_slide_info_to_match_slide_info_model(slide_info, slide_info_model)
         if isinstance(slide_info, SlideInfoV3):
-            # set and extend slide format identifier
-            if not slide_info.format:
-                slide_info.format = ""
-            if "file" not in slide_info.format and "folder" not in slide_info.format:
-                if os.path.isfile(slide.filepath):
-                    slide_info.format = "file-" + pathlib.Path(slide.filepath).lstrip(".") + "-" + slide_info.format
-                elif os.path.isdir(slide.filepath):
-                    slide_info.format = "folder-" + slide_info.format
-            if slide.plugin not in slide_info.format:
-                if slide_info.format and not slide_info.format.endswith("-"):
-                    slide_info.format += "-"
-                slide_info.format += f"{slide.plugin}"
-            slide_info.format = slide_info.format.lower()
+            self._extend_slide_format_identifier(slide, slide_info)
             # enable raw download if filepath exists on disk
             if os.path.exists(slide.filepath):
                 slide_info.raw_download = True
@@ -149,3 +137,22 @@ class SlideManager:
                 # v1 --> v3
                 slide_info = SlideInfoV3.parse_obj(slide_info.dict())
         return slide_info
+
+    def _extend_slide_format_identifier(self, slide, slide_info):
+        # slide format identifier assembeld to have the following format
+        # {file or folder, if any}-{file extension, if any}-{identifier set by plugin, if any}-{plugin name}
+        # e.g.
+        # file-svs-aperio-openslide
+        # folder-dicom-wsidicom
+        if not slide_info.format:
+            slide_info.format = ""
+        if "file" not in slide_info.format and "folder" not in slide_info.format:
+            if os.path.isfile(slide.filepath):
+                slide_info.format = "file-" + pathlib.Path(slide.filepath).suffix.lstrip(".") + "-" + slide_info.format
+            elif os.path.isdir(slide.filepath):
+                slide_info.format = "folder-" + slide_info.format
+        if slide.plugin not in slide_info.format:
+            if slide_info.format and not slide_info.format.endswith("-"):
+                slide_info.format += "-"
+            slide_info.format += f"{slide.plugin}"
+        slide_info.format = slide_info.format.lower()
