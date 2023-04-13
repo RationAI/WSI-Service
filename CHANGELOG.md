@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.1
+
+- Missing huffman tables fix
+
 ## 0.11.0
 
 - New plugin concept
