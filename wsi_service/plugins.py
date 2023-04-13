@@ -53,7 +53,7 @@ def get_plugins_overview():
 
 
 def is_supported_format(filepath):
-    return len(_get_supported_plugins(filepath))
+    return len(_get_supported_plugins(filepath)) > 0
 
 
 def _get_supported_plugins(filepath):

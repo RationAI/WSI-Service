@@ -72,7 +72,7 @@ class SlideManager:
                 slide_info.format = ""
             if "file" not in slide_info.format and "folder" not in slide_info.format:
                 if os.path.isfile(slide.filepath):
-                    slide_info.format = "file-" + pathlib.Path(slide.filepath).suffix[1:] + "-" + slide_info.format
+                    slide_info.format = "file-" + pathlib.Path(slide.filepath).lstrip(".") + "-" + slide_info.format
                 elif os.path.isdir(slide.filepath):
                     slide_info.format = "folder-" + slide_info.format
             if slide.plugin not in slide_info.format:
