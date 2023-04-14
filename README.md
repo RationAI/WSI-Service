@@ -217,7 +217,7 @@ async def open(filepath):
     return await Slide.create(filepath)
 ```
 
-The `priority` value is optional and is `0` by default. If it is set, a higher value means that a plugin is preferred. The priority can also be overridden by an environment variable, e.g. by setting `WS_PLUGIN_PRIORITY_PLUGINNAME=10`.
+The `priority` value is optional and is `0` by default. If it is set, a higher value means that a plugin is preferred. The priority can also be overridden by an environment variable, e.g. by setting `WS_PLUGIN_PRIORITY_PLUGINNAME=10`. If the priority is set to a negative value, the plugin will be disabled.
 
 Once these minimal requirements are taken care of, the python package can be installed on top of an existing WSI Service docker image by simple running a Dockerfile along these lines:
 
