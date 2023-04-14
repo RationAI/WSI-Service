@@ -2,7 +2,7 @@
 
 ## 0.11.2
 
-- Add possibility to disable plugins with priority < 0
+- Added possibility to disable plugins with priority < 0
 
 ## 0.11.1
 
