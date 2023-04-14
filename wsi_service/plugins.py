@@ -59,13 +59,14 @@ def is_supported_format(filepath):
 def _get_supported_plugins(filepath):
     supported_plugins = {}
     for plugin_name, plugin in plugins.items():
-        if hasattr(plugin, "is_supported"):
-            if plugin.is_supported(filepath):
-                supported_plugins[plugin_name] = plugin
-        elif hasattr(plugin, "supported_file_extensions"):
-            file_extension = pathlib.Path(filepath).suffix
-            if file_extension in plugin.supported_file_extensions:
-                supported_plugins[plugin_name] = plugin
+        if _get_plugin_priority((plugin_name, plugin)) >= 0:
+            if hasattr(plugin, "is_supported"):
+                if plugin.is_supported(filepath):
+                    supported_plugins[plugin_name] = plugin
+            elif hasattr(plugin, "supported_file_extensions"):
+                file_extension = pathlib.Path(filepath).suffix
+                if file_extension in plugin.supported_file_extensions:
+                    supported_plugins[plugin_name] = plugin
     return supported_plugins
 
 
