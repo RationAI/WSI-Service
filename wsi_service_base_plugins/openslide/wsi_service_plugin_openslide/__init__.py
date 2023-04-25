@@ -7,7 +7,11 @@ from wsi_service_plugin_openslide.slide import Slide
 
 def is_supported(filepath):
     if os.path.isfile(filepath):
-        return pathlib.Path(filepath).suffix in [".bif", ".mrxs", ".ndpi", ".scn", ".svs", ".tiff", ".tif"]
+        filename = pathlib.Path(filepath).name
+        suffix = pathlib.Path(filepath).suffix
+        if filename.endswith("ome.tif") or filename.endswith("ome.tiff"):
+            return False
+        return suffix in [".bif", ".mrxs", ".ndpi", ".scn", ".svs", ".tiff", ".tif"]
     else:
         return len(glob.glob(os.path.join(filepath, "*.vsf"))) > 0
 
