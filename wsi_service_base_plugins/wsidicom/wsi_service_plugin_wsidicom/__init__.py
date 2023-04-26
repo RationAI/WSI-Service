@@ -1,11 +1,14 @@
-import glob
 import os
+import pathlib
 
 from wsi_service_plugin_wsidicom.slide import Slide
 
 
 def is_supported(filepath):
-    return len(glob.glob(os.path.join(filepath, "*.dcm"))) > 0
+    if os.path.isfile(filepath):
+        return False
+    else:
+        return any(list(pathlib.Path(filepath).glob("*.dcm")))
 
 
 async def open(filepath):

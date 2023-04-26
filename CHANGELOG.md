@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.5
+
+- bugfix for tifffiles plugin selection (ome.tif)
+
 ## 0.11.4
 
 - Updated Dependencies
