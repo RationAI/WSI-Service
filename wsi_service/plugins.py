@@ -33,7 +33,7 @@ async def load_slide(filepath, plugin=None):
             )
 
     exception_details = ""
-    for plugin_name, plugin in _get_sorted_plugins():
+    for plugin_name, plugin in _get_sorted_plugins(supported_plugins):
         try:
             return await _open_slide(plugin, plugin_name, filepath)
         except HTTPException as e:
@@ -70,8 +70,8 @@ def _get_supported_plugins(filepath):
     return supported_plugins
 
 
-def _get_sorted_plugins():
-    return sorted(plugins.items(), key=_get_plugin_priority, reverse=True)
+def _get_sorted_plugins(supported_plugins):
+    return sorted(supported_plugins.items(), key=_get_plugin_priority, reverse=True)
 
 
 def _get_plugin_priority(plugin_item):

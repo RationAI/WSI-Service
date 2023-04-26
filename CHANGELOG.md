@@ -2,6 +2,11 @@
 
 ## 0.11.5
 
+- bugfix for plugin concept
+- pinned wsidicom lib to 0.7.0
+
+## 0.11.5
+
 - bugfix for tifffiles plugin selection (ome.tif)
 
 ## 0.11.4
