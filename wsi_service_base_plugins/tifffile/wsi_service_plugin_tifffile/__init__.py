@@ -15,9 +15,10 @@ supported_file_extensions = [
 def is_supported(filepath):
     if os.path.isfile(filepath):
         filename = pathlib.Path(filepath).name
-        return filename.endswith("ome.tif") or filename.endswith("ome.tiff")
-    else:
-        return False
+        for suffix in ["ome.tif", "ome.tiff", "ome.tf2", "ome.tf8", "ome.btf"]:
+            if filename.endswith(suffix):
+                return True
+    return False
 
 
 async def open(filepath):
