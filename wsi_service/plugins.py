@@ -38,7 +38,7 @@ async def load_slide(filepath, plugin=None):
             )
 
     exception_details = ""
-    for plugin_name, plugin in _get_sorted_plugins():
+    for plugin_name, plugin in _get_sorted_plugins(supported_plugins):
         logger.debug(f"[load_slide] Checking plugin: {plugin_name} | {plugin}")
         try:
             return await _open_slide(plugin, plugin_name, filepath)
@@ -65,25 +65,19 @@ def is_supported_format(filepath):
 def _get_supported_plugins(filepath):
     supported_plugins = {}
     for plugin_name, plugin in plugins.items():
-        logger.debug(f"[_get_supported_plugins] Checking plugin: {plugin_name} | {plugin}")
         if _get_plugin_priority((plugin_name, plugin)) >= 0:
-            logger.debug("[_get_supported_plugins] Plugin has priority >= 0")
             if hasattr(plugin, "is_supported"):
-                logger.debug("[_get_supported_plugins] Check is_supported")
                 if plugin.is_supported(filepath):
-                    logger.debug(f"[_get_supported_plugins] Add plugin {plugin_name} to supported plugins")
                     supported_plugins[plugin_name] = plugin
             elif hasattr(plugin, "supported_file_extensions"):
-                logger.debug("[_get_supported_plugins] Has supported_file_extensions")
                 file_extension = pathlib.Path(filepath).suffix
                 if file_extension in plugin.supported_file_extensions:
                     supported_plugins[plugin_name] = plugin
-    logger.debug(f"[_get_supported_plugins] Supported plugins: {supported_plugins}")
     return supported_plugins
 
 
-def _get_sorted_plugins():
-    return sorted(plugins.items(), key=_get_plugin_priority, reverse=True)
+def _get_sorted_plugins(supported_plugins):
+    return sorted(supported_plugins.items(), key=_get_plugin_priority, reverse=True)
 
 
 def _get_plugin_priority(plugin_item):
