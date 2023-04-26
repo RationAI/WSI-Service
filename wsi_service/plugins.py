@@ -8,8 +8,6 @@ from fastapi import HTTPException
 
 from wsi_service.custom_models.service_status import PluginInfo
 
-from wsi_service.singletons import logger
-
 plugins = {
     name.replace("wsi_service_plugin_", ""): importlib.import_module(name)
     for _, name, _ in pkgutil.iter_modules()
@@ -21,10 +19,7 @@ async def load_slide(filepath, plugin=None):
     if not (os.path.exists(filepath)):
         raise HTTPException(status_code=500, detail=f"File {filepath} not found.")
 
-    logger.debug(f"Filepath: {filepath}")
-
     supported_plugins = _get_supported_plugins(filepath)
-    logger.debug(f"[load_slide] Supported plugins: {supported_plugins}")
     if len(supported_plugins) == 0:
         raise HTTPException(status_code=500, detail="There is no plugin available that does support this slide.")
 
@@ -39,7 +34,6 @@ async def load_slide(filepath, plugin=None):
 
     exception_details = ""
     for plugin_name, plugin in _get_sorted_plugins(supported_plugins):
-        logger.debug(f"[load_slide] Checking plugin: {plugin_name} | {plugin}")
         try:
             return await _open_slide(plugin, plugin_name, filepath)
         except HTTPException as e:

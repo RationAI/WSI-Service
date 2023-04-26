@@ -10,6 +10,12 @@
   "packageRules": [
     {
       "matchPackageNames": [
+        "wsidicom"
+      ],
+      "allowedVersions": "0.7.0"
+    },
+    {
+      "matchPackageNames": [
         "ubuntu"
       ],
       "allowedVersions": "20.04"
