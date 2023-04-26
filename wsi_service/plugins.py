@@ -8,6 +8,8 @@ from fastapi import HTTPException
 
 from wsi_service.custom_models.service_status import PluginInfo
 
+from wsi_service.singletons import logger
+
 plugins = {
     name.replace("wsi_service_plugin_", ""): importlib.import_module(name)
     for _, name, _ in pkgutil.iter_modules()
@@ -19,7 +21,10 @@ async def load_slide(filepath, plugin=None):
     if not (os.path.exists(filepath)):
         raise HTTPException(status_code=500, detail=f"File {filepath} not found.")
 
+    logger.debug(f"Filepath: {filepath}")
+
     supported_plugins = _get_supported_plugins(filepath)
+    logger.debug(f"[load_slide] Supported plugins: {supported_plugins}")
     if len(supported_plugins) == 0:
         raise HTTPException(status_code=500, detail="There is no plugin available that does support this slide.")
 
@@ -34,6 +39,7 @@ async def load_slide(filepath, plugin=None):
 
     exception_details = ""
     for plugin_name, plugin in _get_sorted_plugins():
+        logger.debug(f"[load_slide] Checking plugin: {plugin_name} | {plugin}")
         try:
             return await _open_slide(plugin, plugin_name, filepath)
         except HTTPException as e:
@@ -59,14 +65,20 @@ def is_supported_format(filepath):
 def _get_supported_plugins(filepath):
     supported_plugins = {}
     for plugin_name, plugin in plugins.items():
+        logger.debug(f"[_get_supported_plugins] Checking plugin: {plugin_name} | {plugin}")
         if _get_plugin_priority((plugin_name, plugin)) >= 0:
+            logger.debug("[_get_supported_plugins] Plugin has priority >= 0")
             if hasattr(plugin, "is_supported"):
+                logger.debug("[_get_supported_plugins] Check is_supported")
                 if plugin.is_supported(filepath):
+                    logger.debug(f"[_get_supported_plugins] Add plugin {plugin_name} to supported plugins")
                     supported_plugins[plugin_name] = plugin
             elif hasattr(plugin, "supported_file_extensions"):
+                logger.debug("[_get_supported_plugins] Has supported_file_extensions")
                 file_extension = pathlib.Path(filepath).suffix
                 if file_extension in plugin.supported_file_extensions:
                     supported_plugins[plugin_name] = plugin
+    logger.debug(f"[_get_supported_plugins] Supported plugins: {supported_plugins}")
     return supported_plugins
 
 
