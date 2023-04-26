@@ -13,6 +13,8 @@ def is_supported(filepath):
         if filename.endswith("ome.tif") or filename.endswith("ome.tiff"):
             return False
         return suffix in [".svs", ".tiff", ".tif"]
+    else:
+        return False
 
 
 async def open(filepath):

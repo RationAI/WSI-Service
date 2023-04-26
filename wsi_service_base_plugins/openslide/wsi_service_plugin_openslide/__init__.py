@@ -1,4 +1,3 @@
-import glob
 import os
 import pathlib
 
@@ -13,7 +12,7 @@ def is_supported(filepath):
             return False
         return suffix in [".bif", ".mrxs", ".ndpi", ".scn", ".svs", ".tiff", ".tif"]
     else:
-        return len(glob.glob(os.path.join(filepath, "*.vsf"))) > 0
+        return any(filename.endswith(".vsf") for filename in os.listdir(filepath))
 
 
 async def open(filepath):
