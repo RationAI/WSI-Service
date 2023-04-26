@@ -12,7 +12,7 @@ def is_supported(filepath):
             return False
         return suffix in [".bif", ".mrxs", ".ndpi", ".scn", ".svs", ".tiff", ".tif"]
     else:
-        return any(filename.endswith(".vsf") for filename in pathlib.Path(filepath).iterdir())
+        return any(list(pathlib.Path(filepath).glob("*.vsf")))
 
 
 async def open(filepath):

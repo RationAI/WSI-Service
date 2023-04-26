@@ -1,4 +1,3 @@
-import glob
 import os
 import pathlib
 
@@ -9,7 +8,7 @@ def is_supported(filepath):
     if os.path.isfile(filepath):
         return False
     else:
-        return any(filename.endswith(".dcm") for filename in pathlib.Path(filepath).iterdir())
+        return any(list(pathlib.Path(filepath).glob("*.dcm")))
 
 
 async def open(filepath):
