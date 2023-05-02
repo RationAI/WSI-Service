@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.11.5
+## 0.11.7
+
+- Updated Dependencies
+
+## 0.11.6
 
 - bugfix for plugin concept
 - pinned wsidicom lib to 0.7.0
