@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.76@sha256:af6f2e5a6e535c79cdb0ccfaa878cab1e4e6692c0156a4798d18a326a2065ee8 AS wsi_service_build
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.78@sha256:7cbf05b3903c4989b84234713998e3ac64bc55c5dbf027b3042397a3522e754a AS wsi_service_build
 
 # EDIT to set version of OpenSlide
 ENV OPENSLIDE_VERSION=3390d5a
@@ -17,11 +17,6 @@ RUN curl -o /usr/lib/x86_64-linux-gnu/libopenslide.so.0 \
 RUN cp /usr/lib/x86_64-linux-gnu/libopenslide.so.0 /openslide_deps
 RUN ldd /usr/lib/x86_64-linux-gnu/libopenslide.so.0 \
   | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp -v '{}' /openslide_deps
-
-RUN curl -o /tmp/libpixman-1-0_0.40.0-1build3_amd64.deb \
-  http://launchpadlibrarian.net/562429593/libpixman-1-0_0.40.0-1build3_amd64.deb
-RUN dpkg -i /tmp/libpixman-1-0_0.40.0-1build3_amd64.deb
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libpixman-1.so.0.40.0
 
 COPY . /wsi-service
 
@@ -50,7 +45,7 @@ WORKDIR /wsi-service
 RUN poetry install
 
 
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.76@sha256:af6f2e5a6e535c79cdb0ccfaa878cab1e4e6692c0156a4798d18a326a2065ee8 AS wsi_service_intermediate
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.1.78@sha256:7cbf05b3903c4989b84234713998e3ac64bc55c5dbf027b3042397a3522e754a AS wsi_service_intermediate
 
 RUN mkdir /artifacts
 COPY --from=wsi_service_build /wsi-service/requirements.txt /artifacts
@@ -79,10 +74,10 @@ RUN pip3 install /wsi-service/dist/*.whl
 RUN mkdir /data
 
 
-FROM ubuntu:20.04@sha256:db8bf6f4fb351aa7a26e27ba2686cf35a6a409f65603e59d4c203e58387dc6b3 AS wsi_service_production
+FROM ubuntu:22.04 AS wsi_service_production
 
 RUN apt-get update \
-  && apt-get install --no-install-recommends -y python3 python3-pip \
+  && apt-get install --no-install-recommends -y python3 python3-pip python3-packaging \
   && rm -rf /var/lib/apt/lists/*
 
 RUN adduser --disabled-password --gecos '' appuser \
@@ -91,16 +86,14 @@ RUN adduser --disabled-password --gecos '' appuser \
 USER appuser
 
 COPY --chown=appuser --from=wsi_service_build /openslide_deps/* /usr/lib/x86_64-linux-gnu/
-COPY --chown=appuser --from=wsi_service_build /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.40.0 /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.40.0
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libpixman-1.so.0.40.0
 
-COPY --chown=appuser --from=wsi_service_intermediate /usr/local/lib/python3.8/dist-packages/ /usr/local/lib/python3.8/dist-packages/
+COPY --chown=appuser --from=wsi_service_intermediate /usr/local/lib/python3.10/dist-packages/ /usr/local/lib/python3.10/dist-packages/
 COPY --chown=appuser --from=wsi_service_intermediate /data /data
 
 ENV WEB_CONCURRENCY=8
 
 EXPOSE 8080/tcp
 
-WORKDIR /usr/local/lib/python3.8/dist-packages/wsi_service
+WORKDIR /usr/local/lib/python3.10/dist-packages/wsi_service
 
 CMD ["python3", "-m", "uvicorn", "wsi_service.app:app", "--host", "0.0.0.0", "--port", "8080", "--loop=uvloop", "--http=httptools"]

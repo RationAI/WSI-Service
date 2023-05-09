@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.8
+
+- Updated Dependencies
+- Update base image to Ubuntu 22.04
+
 ## 0.11.7
 
 - Updated Dependencies
