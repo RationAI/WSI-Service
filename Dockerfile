@@ -77,7 +77,7 @@ RUN mkdir /data
 FROM ubuntu:22.04 AS wsi_service_production
 
 RUN apt-get update \
-  && apt-get install --no-install-recommends -y python3 python3-pip \
+  && apt-get install --no-install-recommends -y python3 python3-pip python3-packaging \
   && rm -rf /var/lib/apt/lists/*
 
 RUN adduser --disabled-password --gecos '' appuser \
