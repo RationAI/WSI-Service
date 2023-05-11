@@ -18,7 +18,7 @@
       "matchPackageNames": [
         "ubuntu"
       ],
-      "allowedVersions": "20.04"
+      "allowedVersions": "22.04"
     }
   ]
 }
