@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wsi-service"
-version = "0.11.13"
+version = "0.11.14"
 description = "EMPAIA WSI Service to stream whole slide images"
 authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
@@ -8,7 +8,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
 pydantic = {extras = ["dotenv"], version = "^1.9.0"}
-fastapi = "^0.96.0"
+fastapi = "^0.97.0"
 requests = "^2.27.1"
 uvicorn = "^0.22.0"
 numpy = "^1.22.3"
