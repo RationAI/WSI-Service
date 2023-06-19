@@ -74,7 +74,7 @@ RUN pip3 install /wsi-service/dist/*.whl
 RUN mkdir /data
 
 
-FROM ubuntu:22.04 AS wsi_service_production
+FROM ubuntu:22.04@sha256:83f0c2a8d6f266d687d55b5cb1cb2201148eb7ac449e4202d9646b9083f1cee0 AS wsi_service_production
 
 RUN apt-get update \
   && apt-get install --no-install-recommends -y python3 python3-pip python3-packaging \
