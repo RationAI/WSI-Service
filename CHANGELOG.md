@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.15
+
+- Updated Dependencies
+- Added docker digest to Ubuntu 22.04
+
 ## 0.11.14
 
 - Updated Dependencies

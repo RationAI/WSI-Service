@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.2.0@sha256:81523e4a90baa876e4f6411c66566ff246974457c4034d5924bd6c63de76e2af AS wsi_service_build
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.2.2@sha256:bbf52a48428553dc37fd08ab0021213a751a4971eccbf1dabc4a634f5a6c5acf AS wsi_service_build
 
 # EDIT to set version of OpenSlide
 ENV OPENSLIDE_VERSION=3390d5a
@@ -45,7 +45,7 @@ WORKDIR /wsi-service
 RUN poetry install
 
 
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.2.0@sha256:81523e4a90baa876e4f6411c66566ff246974457c4034d5924bd6c63de76e2af AS wsi_service_intermediate
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.2.2@sha256:bbf52a48428553dc37fd08ab0021213a751a4971eccbf1dabc4a634f5a6c5acf AS wsi_service_intermediate
 
 RUN mkdir /artifacts
 COPY --from=wsi_service_build /wsi-service/requirements.txt /artifacts
@@ -74,7 +74,7 @@ RUN pip3 install /wsi-service/dist/*.whl
 RUN mkdir /data
 
 
-FROM ubuntu:22.04 AS wsi_service_production
+FROM ubuntu:22.04@sha256:83f0c2a8d6f266d687d55b5cb1cb2201148eb7ac449e4202d9646b9083f1cee0 AS wsi_service_production
 
 RUN apt-get update \
   && apt-get install --no-install-recommends -y python3 python3-pip python3-packaging \
