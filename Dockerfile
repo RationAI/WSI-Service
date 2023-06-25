@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.2.2@sha256:bbf52a48428553dc37fd08ab0021213a751a4971eccbf1dabc4a634f5a6c5acf AS wsi_service_build
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.2.3@sha256:9e3b3f7c61f265da8a49a5baa69bc8ce8d425e59e1822e29b1d65cdc27ae8913 AS wsi_service_build
 
 # EDIT to set version of OpenSlide
 ENV OPENSLIDE_VERSION=3390d5a
@@ -45,7 +45,7 @@ WORKDIR /wsi-service
 RUN poetry install
 
 
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.2.2@sha256:bbf52a48428553dc37fd08ab0021213a751a4971eccbf1dabc4a634f5a6c5acf AS wsi_service_intermediate
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.2.3@sha256:9e3b3f7c61f265da8a49a5baa69bc8ce8d425e59e1822e29b1d65cdc27ae8913 AS wsi_service_intermediate
 
 RUN mkdir /artifacts
 COPY --from=wsi_service_build /wsi-service/requirements.txt /artifacts
