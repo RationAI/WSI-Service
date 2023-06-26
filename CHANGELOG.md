@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.16
+
+- Updated Dependencies
+
 ## 0.11.15
 
 - Updated Dependencies
