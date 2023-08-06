@@ -7,17 +7,17 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
-pydantic = {extras = ["dotenv"], version = "^1.9.0"}
-fastapi = "^0.98.0"
+pydantic = {extras = ["dotenv"], version = "^2.0.0"}
+fastapi = "^0.101.0"
 requests = "^2.27.1"
-uvicorn = "^0.22.0"
+uvicorn = "^0.23.0"
 numpy = "^1.22.3"
-Pillow = "^9.0.0"
+Pillow = "^10.0.0"
 imagecodecs = "^2023.0.0"
 tifffile = "^2023.0.0"
 uvloop = "^0.17.0"
 aiohttp = "^3.8.1"
-httptools = "^0.5.0"
+httptools = "^0.6.0"
 filelock = "^3.6.0"
 idna = "^3.3"
 zipfly = "^6.0.3"

@@ -294,14 +294,14 @@ all = ["fsspec", "imagecodecs (>=2022.2.22)", "lxml", "matplotlib (>=3.3)", "zar
 
 [[package]]
 name = "tiffslide"
-version = "2.1.2"
+version = "2.2.0"
 description = "tifffile-based drop-in replacement for openslide-python"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "tiffslide-2.1.2-py3-none-any.whl", hash = "sha256:0d43318c8f1a1951a5a39d4aaff8d8dd9b3a6453020fca8feabc606970a3cd1a"},
-    {file = "tiffslide-2.1.2.tar.gz", hash = "sha256:77195ed9b0a86744577f1e294ebdc3ceb08ec9ecbddc0acbd66501beae0bbe54"},
+    {file = "tiffslide-2.2.0-py3-none-any.whl", hash = "sha256:b6d256cfd5e1209ded241dc280b19247e615244ca9208dd779c45591de99f934"},
+    {file = "tiffslide-2.2.0.tar.gz", hash = "sha256:ed45d46167df75013cd042697213b0667e17639def0ea3ae3b798f8fdd1b5a15"},
 ]
 
 [package.dependencies]
@@ -310,7 +310,7 @@ imagecodecs = "*"
 pillow = "*"
 tifffile = ">=2021.6.14"
 typing-extensions = ">=4.0"
-zarr = "*"
+zarr = ">=2.11.0"
 
 [package.extras]
 dev = ["black", "mypy", "pre-commit", "pytest (>=6)", "pytest-cov"]
