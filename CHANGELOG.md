@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.12.0
+
+- Updated to Pydantic v2
+- Updated models to 0.4.3
+
 ## 0.11.16
 
 - Updated Dependencies

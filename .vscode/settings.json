@@ -3,7 +3,7 @@
     // https://code.visualstudio.com/docs/python/linting#_default-pylint-rules
     "python.linting.pylintEnabled": true,
     // setup automatic code formatter (https://github.com/psf/black)
-    "python.formatting.provider": "black",
+    "python.formatting.provider": "none",
     "editor.formatOnSave": true,
     // setup automatic import sort
     "editor.codeActionsOnSave": {
@@ -17,4 +17,7 @@
         "--line-length",
         "120"
     ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
 }

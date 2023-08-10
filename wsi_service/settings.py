@@ -1,6 +1,6 @@
 from typing import Set
 
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 from wsi_service.version import __version__
 
@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     disable_openapi: bool = False
     cors_allow_credentials: bool = False
-    cors_allow_origins: Set[str] = None
+    cors_allow_origins: Set[str] = set()
     debug: bool = False
     data_dir: str = "/data"
     mapper_address: str = "http://localhost:8080/slides/{slide_id}/storage"
@@ -22,10 +22,10 @@ class Settings(BaseSettings):
     image_handle_cache_size: int = 50
     max_returned_region_size: int = 25_000_000  # e.g. 5000 x 5000
     max_thumbnail_size: int = 500
-    root_path: str = None
+    root_path: str = ""
 
     # default color for padding of image regions out of image extent
-    padding_color = (255, 255, 255)
+    padding_color: tuple = (255, 255, 255)
 
     class Config:
         env_file = ".env"
