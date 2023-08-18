@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wsi-service"
-version = "0.12.0"
+version = "0.12.1"
 description = "EMPAIA WSI Service to stream whole slide images"
 authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
@@ -12,7 +12,7 @@ fastapi = "^0.101.0"
 requests = "^2.27.1"
 uvicorn = "^0.23.0"
 numpy = "^1.22.3"
-Pillow = "<10.0.0"
+Pillow = "<10.0.1"
 imagecodecs = "^2023.0.0"
 tifffile = "^2023.0.0"
 uvloop = "^0.17.0"
