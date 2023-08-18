@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.1
+
+- Updated Dependencies
+
 ## 0.12.0
 
 - Updated to Pydantic v2
