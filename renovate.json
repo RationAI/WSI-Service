@@ -1,23 +1,18 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:base"
-  ],
-  "assignees": [
-    "michael.franz.sy",
-    "nweiss"
-  ],
+  "extends": ["config:base"],
+  "assignees": ["michael.franz.sy", "nweiss"],
   "packageRules": [
     {
-      "matchPackageNames": [
-        "wsidicom"
-      ],
+      "matchPackageNames": ["wsidicom"],
       "allowedVersions": "0.7.0"
     },
     {
-      "matchPackageNames": [
-        "ubuntu"
-      ],
+      "matchPackageNames": ["Pillow"],
+      "allowedVersions": "<10.0.0"
+    },
+    {
+      "matchPackageNames": ["ubuntu"],
       "allowedVersions": "22.04"
     }
   ]
