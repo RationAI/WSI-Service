@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.3
+
+- Updated Dependencies
+
 ## 0.12.2
 
 - Updated Dependencies
