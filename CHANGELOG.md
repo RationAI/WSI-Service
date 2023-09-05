@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.4
+
+- Downgrade to Pillow < 10.0.0
+
 ## 0.12.3
 
 - Updated Dependencies
