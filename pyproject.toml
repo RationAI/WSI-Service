@@ -22,7 +22,7 @@ filelock = "^3.6.0"
 idna = "^3.3"
 zipfly = "^6.0.3"
 aiofiles = "^23.0.0"
-httpx = "^0.24.0"
+httpx = "^0.25.0"
 pydantic-settings = "^2.0.2"
 
 [tool.poetry.dev-dependencies]
