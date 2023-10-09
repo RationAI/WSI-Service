@@ -10,7 +10,7 @@ from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_l
 
 
 class Slide(BaseSlide):
-    supported_vendors = ["aperio", None]
+    supported_vendors = ["aperio", "hamamatsu", None]
 
     async def open(self, filepath):
         self.filepath = filepath

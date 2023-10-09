@@ -12,7 +12,7 @@ def is_supported(filepath):
         suffix = pathlib.Path(filepath).suffix
         if filename.endswith("ome.tif") or filename.endswith("ome.tiff"):
             return False
-        return suffix in [".svs", ".tiff", ".tif"]
+        return suffix in [".svs", ".tiff", ".tif", ".ndpi"]
     else:
         return False
 
