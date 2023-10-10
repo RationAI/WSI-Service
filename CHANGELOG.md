@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.8
+
+- Updated Dependencies
+
 ## 0.12.7
 
 - Add .ndpi format to tiffslide
