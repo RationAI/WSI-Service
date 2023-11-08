@@ -95,7 +95,7 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_request(image_format, image_quality)
         slide = await slide_manager.get_slide(slide_id, plugin=plugin)
         label = await slide.get_label()
-        label.thumbnail((max_x, max_y), Image.ANTIALIAS)
+        label.thumbnail((max_x, max_y), Image.Resampling.LANCZOS)
         return make_response(slide, label, image_format, image_quality)
 
     @app.get(
@@ -124,7 +124,7 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_request(image_format, image_quality)
         slide = await slide_manager.get_slide(slide_id, plugin=plugin)
         macro = await slide.get_macro()
-        macro.thumbnail((max_x, max_y), Image.ANTIALIAS)
+        macro.thumbnail((max_x, max_y), Image.Resampling.LANCZOS)
         return make_response(slide, macro, image_format, image_quality)
 
     @app.get(

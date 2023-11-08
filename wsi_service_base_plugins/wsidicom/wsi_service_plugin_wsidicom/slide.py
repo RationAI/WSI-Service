@@ -28,7 +28,9 @@ class Slide(BaseSlide):
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    async def get_region(
+        self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0
+    ):
         if padding_color is None:
             padding_color = settings.padding_color
         level_dicom = self.dicom_slide.levels[level].level
@@ -36,13 +38,17 @@ class Slide(BaseSlide):
             (int)(start_x),
             (int)(start_y),
         )
-        img = self.dicom_slide.read_region(level_location, level_dicom, (size_x, size_y))
+        img = self.dicom_slide.read_region(
+            level_location, level_dicom, (size_x, size_y)
+        )
         rgb_img = rgba_to_rgb_with_background_color(img, padding_color)
         return rgb_img
 
     async def get_thumbnail(self, max_x, max_y):
         if not hasattr(self, "thumbnail"):
-            self.thumbnail = await self.__get_thumbnail_dicom(settings.max_thumbnail_size, settings.max_thumbnail_size)
+            self.thumbnail = await self.__get_thumbnail_dicom(
+                settings.max_thumbnail_size, settings.max_thumbnail_size
+            )
         thumbnail = self.thumbnail.copy()
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
@@ -91,7 +97,7 @@ class Slide(BaseSlide):
         return original_levels
 
     def __get_pixel_size(self):
-        mpp = self.dicom_slide.base_level.mpp
+        mpp = self.dicom_slide.get_level(0).mpp
         return SlidePixelSizeNm(x=1000.0 * mpp.width, y=1000.0 * mpp.height)
 
     def __get_tile_extent(self):
@@ -100,8 +106,9 @@ class Slide(BaseSlide):
 
         # some tiles can have an unequal tile height and width that can cause problems in the slide viewer
         # since the tile route is soley used for viewing, we provide the default tile width and height
-        temp_height = self.dicom_slide.base_level.tile_size.height
-        temp_width = self.dicom_slide.base_level.tile_size.width
+        base_level = self.dicom_slide.get_level(0)
+        temp_height = base_level.tile_size.height
+        temp_width = base_level.tile_size.width
 
         if temp_height == temp_width:
             tile_height = temp_height
@@ -111,14 +118,15 @@ class Slide(BaseSlide):
 
     def __get_slide_info_dicom(self):
         try:
+            base_level = self.dicom_slide.get_level(0)
             levels = self.__get_levels_dicom()
             slide_info = SlideInfo(
                 id="",
                 channels=get_rgb_channel_list(),  # rgb channels
                 channel_depth=8,  # 8bit each channel
                 extent=SlideExtent(
-                    x=self.dicom_slide.base_level.size.width,
-                    y=self.dicom_slide.base_level.size.height,
+                    x=base_level.size.width,
+                    y=base_level.size.height,
                     z=1,
                 ),
                 pixel_size_nm=self.__get_pixel_size(),
@@ -129,11 +137,15 @@ class Slide(BaseSlide):
             )
             return slide_info
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
+            raise HTTPException(
+                status_code=404, detail=f"Failed to gather slide infos. [{e}]"
+            )
 
     async def __get_thumbnail_dicom(self, max_x, max_y):
         try:
             thumbnail = self.dicom_slide.read_thumbnail((max_x, max_y))
             return thumbnail
         except Exception as e:
-            raise HTTPException(status_code=500, detail="Failed to extract thumbnail from WSI.") from e
+            raise HTTPException(
+                status_code=500, detail="Failed to extract thumbnail from WSI."
+            ) from e
