@@ -103,6 +103,7 @@ def check_get_slide_macro_valid(
             narray = image.asarray()
             for i, value in enumerate(testpixel):
                 c = narray[i][pixel_location[1]][pixel_location[0]]
+                print(f"Testpixel val: {c} | actual val {value}")
                 assert c == value
         else:
             image = get_image(response)

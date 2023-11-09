@@ -128,6 +128,7 @@ def test_get_slide_label_valid(image_format, image_quality, slide_id, has_label,
     ],
 )
 def test_get_slide_macro_valid(image_format, image_quality, slide_id, return_value, pixel_location, testpixel):
+    print(f"Slide ID: {slide_id}")
     check_get_slide_macro_valid(
         image_format,
         image_quality,
