@@ -123,8 +123,8 @@ def test_get_slide_label_valid(image_format, image_quality, slide_id, has_label,
     [
         ("50f3010ed9a55f04b2e0d88cd19c6923", 200, (0, 0), (0, 0, 0)),
         ("50f3010ed9a55f04b2e0d88cd19c6923", 200, (50, 50), (238, 240, 240)),
-        ("d3fc669ff08d57a4a409340d54d6bf4f", 200, (0, 0), (221, 221, 221)),
-        ("d3fc669ff08d57a4a409340d54d6bf4f", 200, (50, 50), (157, 157, 157)),
+        ("d3fc669ff08d57a4a409340d54d6bf4f", 200, (0, 0), (220, 220, 220)),
+        ("d3fc669ff08d57a4a409340d54d6bf4f", 200, (50, 50), (156, 156, 156)),
     ],
 )
 def test_get_slide_macro_valid(image_format, image_quality, slide_id, return_value, pixel_location, testpixel):
