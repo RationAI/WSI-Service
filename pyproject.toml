@@ -24,6 +24,7 @@ zipfly = "^6.0.3"
 aiofiles = "^23.0.0"
 httpx = "^0.25.0"
 pydantic-settings = "^2.0.2"
+six = "^1.16.0"
 
 [tool.poetry.dev-dependencies]
 aioresponses = "^0.7.3"
