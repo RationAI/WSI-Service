@@ -12,9 +12,9 @@ from wsi_service.tests.integration.plugin_example_tests.helpers import get_image
 )
 def test_compare_openslide_info(slide_id):
     response = requests.get(f"http://localhost:8080/v3/slides/{slide_id}/info?plugin=tiffslide")
-    slide_info_tiffslide = SlideInfo.parse_obj(response.json())
+    slide_info_tiffslide = SlideInfo.model_validate(response.json())
     response = requests.get(f"http://localhost:8080/v3/slides/{slide_id}/info?plugin=openslide")
-    slide_info_openslide = SlideInfo.parse_obj(response.json())
+    slide_info_openslide = SlideInfo.model_validate(response.json())
     slide_info_tiffslide.format = ""
     slide_info_openslide.format = ""
     assert slide_info_tiffslide == slide_info_openslide
