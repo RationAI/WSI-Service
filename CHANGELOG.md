@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.12
+
+- Reverted wsidicom to 0.17.0
+
+## 0.12.11
+
+- Updated Dependencies
+
 ## 0.12.10
 
 - Updated Dependencies
