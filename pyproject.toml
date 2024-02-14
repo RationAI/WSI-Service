@@ -65,7 +65,7 @@ ignore = ["wsi_service/models/tests"]
 
 [tool.pylint."MESSAGES CONTROL"]
 max-line-length = 120
-disable = "R,C,W0613,E0213,W0603,W0231,E1136,W0707,W0622,W0201,E0401,W3101,W0212"
+disable = "R,C,W0613,E0213,W0603,W0231,E1136,W0707,W0622,W0201,E0401,W3101,W0212,W0621"
 
 [tool.pytest.ini_options]
 addopts = "--asyncio-mode=strict"
