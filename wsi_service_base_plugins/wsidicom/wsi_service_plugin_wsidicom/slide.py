@@ -91,7 +91,7 @@ class Slide(BaseSlide):
         return original_levels
 
     def __get_pixel_size(self):
-        mpp = self.dicom_slide.base_level.mpp
+        mpp = self.dicom_slide.levels.get_level(0).mpp
         return SlidePixelSizeNm(x=1000.0 * mpp.width, y=1000.0 * mpp.height)
 
     def __get_tile_extent(self):
@@ -100,8 +100,9 @@ class Slide(BaseSlide):
 
         # some tiles can have an unequal tile height and width that can cause problems in the slide viewer
         # since the tile route is soley used for viewing, we provide the default tile width and height
-        temp_height = self.dicom_slide.base_level.tile_size.height
-        temp_width = self.dicom_slide.base_level.tile_size.width
+        base_level = self.dicom_slide.levels.get_level(0)
+        temp_height = base_level.tile_size.height
+        temp_width = base_level.tile_size.width
 
         if temp_height == temp_width:
             tile_height = temp_height
@@ -111,14 +112,15 @@ class Slide(BaseSlide):
 
     def __get_slide_info_dicom(self):
         try:
+            base_level = self.dicom_slide.levels.get_level(0)
             levels = self.__get_levels_dicom()
             slide_info = SlideInfo(
                 id="",
                 channels=get_rgb_channel_list(),  # rgb channels
                 channel_depth=8,  # 8bit each channel
                 extent=SlideExtent(
-                    x=self.dicom_slide.base_level.size.width,
-                    y=self.dicom_slide.base_level.size.height,
+                    x=base_level.size.width,
+                    y=base_level.size.height,
                     z=1,
                 ),
                 pixel_size_nm=self.__get_pixel_size(),

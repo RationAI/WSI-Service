@@ -9,7 +9,7 @@ def check_get_slide_info_valid(
 ):
     response = requests.get(f"http://localhost:8080/v3/slides/{slide_id}/info?plugin={plugin}")
     assert response.status_code == 200
-    slide_info = SlideInfo.parse_obj(response.json())
+    slide_info = SlideInfo.model_validate(response.json())
     assert slide_info.id == slide_id
     assert slide_info.num_levels == num_levels
     assert round(slide_info.pixel_size_nm.x) == pixel_size_nm
@@ -103,6 +103,7 @@ def check_get_slide_macro_valid(
             narray = image.asarray()
             for i, value in enumerate(testpixel):
                 c = narray[i][pixel_location[1]][pixel_location[0]]
+                print(f"Testpixel val: {c} | actual val {value}")
                 assert c == value
         else:
             image = get_image(response)

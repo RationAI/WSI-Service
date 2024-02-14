@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "wsi-service-plugin-tiffslide"
-version = "0.2.2"
+version = "0.2.3"
 description = ""
 authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.12"
+python = ">=3.9,<3.12"
 tiffslide = "^2.0.0"
 
 [tool.poetry.dev-dependencies]

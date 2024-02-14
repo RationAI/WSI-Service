@@ -17,7 +17,7 @@ ImageChannelQuery = Query(None, description="List of requested image channels. B
 
 ImagePaddingColorQuery = Query(
     None,
-    example="#FFFFFF",
+    examples=["#FFFFFF"],
     description="""Background color as 24bit-hex-string with leading #,
     that is used when image tile contains whitespace when out of image extent. Default is white.
     Only works for 8-bit RGB slides, otherwise the background color is black.

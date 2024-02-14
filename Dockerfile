@@ -45,7 +45,11 @@ WORKDIR /wsi-service
 RUN poetry install
 
 
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.2.8@sha256:0c20dd487c2bb040fd78991bf54f396cb1fd9ab314a7a55bee0ad4909748797d AS wsi_service_intermediate
+FROM ubuntu:22.04@sha256:c9cf959fd83770dfdefd8fb42cfef0761432af36a764c077aed54bbc5bb25368 AS wsi_service_intermediate
+
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y build-essential python3-pip python3-packaging python3-dev \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /artifacts
 COPY --from=wsi_service_build /wsi-service/requirements.txt /artifacts

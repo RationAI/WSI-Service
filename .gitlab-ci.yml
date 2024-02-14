@@ -33,7 +33,7 @@ docker-based-pytest:
     - docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --build -d
     - sleep 10
   script:
-    - docker exec wsi-service_wsi_service_1 poetry run pytest --cov wsi_service
+    - docker exec wsi-service_wsi_service_1 poetry run pytest -vv --cov wsi_service
   after_script:
     - docker exec wsi-service_wsi_service_1 rm -r .pytest_cache
     - docker-compose -f docker-compose.yml -f docker-compose.ci.yml down
