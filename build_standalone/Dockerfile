@@ -88,8 +88,8 @@ COPY --chown=appuser --from=wsi_service_build /openslide_deps/* /usr/lib/x86_64-
 COPY --chown=appuser --from=wsi_service_intermediate /usr/local/lib/python3.10/dist-packages/ /usr/local/lib/python3.10/dist-packages/
 COPY --chown=appuser --from=wsi_service_intermediate /data /data
 
-COPY ./gunicorn/requirements.txt /tmp/requirements.txt
-COPY --chown=appuser ./gunicorn/run.sh /usr/local/lib/python3.10/dist-packages/wsi_service
+COPY ./build_standalone/requirements.txt /tmp/requirements.txt
+COPY --chown=appuser ./build_standalone/run.sh /usr/local/lib/python3.10/dist-packages/wsi_service
 
 RUN pip3 install -r /tmp/requirements.txt \
   && chmod u+x /usr/local/lib/python3.10/dist-packages/wsi_service/run.sh
@@ -101,6 +101,6 @@ EXPOSE 8080/tcp
 
 WORKDIR /usr/local/lib/python3.10/dist-packages/wsi_service
 RUN mkdir -p modules
-COPY --chown=appuser ./gunicorn/gunicorn_conf.py .
+COPY --chown=appuser ./build_standalone/gunicorn_conf.py .
 
 ENTRYPOINT ["/usr/bin/tini", "--", "./run.sh"]
