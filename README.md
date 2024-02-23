@@ -1,5 +1,27 @@
 # WSI Service
 
+This is a general purpose WSI server written in Python. The server is based on Emapaia's WSI service. It supports
+numerous WSI formats. The service is managed & features are added by RationAI.
+
+### Features:
+
+:key: Authentication. Pass a token, write a logics of verifying it and provide logics on which slide IDs are
+allowed to view by whom. Or just parse tokens. Or just re-use existing implementation. Or simply disable auth.
+
+:bus: Batch access. Do not fetch single tile per request. 
+
+:black_nib: Custom local access address mappers. Add your own logics on how case and slide IDs are derived. 
+
+:open_file_folder: Direct file access. We don't force you to use IDs: just select a file mapper and
+access slides by their relative path to the server data root.
+
+
+### Limitations:
+
+API versions prior ``v3`` are not supported.
+
+Direct file access slides path must replace reserved character `/` with `>`, e.g. `v3/slides/path>to>my>file.mrxs/info`.
+
 ## Quickstart
 
 ```bash
