@@ -4,7 +4,5 @@ To build, first provide `.env` file that configures the server. See examples in 
 Then run:
 
 > ``build.sh``
->
-> ``docker run -v $COMPOSE_DATA_DIR:/data -p $COMPOSE_WS_PORT:8080 wsi-service-standalone:v0.0.1``
 
-
+You can then deploy the built image on the infrastructure of choice.

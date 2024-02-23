@@ -98,4 +98,5 @@ USER appuser
 EXPOSE 8080/tcp
 
 WORKDIR /usr/local/lib/python3.10/dist-packages/wsi_service
+COPY --chown=appuser ./build_rationai/*.env .
 ENTRYPOINT ["./pod.run.sh"]
