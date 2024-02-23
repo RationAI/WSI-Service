@@ -40,11 +40,13 @@ app = FastAPI(
 
 add_routes_root(app, settings)
 
-app_v1 = FastAPI(openapi_url=openapi_url)
+# App V1 disabled - not supported
+# app_v1 = FastAPI(openapi_url=openapi_url)
 app_v3 = FastAPI(openapi_url=openapi_url)
 
 if settings.cors_allow_origins:
-    for app_obj in [app, app_v1, app_v3]:
+    # for app_obj in [app, app_v1, app_v3]:
+    for app_obj in [app, app_v3]:
         app_obj.add_middleware(
             CORSMiddleware,
             allow_origins=settings.cors_allow_origins,
@@ -53,8 +55,8 @@ if settings.cors_allow_origins:
             allow_headers=["*"],
         )
 
-add_routes_v1(app_v1, settings, slide_manager)
+# add_routes_v1(app_v1, settings, slide_manager)
 add_routes_v3(app_v3, settings, slide_manager)
 
-app.mount("/v1", app_v1)
+# app.mount("/v1", app_v1)
 app.mount("/v3", app_v3)

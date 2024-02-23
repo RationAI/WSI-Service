@@ -17,30 +17,24 @@ class SlideManager:
         self.mapper_address = mapper_address
         self.data_dir = data_dir
         self.timeout = timeout
-        self.storage_mapper = {}
         self.slide_cache = LRUCache(cache_size)
         self.lock = asyncio.Lock()
         self.storage_locks = {}
         self.event_loop = asyncio.get_event_loop()
 
     async def get_slide(self, slide_id, plugin=None):
-        if slide_id in self.storage_mapper:
-            storage_address = self.storage_mapper[slide_id]
-        else:
-            main_storage_address = await self._get_slide_main_storage_address(slide_id)
-            storage_address = os.path.join(self.data_dir, main_storage_address["address"])
-            self.storage_mapper[slide_id] = storage_address
+        cache_id = slide_id + f" ({plugin})" if plugin else slide_id
 
-        logger.debug("Storage address for slide %s: %s", slide_id, storage_address)
-
-        cache_id = storage_address
-        if plugin:
-            cache_id = storage_address + f" ({plugin})"
-
-        await self._set_storage_lock(cache_id)
+        async with self.lock:
+            if cache_id not in self.storage_locks:
+                self.storage_locks[cache_id] = asyncio.Lock()
 
         exp_slide = self.slide_cache.get_item(cache_id)
         if exp_slide is None:
+            main_storage_address = await self._get_slide_main_storage_address(slide_id)
+            storage_address = os.path.join(self.data_dir, main_storage_address["address"])
+            logger.debug("Storage address for slide %s: %s", slide_id, storage_address)
+
             async with self.storage_locks[cache_id]:
                 slide = await load_slide(storage_address, plugin=plugin)
                 exp_slide = ExpiringSlide(slide)
@@ -121,6 +115,7 @@ class SlideManager:
     async def _close_slide(self, cache_id):
         if self.slide_cache.has_item(cache_id):
             exp_slide = self.slide_cache.pop_item(cache_id)
+            self.storage_locks.pop(cache_id, None)
             await exp_slide.slide.close()
             logger.debug("Closed slide with storage address: %s", cache_id)
 

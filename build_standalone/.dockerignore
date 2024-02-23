@@ -1,0 +1,6 @@
+# Ignore everything
+*
+
+# Allow files and directories for Docker image
+!/run.sh
+!/gunicorn.conf

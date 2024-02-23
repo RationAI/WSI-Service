@@ -152,3 +152,5 @@ data
 .DS_Store
 local_mapper.p
 local_mapper.lock
+
+.idea/

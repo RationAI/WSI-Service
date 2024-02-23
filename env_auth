@@ -9,20 +9,19 @@ WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600
 WS_IMAGE_HANDLE_CACHE_SIZE=50
 WS_MAX_RETURNED_REGION_SIZE=25000000
 WS_MAX_THUMBNAIL_SIZE=500
-WS_API_V3_INTEGRATION=wsi_service.api.v3.integrations.disable_auth:DisableAuth
 
-
-# Auth
-WS_API_V3_INTEGRATION=wsi_service.api.v3.integrations.disable_auth:DisableAuth
-WS_IDP_URL=
-WS_CLIENT_ID=wbs
-WS_CLIENT_SECRET=dummy
+# Auth (re-uses auth config for WBS)
+WS_API_V3_INTEGRATION=wsi_service.api.v3.integrations.empaia:EmpaiaApiIntegration
+WS_IDP_URL=http://localhost:10082/auth/realms/EMPAIA
+WS_CLIENT_ID=WBS_CLIENT
+WS_CLIENT_SECRET=secret
 WS_ORGANIZATION_ID=dummy_org
-WS_AUDIENCE=org.empaia.no-auth.wbs
-WS_OPENAPI_TOKEN_URL=
-WS_OPENAPI_AUTH_URL=
-WS_REWRITE_URL_IN_WELLKNOWN=
+WS_AUDIENCE=org.empaia.auth.wbs
+WS_OPENAPI_TOKEN_URL=http://localhost:10082/auth/realms/EMPAIA/protocol/openid-connect/token
+WS_OPENAPI_AUTH_URL=http://localhost:10082/auth/realms/EMPAIA/protocol/openid-connect/auth
+WS_REWRITE_URL_IN_WELLKNOWN=http://localhost:10082/auth/realms/EMPAIA
 WS_REFRESH_INTERVAL=300
+
 
 COMPOSE_RESTART=no
 COMPOSE_NETWORK=default
