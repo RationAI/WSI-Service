@@ -22,19 +22,10 @@ API versions prior ``v3`` are not supported.
 
 Direct file access slides path must replace reserved character `/` with `>`, e.g. `v3/slides/path>to>my>file.mrxs/info`.
 
-## Quickstart
-
-```bash
-docker run -v <local-data-folder>:/data -p 8080:8080 --rm -d registry.gitlab.com/empaia/services/wsi-service
-```
-
-The `<local-data-folder>` should contain the following structure:
-
-- some_case/image.tif
-- another_case/img.tif
-- etc.
-
-Visit [http://localhost:8080/docs](http://localhost:8080/docs) to checkout the available endpoints. There is also a simple viewer, which can be accessed via [http://localhost:8080/validation_viewer](http://localhost:8080/validation_viewer).
+The Setup chapter in this README is outdated: we will try to provide simple quickstart and setup options if
+there will be interest. For now, refer to ``build_rationai`` which builds a cloud-ready docker image
+(meant for balance loaders). Or `build_standalone` which uses gunicorn to spin up standalone service (meant for docker compose).
+Each folder contains ``build.sh`` file that automates image creation.
 
 ## Overview
 

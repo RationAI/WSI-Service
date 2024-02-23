@@ -3,7 +3,6 @@ BASEDIR=$(realpath $(dirname $0))
 CONTEXT_TARGET=$(dirname $BASEDIR)
 
 cd $CONTEXT_TARGET
-#todo submodule pull if detected...
 
 if git submodule status | grep --quiet '^-'; then
     echo "Seems like a new clone: initializing submodules..."
