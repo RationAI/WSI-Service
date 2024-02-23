@@ -1,9 +1,14 @@
 #! /usr/bin/env sh
 set -e
 
-if [ -f ".env" ] ; then
+SOURCE="source"
+if ! command -v source &> /dev/null; then
+    SOURCE="."
+fi
+
+if [ -f "./.env" ] ; then
     echo ".env file found: setting env variables..."
-    source .env
+    $SOURCE "./.env"
 else
     echo "There is no .env available!"
 fi

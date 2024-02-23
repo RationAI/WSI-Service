@@ -5,6 +5,12 @@ Then run:
 
 > ``build.sh``
 >
-> ``docker run -v $COMPOSE_DATA_DIR:/data -p $COMPOSE_WS_PORT:8080 wsi-service-standalone:v0.0.1``
+> ``source .env``
+> 
+> To test the deployment
+> ``docker run -v $COMPOSE_DATA_DIR:/data -p $COMPOSE_WS_PORT:8080 --rm wsi-service-standalone:v0.0.1``
+>
+> To run detached (production)
+> ``docker run -v $COMPOSE_DATA_DIR:/data -p $COMPOSE_WS_PORT:8080 -d wsi-service-standalone:v0.0.1``
 
 
