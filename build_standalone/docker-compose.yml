@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  wsi_service_auth:
+    image: ${COMPOSE_WS_IMAGE}
+    ports:
+      - ${COMPOSE_WS_PORT}:8080
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ${COMPOSE_DATA_DIR}:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

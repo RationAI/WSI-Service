@@ -1,8 +1,9 @@
-# Standalone Gunicorn Image
+# RationAI Image
 
-To build, first provide `.env` file that configures the server. See examples in the repository root.
-Then run:
+To build, run:
 
 > ``build.sh``
 
-You can then deploy the built image on the infrastructure of choice.
+You can then deploy the built image on the infrastructure of choice. This build
+option does not offer ready-to-run example. You can deploy the built image
+using similar docker-compose file as the standalone build does.

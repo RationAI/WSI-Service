@@ -1,18 +1,6 @@
 #! /usr/bin/env sh
 set -e
 
-SOURCE="source"
-if ! command -v source &> /dev/null; then
-    SOURCE="."
-fi
-
-if [ -f "./.env" ] ; then
-    echo ".env file found: setting env variables..."
-    $SOURCE "./.env"
-else
-    echo "There is no .env available!"
-fi
-
 # Relies on pre-installation
 # or external fetching of the code library 
 
