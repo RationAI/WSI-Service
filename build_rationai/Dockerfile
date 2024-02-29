@@ -41,7 +41,11 @@ RUN poetry build && poetry export -f requirements.txt > requirements.txt
 
 
 
-FROM cerit.io/rationai/production/test-runner:v0.0.1 AS wsi_service_intermediate
+FROM ubuntu:22.04@sha256:bcc511d82482900604524a8e8d64bf4c53b2461868dac55f4d04d660e61983cb AS wsi_service_intermediate
+
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y build-essential python3-pip python3-packaging python3-dev \
+  && rm -rf /var/lib/apt/lists/* \
 
 RUN mkdir /artifacts
 COPY --from=wsi_service_build /wsi-service/requirements.txt /artifacts
@@ -96,6 +100,7 @@ RUN apt-get update \
   && mkdir -p modules
 USER appuser
 EXPOSE 8080/tcp
+ENV WEB_CONCURRENCY=8
 
 WORKDIR /usr/local/lib/python3.10/dist-packages/wsi_service
 COPY --chown=appuser ./build_rationai/*.env .

@@ -45,7 +45,11 @@ WORKDIR /wsi-service
 RUN poetry install
 
 
-FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.2.8@sha256:0c20dd487c2bb040fd78991bf54f396cb1fd9ab314a7a55bee0ad4909748797d AS wsi_service_intermediate
+FROM ubuntu:22.04@sha256:bcc511d82482900604524a8e8d64bf4c53b2461868dac55f4d04d660e61983cb AS wsi_service_intermediate
+
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y build-essential python3-pip python3-packaging python3-dev \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /artifacts
 COPY --from=wsi_service_build /wsi-service/requirements.txt /artifacts
@@ -95,12 +99,11 @@ RUN pip3 install -r /tmp/requirements.txt \
   && chmod u+x /usr/local/lib/python3.10/dist-packages/wsi_service/run.sh
 USER appuser
 
-
+ENV WEB_CONCURRENCY=8
 
 EXPOSE 8080/tcp
 
 WORKDIR /usr/local/lib/python3.10/dist-packages/wsi_service
-RUN mkdir -p modules
 COPY --chown=appuser ./build_standalone/gunicorn_conf.py .
 
 ENTRYPOINT ["/usr/bin/tini", "--", "./run.sh"]
