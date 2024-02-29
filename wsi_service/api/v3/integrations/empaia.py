@@ -17,7 +17,7 @@ class AuthSettings(BaseSettings):
     openapi_auth_url: str = ""
     rewrite_url_in_wellknown: str = ""
 
-    model_config = SettingsConfigDict(env_prefix="ws_auth_", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="ws_", env_file=".env", extra="ignore")
 
 
 class Payload(BaseModel):
