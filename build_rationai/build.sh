@@ -12,7 +12,7 @@ fi
 git submodule update
 
 echo
-echo "Starting build: docker build -t "cerit.io/rationai/production/wsi-service:v0.0.1" -f $BASEDIR/Dockerfile ."
+echo "Starting build: docker build -t "cerit.io/rationai/production/wsi-service-auth:v0.0.1" -f $BASEDIR/Dockerfile ."
 echo
-docker build -t "cerit.io/rationai/production/wsi-service:v0.0.1" -f $BASEDIR/Dockerfile .
+docker build -t "cerit.io/rationai/production/wsi-service-auth:v0.0.1" -f $BASEDIR/Dockerfile .
 cd -
