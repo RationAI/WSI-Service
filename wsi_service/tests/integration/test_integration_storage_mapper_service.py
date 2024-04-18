@@ -19,7 +19,7 @@ def check_storage_mapper_is_available():
     return available
 
 
-@pytest.mark.parametrize("api_version", ["v1", "v3"])
+@pytest.mark.parametrize("api_version", ["v3"])
 @pytest.mark.parametrize("slide_id", ["8d32dba05a4558218880f06caf30d3ac"])
 def test_real_storage_mapper_with_wsi_service(api_version, slide_id):
     available = check_storage_mapper_is_available()

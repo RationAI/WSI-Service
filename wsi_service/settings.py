@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     request_timeout: int = 300
     api_v3_integration: str = ""
     idp_url: str = ""
-    client_id: str
+    client_id: str = ""
     client_secret: str = ""
     organization_id: str = ""
 

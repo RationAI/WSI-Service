@@ -11,8 +11,10 @@ fi
 
 git submodule update
 
+IMAGE_NAME_TAG="${RAT_IMAGE_WBS:=cerit.io/rationai/production/wsi-service-auth:v0.0.1}"
+
 echo
-echo "Starting build: docker build -t "cerit.io/rationai/production/wsi-service-auth:v0.0.1" -f $BASEDIR/Dockerfile ."
+echo "Starting build: docker build -t "$IMAGE_NAME_TAG" -f $BASEDIR/Dockerfile ."
 echo
-docker build -t "cerit.io/rationai/production/wsi-service-auth:v0.0.1" -f $BASEDIR/Dockerfile .
+docker build -t "$IMAGE_NAME_TAG" -f $BASEDIR/Dockerfile .
 cd -

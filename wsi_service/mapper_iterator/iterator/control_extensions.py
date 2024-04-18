@@ -20,7 +20,10 @@ def get_file_extensions(folder_path):
 
 
 def control_mrxs(settings, file_path, case_id, cases, slides, controlled_path):
-    corresponding_dir = os.path.dirname(file_path)
+    filename, file_ext = os.path.splitext(file_path)
+    filename = os.path.basename(filename)
+    corresponding_dir = os.path.join(os.path.dirname(file_path), filename)
+
     controlled_path.add(file_path)
 
     if not os.path.isdir(corresponding_dir) or not os.path.exists(corresponding_dir):

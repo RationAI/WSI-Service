@@ -22,7 +22,6 @@ class LocalMapper:
         self.refresh(force_refresh=False)
 
     def refresh(self, force_refresh=True):
-
         with FileLock("local_mapper.lock"):
             data_dir_changed = self._get_data_dir_changed()
             if force_refresh or data_dir_changed or not os.path.exists("local_mapper.p"):

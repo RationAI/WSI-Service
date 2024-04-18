@@ -5,7 +5,6 @@ import pathlib
 import aiohttp
 from fastapi import HTTPException
 
-from wsi_service.models.v1.slide import SlideInfo as SlideInfoV1
 from wsi_service.models.v3.slide import SlideInfo as SlideInfoV3
 from wsi_service.plugins import load_slide
 from wsi_service.singletons import logger
@@ -120,17 +119,18 @@ class SlideManager:
             logger.debug("Closed slide with storage address: %s", cache_id)
 
     def _convert_slide_info_to_match_slide_info_model(self, slide_info, slide_info_model):
-        if issubclass(slide_info_model, SlideInfoV1):
-            if isinstance(slide_info, SlideInfoV3):
-                # v3 --> v1
-                slide_info_dict = slide_info.model_dump()
-                del slide_info_dict["format"]
-                del slide_info_dict["raw_download"]
-                slide_info = SlideInfoV1.model_validate(slide_info_dict)
-        if issubclass(slide_info_model, SlideInfoV3):
-            if isinstance(slide_info, SlideInfoV1):
-                # v1 --> v3
-                slide_info = SlideInfoV3.model_validate(slide_info.model_dump())
+        # V1 not supported: left for reference
+        # if issubclass(slide_info_model, SlideInfoV1):
+        #     if isinstance(slide_info, SlideInfoV3):
+        #         # v3 --> v1
+        #         slide_info_dict = slide_info.model_dump()
+        #         del slide_info_dict["format"]
+        #         del slide_info_dict["raw_download"]
+        #         slide_info = SlideInfoV1.model_validate(slide_info_dict)
+        # if issubclass(slide_info_model, SlideInfoV3):
+        #     if isinstance(slide_info, SlideInfoV1):
+        #         # v1 --> v3
+        #         slide_info = SlideInfoV3.model_validate(slide_info.model_dump())
         return slide_info
 
     def _extend_slide_format_identifier(self, slide, slide_info):

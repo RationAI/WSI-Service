@@ -73,7 +73,7 @@ def test_get_slide_invalid_slide_id():
     assert response.json()["detail"] == "Slide with slide_id invalid_id does not exist"
 
 
-@pytest.mark.parametrize("api_version", ["v1", "v3"])
+@pytest.mark.parametrize("api_version", ["v3"])
 @pytest.mark.parametrize("slide_id", ["f5f3a03b77fb5e0497b95eaff84e9a21"])
 @pytest.mark.parametrize("tile_x, tile_y, level, expected_response, size", [(0, 0, 9, 200, (128, 128))])  # ok
 def test_get_slide_tile_padding_color(api_version, slide_id, tile_x, tile_y, level, expected_response, size):
@@ -93,7 +93,7 @@ def test_get_slide_tile_padding_color(api_version, slide_id, tile_x, tile_y, lev
     assert image.getpixel((size[0] - 1, size[1] - 1)) == (170, 187, 204)
 
 
-@pytest.mark.parametrize("api_version", ["v1", "v3"])
+@pytest.mark.parametrize("api_version", ["v3"])
 @pytest.mark.parametrize("slide_id", ["f5f3a03b77fb5e0497b95eaff84e9a21"])
 @pytest.mark.parametrize(
     "tile_x, level, expected_response",
@@ -112,7 +112,7 @@ def test_get_slide_tile_invalid(api_version, slide_id, tile_x, level, expected_r
     assert response.status_code == expected_response
 
 
-@pytest.mark.parametrize("api_version", ["v1", "v3"])
+@pytest.mark.parametrize("api_version", ["v3"])
 @pytest.mark.parametrize("slide_id", ["f5f3a03b77fb5e0497b95eaff84e9a21"])
 @pytest.mark.parametrize(
     "tile_x, tile_y, level, expected_response, expected_mean",
@@ -130,7 +130,7 @@ def test_get_slide_tile_out_of_image(api_version, slide_id, tile_x, tile_y, leve
     assert sum(Stat(image).mean) / 3 == expected_mean
 
 
-@pytest.mark.parametrize("api_version", ["v1", "v3"])
+@pytest.mark.parametrize("api_version", ["v3"])
 @pytest.mark.parametrize("slide_id", ["f5f3a03b77fb5e0497b95eaff84e9a21"])
 @pytest.mark.parametrize(
     "start_x, start_y, size_x, size_y, level, expected_response, expected_mean",
@@ -151,7 +151,7 @@ def test_get_slide_region_out_of_image(
     assert sum(Stat(image).mean) / 3 == expected_mean
 
 
-@pytest.mark.parametrize("api_version", ["v1", "v3"])
+@pytest.mark.parametrize("api_version", ["v3"])
 @pytest.mark.parametrize("slide_id", ["f5f3a03b77fb5e0497b95eaff84e9a21"])
 @pytest.mark.parametrize(
     "start_x, start_y, size_x, size_y, level, expected_response, expected_mean, white_patch_size, white_patch_position",
@@ -194,7 +194,7 @@ def test_get_slide_region_partly_out_of_image(
     assert sum(Stat(image).mean) / 3 == 255
 
 
-@pytest.mark.parametrize("api_version", ["v1", "v3"])
+@pytest.mark.parametrize("api_version", ["v3"])
 @pytest.mark.parametrize("region_size", [-1, 0, 1, 256, 512, 10000])
 def test_get_region_maximum_extent(api_version, region_size):
     level = 5

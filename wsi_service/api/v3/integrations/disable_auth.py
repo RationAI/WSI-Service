@@ -15,5 +15,5 @@ class DisableAuth:
     def global_depends(self):
         return Depends(_dummy)
 
-    async def allow_access_id(self, auth_payload, slide_id):
+    async def allow_access_slide(self, auth_payload, slide):
         ...

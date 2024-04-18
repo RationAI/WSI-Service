@@ -11,16 +11,20 @@ WS_MAX_RETURNED_REGION_SIZE=25000000
 WS_MAX_THUMBNAIL_SIZE=500
 
 # Auth (re-uses auth config for WBS)
-WS_API_V3_INTEGRATION=wsi_service.api.v3.integrations.empaia:EmpaiaApiIntegration
-WS_IDP_URL=http://localhost:10082/auth/realms/EMPAIA
-WS_CLIENT_ID=WBS_CLIENT
-WS_CLIENT_SECRET=secret
-WS_ORGANIZATION_ID=dummy_org
-WS_AUDIENCE=org.empaia.auth.wbs
-WS_OPENAPI_TOKEN_URL=http://localhost:10082/auth/realms/EMPAIA/protocol/openid-connect/token
-WS_OPENAPI_AUTH_URL=http://localhost:10082/auth/realms/EMPAIA/protocol/openid-connect/auth
-WS_REWRITE_URL_IN_WELLKNOWN=http://localhost:10082/auth/realms/EMPAIA
-WS_REFRESH_INTERVAL=300
+OAUTH_API_V3_INTEGRATION=wsi_service.api.v3.integrations.empaia:EmpaiaApiIntegration
+OAUTH_IDP_URL=http://localhost:10082/auth/realms/EMPAIA
+OAUTH_CLIENT_ID=WBS_CLIENT
+OAUTH_CLIENT_SECRET=secret
+OAUTH_ORGANIZATION_ID=dummy_org
+OAUTH_AUDIENCE=org.empaia.auth.wbs
+OAUTH_OPENAPI_TOKEN_URL=http://localhost:10082/auth/realms/EMPAIA/protocol/openid-connect/token
+OAUTH_OPENAPI_AUTH_URL=http://localhost:10082/auth/realms/EMPAIA/protocol/openid-connect/auth
+OAUTH_REWRITE_URL_IN_WELLKNOWN=http://localhost:10082/auth/realms/EMPAIA
+OAUTH_REFRESH_INTERVAL=300
+OAUTH_USER_CACHE_TIMEOUT=600
+OAUTH_USER_CACHE_SIZE=999
+# if not set, the user token is used as the info object instead
+OAUTH_USER_INFO_ENDPOINT=
 
 
 COMPOSE_RESTART=no

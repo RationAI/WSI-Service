@@ -85,23 +85,24 @@ RUN poetry install
 FROM ubuntu:22.04@sha256:c9cf959fd83770dfdefd8fb42cfef0761432af36a764c077aed54bbc5bb25368 AS wsi_service_production
 ARG DEPLOY_FOLDER
 
-COPY --chown=appuser --from=wsi_service_build /openslide_deps/* /usr/lib/x86_64-linux-gnu/
-COPY --chown=appuser --from=wsi_service_intermediate /usr/local/lib/python3.10/dist-packages/ /usr/local/lib/python3.10/dist-packages/
-COPY --chown=appuser --from=wsi_service_intermediate /data /data
-COPY --chown=appuser ${DEPLOY_FOLDER}/pod.run.sh /usr/local/lib/python3.10/dist-packages/wsi_service
+COPY --chown=www-data --from=wsi_service_build /openslide_deps/* /usr/lib/x86_64-linux-gnu/
+COPY --chown=www-data --from=wsi_service_intermediate /usr/local/lib/python3.10/dist-packages/ /usr/local/lib/python3.10/dist-packages/
+COPY --chown=www-data --from=wsi_service_intermediate /data /data
+COPY --chown=www-data ${DEPLOY_FOLDER}/pod.run.sh /usr/local/lib/python3.10/dist-packages/wsi_service
 
 RUN apt-get update \
   && apt-get install --no-install-recommends -y python3 python3-pip python3-packaging tini curl nano \
   && rm -rf /var/lib/apt/lists/* \
-  && adduser --uid 1000 --disabled-password --gecos '' appuser \
-  && mkdir /artifacts && chown appuser:appuser /artifacts \
-  && mkdir -p /opt/app/bin && chown appuser:appuser /opt/app/bin \
+  && usermod --non-unique --uid 1000 www-data \
+  && mkdir /artifacts && chown www-data:www-data /artifacts \
+  && mkdir -p /opt/app/bin && chown www-data:www-data /opt/app/bin \
   && chmod u+x /usr/local/lib/python3.10/dist-packages/wsi_service/pod.run.sh \
+  && chown www-data -R /usr/local/lib/python3.10/dist-packages/wsi_service \
   && mkdir -p modules
-USER appuser
 EXPOSE 8080/tcp
 ENV WEB_CONCURRENCY=8
 
 WORKDIR /usr/local/lib/python3.10/dist-packages/wsi_service
-COPY --chown=appuser ./build_rationai/*.env .
+COPY --chown=www-data ./build_rationai/*.env .
+USER www-data
 ENTRYPOINT ["./pod.run.sh"]

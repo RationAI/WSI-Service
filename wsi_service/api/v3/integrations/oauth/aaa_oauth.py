@@ -25,7 +25,7 @@ class OAuthSettings(BaseSettings):
     user_cache_size: int = 999
     user_info_endpoint: str = ""  # Url to the user info data, e.g. 'https://login.bbmri-eric.eu/oidc/userinfo'
 
-    model_config = SettingsConfigDict(env_prefix="wbs_", env_file=".env")
+    model_config = SettingsConfigDict(env_prefix="oauth_", env_file=".env")
 
 
 class BaseJwtTokenModel(BaseModel):

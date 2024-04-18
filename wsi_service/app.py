@@ -4,7 +4,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from wsi_service.api.root import add_routes_root
-from wsi_service.api.v1 import add_routes_v1
 from wsi_service.api.v3 import add_routes_v3
 from wsi_service.singletons import settings
 from wsi_service.slide_manager import SlideManager
@@ -40,12 +39,9 @@ app = FastAPI(
 
 add_routes_root(app, settings)
 
-# App V1 disabled - not supported
-# app_v1 = FastAPI(openapi_url=openapi_url)
 app_v3 = FastAPI(openapi_url=openapi_url)
 
 if settings.cors_allow_origins:
-    # for app_obj in [app, app_v1, app_v3]:
     for app_obj in [app, app_v3]:
         app_obj.add_middleware(
             CORSMiddleware,
@@ -55,8 +51,6 @@ if settings.cors_allow_origins:
             allow_headers=["*"],
         )
 
-# add_routes_v1(app_v1, settings, slide_manager)
 add_routes_v3(app_v3, settings, slide_manager)
 
-# app.mount("/v1", app_v1)
 app.mount("/v3", app_v3)

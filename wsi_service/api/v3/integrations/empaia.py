@@ -63,5 +63,5 @@ class EmpaiaApiIntegration:
     def global_depends(self):
         return Depends(self.oauth2_wrapper)
 
-    async def allow_access_id(self, auth_payload, slide_id):
+    async def allow_access_slide(self, auth_payload, slide):
         ...
