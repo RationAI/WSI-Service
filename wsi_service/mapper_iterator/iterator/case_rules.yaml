@@ -1,0 +1,5 @@
+MMCI/:
+  stain: HE                # Default stain within MMCI
+  institution: MMCI
+  !HE:                     # Exception for non-HE
+     stain: FE

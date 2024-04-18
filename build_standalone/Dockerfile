@@ -96,6 +96,8 @@ COPY ./build_standalone/requirements.txt /tmp/requirements.txt
 COPY --chown=appuser ./build_standalone/run.sh /usr/local/lib/python3.10/dist-packages/wsi_service
 
 RUN pip3 install -r /tmp/requirements.txt \
+  && chown appuser -R /usr/local/lib/python3.10/dist-packages/wsi_service \
+
   && chmod u+x /usr/local/lib/python3.10/dist-packages/wsi_service/run.sh
 USER appuser
 
