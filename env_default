@@ -13,7 +13,7 @@ WS_API_V3_INTEGRATION=wsi_service.api.v3.integrations.disable_auth:DisableAuth
 
 
 # Auth
-OAUTH_API_V3_INTEGRATION=wsi_service.api.v3.integrations.disable_auth:DisableAuth
+WS_API_V3_INTEGRATION=wsi_service.api.v3.integrations.disable_auth:DisableAuth
 OAUTH_IDP_URL=
 OAUTH_CLIENT_ID=wbs
 OAUTH_CLIENT_SECRET=dummy
