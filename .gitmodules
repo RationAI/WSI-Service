@@ -7,3 +7,6 @@
 [submodule "wsi_service/empaia_receiver_auth"]
 	path = wsi_service/empaia_receiver_auth
 	url = https://gitlab.com/empaia/integration/empaia-receiver-auth.git
+[submodule "rationai_receiver_auth"]
+	path = wsi_service/rationai_receiver_auth
+	url = git@github.com:RationAI/pyOIDCIntegration.git
