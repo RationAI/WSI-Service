@@ -104,5 +104,5 @@ ENV WEB_CONCURRENCY=8
 
 WORKDIR /usr/local/lib/python3.10/dist-packages/wsi_service
 COPY --chown=www-data ./build_rationai/*.env .
-USER www-data
+#USER www-data
 ENTRYPOINT ["./pod.run.sh"]

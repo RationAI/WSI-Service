@@ -81,7 +81,7 @@ RUN mkdir /data
 FROM ubuntu:22.04@sha256:c9cf959fd83770dfdefd8fb42cfef0761432af36a764c077aed54bbc5bb25368 AS wsi_service_production
 
 RUN apt-get update \
-  && apt-get install --no-install-recommends -y python3 python3-pip python3-packaging tini nano \
+  && apt-get install --no-install-recommends -y python3 python3-pip python3-packaging tini nano rsync \
   && rm -rf /var/lib/apt/lists/* \
   && adduser --disabled-password --gecos '' appuser \
   && mkdir /artifacts && chown appuser:appuser /artifacts \
@@ -97,9 +97,8 @@ COPY --chown=appuser ./build_standalone/run.sh /usr/local/lib/python3.10/dist-pa
 
 RUN pip3 install -r /tmp/requirements.txt \
   && chown appuser -R /usr/local/lib/python3.10/dist-packages/wsi_service \
-
   && chmod u+x /usr/local/lib/python3.10/dist-packages/wsi_service/run.sh
-USER appuser
+#USER appuser
 
 ENV WEB_CONCURRENCY=8
 

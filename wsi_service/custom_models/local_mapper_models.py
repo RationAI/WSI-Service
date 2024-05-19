@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import BaseModel
 
-from wsi_service.models.v3.storage import SlideStorage
+from wsi_service.custom_models.old_v3.storage import SlideStorage
 
 
 class CaseLocalMapper(BaseModel):

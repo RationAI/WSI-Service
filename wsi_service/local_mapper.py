@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from filelock import FileLock
 
 from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper
-from wsi_service.models.v3.storage import SlideStorage, StorageAddress
+from wsi_service.custom_models.old_v3.storage import SlideStorage, StorageAddress
 from wsi_service.plugins import is_supported_format
 
 

@@ -6,4 +6,4 @@ from .integrations import get_api_integration
 
 api_integration = get_api_integration(settings=settings, logger=logger, http_client=http_client)
 
-MapperClass = get_class(settings.local_mode)
+MapperClass = get_class(settings.local_mode) if settings.local_mode else None
