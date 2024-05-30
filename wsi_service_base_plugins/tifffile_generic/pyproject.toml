@@ -1,16 +1,18 @@
 [tool.poetry]
-name = "wsi-service-plugin-tiffslide"
-version = "0.2.3"
+name = "wsi-service-plugin-tifffile-generic"
+version = "0.4.3"
 description = ""
 authors = ["EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
-pyvips = "^2.0.0"
+numpy = "^1.22.3"
+Pillow = "^10.0.0"
+scikit-image = "^0.22.0"
+tifffile = "^2024.0.0"
 
 [tool.poetry.dev-dependencies]
-psutil = "^5.9.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

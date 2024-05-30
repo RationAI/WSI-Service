@@ -149,7 +149,7 @@ class CSVMapper:
         self.case_map = {}
         self.slide_map = {}
         with open(self.settings.source, 'r') as file:
-            reader = csv.reader(file, delimiter='\t')
+            reader = csv.reader(file, delimiter=settings.separator)
             for data in reader:
                 case_id = data[settings.case_id]
                 case = self.case_map.get(case_id, None)

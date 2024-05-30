@@ -15,7 +15,7 @@ class WSAuthSettings(OAuthSettings):
 
 class LSAAIIntegration(OAuthIntegration):
     """
-    LSAAI Linking works the following way:
+    LSAAI Resource Linking works the following way:
      - create a group, no child groups are allowed, name the group after the organization slug (up to 5 chars)
        - do not forget to add the user to the group :)
      - link the group to the target client/facility via resource

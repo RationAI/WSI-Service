@@ -39,6 +39,8 @@ RUN poetry build && poetry export -f requirements.txt > requirements.txt
 WORKDIR /wsi-service/wsi_service_base_plugins/wsidicom
 RUN poetry build && poetry export -f requirements.txt > requirements.txt
 
+WORKDIR /wsi-service/wsi_service_base_plugins/tifffile_generic
+RUN poetry build && poetry export -f requirements.txt > requirements.txt
 
 
 FROM ubuntu:22.04@sha256:bcc511d82482900604524a8e8d64bf4c53b2461868dac55f4d04d660e61983cb AS wsi_service_intermediate
@@ -61,6 +63,8 @@ COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tiffslide/re
 RUN pip install -r /artifacts/requirements_tiffslide.txt
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/wsidicom/requirements.txt /artifacts/requirements_wsidicom.txt
 RUN pip install -r /artifacts/requirements_wsidicom.txt
+COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tifffile_generic/requirements.txt /artifacts/requirements_tiffile_generic.txt
+RUN pip install -r /artifacts/requirements_tiffile_generic.txt
 
 COPY --from=wsi_service_build /wsi-service/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/openslide/dist/ /wsi-service/dist/
@@ -68,6 +72,7 @@ COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/pil/dist/ /w
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tifffile/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tiffslide/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/wsidicom/dist/ /wsi-service/dist/
+COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tifffile_generic/dist/ /wsi-service/dist/
 
 RUN pip3 install /wsi-service/dist/*.whl
 

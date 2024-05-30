@@ -72,7 +72,7 @@ def convert_narray_to_pil_image(narray, lower=None, upper=None, mode="RGB"):
         raise HTTPException(status_code=400, detail="Array conversion not supported")
 
     try:
-        if mode == "L":
+        if mode == "L" or narray_uint8.shape[0] == 1:
             # convert to grayscale for single channel
             new_array = narray_uint8[0, :, :]
             pil_image = Image.fromarray(new_array, mode="L")
