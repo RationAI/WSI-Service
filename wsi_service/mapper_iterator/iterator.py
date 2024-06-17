@@ -13,7 +13,7 @@ from wsi_service.plugins import is_supported_format
 from .iterator.settings import SettingsIterator
 from .iterator.iterator import iterate
 
-class LocalMapper:
+class IteratorMapper:
     def __init__(self, data_dir):
         self.data_dir = data_dir
         self.hash = None

@@ -11,7 +11,7 @@ from wsi_service.custom_models.old_v3.storage import SlideStorage, StorageAddres
 from wsi_service.plugins import is_supported_format
 
 
-class LocalMapper:
+class SimpleMapper:
     def __init__(self, data_dir):
         self.data_dir = data_dir
         self.hash = None

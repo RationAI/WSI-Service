@@ -4,11 +4,11 @@ import tempfile
 import pytest
 from fastapi import HTTPException
 
-from wsi_service.local_mapper import LocalMapper
+from wsi_service.simple_mapper import SimpleMapper
 
 
 def test_get_cases_no_data():
-    localmapper = LocalMapper(tempfile.mkdtemp())
+    localmapper = SimpleMapper(tempfile.mkdtemp())
     cases = localmapper.get_cases()
     assert len(cases) == 0
 

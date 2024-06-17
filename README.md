@@ -53,9 +53,32 @@ The region and the tile endpoint also offer the selection of a layer with the in
 
 Get a detailed description of each endpoint by running the WSI Service (see _Getting started_ section) and accessing the included Swagger UI [http://localhost:8080/v3/docs](http://localhost:8080/v3/docs).
 
-### Standalone version
+## The Ecosystem
 
-The WSI Service relies on the [Storage Mapper Service](https://www.gitlab.com/empaia/services/storage-mapper-service) to get storage information for a certain slide id. If activated (see _Getting started_ section), the WSI Service will be run in standalone mode using a local mapper. This local mapper fulfills the function of the storage mapper service, the id mapper service and part of the clinical data service by creating case ids for folders found in the data folder and slide ids for images within these case folders. In the standalone mode there are few additional endpoints, which can be accessed:
+In the original Empaia implementation, the WSI service interacted with other 
+microservices. The service maintained here is the discontinued standalone
+service mode. Its purpose is to provide versatile WSI access with configurable behavior.
+This is achieved by injected python classes implementing given functionality.
+The injection always defines
+
+`````python
+ENV_VAR=module.path.to.the.script:ClassName
+`````
+
+which will get instantiated. These classes usually also define their own set of
+environmental variables which become recognized as soon as a particular injected
+logics is used.
+
+### Mappers
+
+The WSI Service detects its data using mappers. A mapper fulfills the function of 
+a data detector which defines what cases, slides are available and what is their relationship.
+
+**Important is to learn how slide and case IDs are constructed based on the mapper logics**.
+
+
+The server then offers these sets of endpoints that allow you querying the slide
+and case relationship:
 
 - `GET /cases/` - Get cases
 - `GET /cases/{case_id}/slides/` - Get available slides
@@ -64,7 +87,113 @@ The WSI Service relies on the [Storage Mapper Service](https://www.gitlab.com/em
 
 Get a detailed description of each endpoint by running the WSI Service (see _Getting started_ section) and accessing the included Swagger UI [http://localhost:8080/docs](http://localhost:8080/docs).
 
-### Supported formats
+
+#### Mapper: Local Mapper
+> ``WS_LOCAL_MODE=wsi_service.simple_mapper:SimpleMapper``
+
+Simple mapper will create the case > slide hierarchy from your filesystem.
+The files must be placed in two-level deep hierarchy: 
+`````html
+data
+├── case1
+│   ├── slide1_1
+│   └── slide1_2
+├── case2
+│   └── slide2_1
+...
+`````
+It's simple, but inflexible. IDs are generated randomly as UUID4.
+
+
+#### Mapper: Paths Mapper
+> ``WS_LOCAL_MODE=wsi_service.paths_mapper:PathsMapper``
+
+The paths mapper does not yet support cases. You can access
+any slide by its path relative to the server data directory root.
+But since paths are provided in the URL, you have to replace ``/`` slash with `>`.
+If your data is available as ``/data/path/to/slide.tiff``, then
+you query with slide ID ``path>to>slide.tiff``.
+
+This mapper is manily for fast-use, debugging purposes. It is not matured enough.
+
+#### Mapper: Paths Mapper
+> ``WS_LOCAL_MODE=wsi_service.paths_mapper:PathsMapper``
+
+The paths mapper does not yet support cases. You can access
+any slide by its path relative to the server data directory root.
+But since paths are provided in the URL, you have to replace ``/`` slash with `>`.
+If your data is available as ``/data/path/to/slide.tiff``, then
+you query with slide ID ``path>to>slide.tiff``.
+
+This mapper is mainly for fast-use, debugging purposes. It is not matured enough.
+
+
+#### Mapper: CSV Mapper
+>  ````
+>   WS_LOCAL_MODE=wsi_service.csv_mapper:CSVMapper
+>   CSWS_SOURCE='data.csv'  # can be also a directory
+>   CSWS_SEPARATOR='\t'
+>   CSWS_GROUP_1=0
+>   CSWS_GROUP_2=1
+>   CSWS_SLIDE_ID=2
+>   CSWS_CASE_ID=3
+>   CSWS_PATH=4
+> ````
+> 
+
+The CSV Mapper is more flexible option. It allows you to configure the
+file or directory to scan for csv (scanned files are *.csv and *.tsv),
+the separator character, and the order of columns. Above are shown ``CSWS_*``
+default values - you don't have to define them if they are sufficient for your use.
+
+The slide and case IDs are constructed then like this: ``group_1.group_2.w.slide_id``
+and ``group_1.group_2.c.case_id``. This can come in handy when you want to implement
+custom authorization logics and want to avoid explicit databases - where you can group
+your data to collections and resolve access on these.
+
+
+#### Mapper: Iterator Mapper
+>  ````
+>   WS_LOCAL_MODE=wsi_service.mapper_iterator.iterator:IteratorMapper
+> ````
+
+This is a proof-of-concept implementation of a directory-walking logics.
+It allows you to scan a filesystem for supported files, and automatically
+register these with the help of wildcard specifications that guite the
+detection process. It is not documented yet as it is not finished.
+If you want to have this feature matured, please feel free to contribute.
+
+
+### Authentication
+
+Similar to mappers, you can provide a custom authentication logics.
+Sample env text files show you how to configure an OAuth2 (JWT-based)
+authentication, and a Life Science RI (LSAAI) authorization scripts 
+are also available. Injected AAA logics also drives what ENV variables are
+available.
+
+Example OAuth2 authorization (no authentication) based on Keycloak:
+````bash
+WS_API_V3_INTEGRATION=wsi_service.api.v3.integrations.empaia:EmpaiaApiIntegration
+WS_IDP_URL=http://domain.url:port/auth/realms/MY_REALM
+WS_CLIENT_ID=my_client
+WS_CLIENT_SECRET=my_client_secret
+WS_ORGANIZATION_ID=my_organization
+WS_AUDIENCE=my_audience
+WS_OPENAPI_TOKEN_URL=http://domain.url:port/auth/realms/MY_REALM/protocol/openid-connect/token
+WS_OPENAPI_AUTH_URL=http://domain.url:port/auth/realms/MY_REALM/protocol/openid-connect/auth
+WS_REWRITE_URL_IN_WELLKNOWN=http://domain.url:port/auth/realms/MY_REALM
+WS_REFRESH_INTERVAL=300
+````
+Where you have to replace all ``my_*`` values with actual values from your Keycloak deployment, which lives
+on `domain.url:port`.
+
+Example setup without authentication:
+`````bash
+WS_API_V3_INTEGRATION=wsi_service.api.v3.integrations.disable_auth:DisableAuth
+`````
+
+## Supported formats
 
 Different formats are supported by plugins for accessing image data. Five base plugins are included and support the following formats:
 
@@ -105,7 +234,7 @@ WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DEBUG=False
 WS_DISABLE_OPENAPI=False
 WS_MAPPER_ADDRESS=http://localhost:8080/slides/{slide_id}/storage
-WS_LOCAL_MODE=True
+WS_LOCAL_MODE=wsi_service.simple_mapper:SimpleMapper
 WS_ENABLE_VIEWER_ROUTES=True
 WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600
 WS_MAX_RETURNED_REGION_SIZE=25000000
@@ -235,13 +364,11 @@ The `priority` value is optional and is `0` by default. If it is set, a higher v
 Once these minimal requirements are taken care of, the python package can be installed on top of an existing WSI Service docker image by simple running a Dockerfile along these lines:
 
 ```Dockerfile
-FROM registry.gitlab.com/empaia/services/wsi-service
+FROM wsi-service
 
 COPY wsi-service-plugin-PLUGINNAME.whl /tmp/wsi-service-plugin-PLUGINNAME.whl
 
 RUN pip3 install /tmp/wsi-service-plugin-PLUGINNAME.whl
 ```
 
-There are five base plugins ([openslide](./wsi_service_base_plugins/openslide/), [pil](./wsi_service_base_plugins/pil/), [tiffile](./wsi_service_base_plugins/tifffile/), [tiffslide](./wsi_service_base_plugins/tiffslide/), [wsidicom](./wsi_service_base_plugins/wsidicom/)) that can be used as templates for new plugins. Additionally to the mentioned minimal requirements these plugins use poetry to manage and create the python package. This is highly recommended when creating a plugin. Furthermore, these plugins implement tests based on pytest by defining a number of parameters on top of example integration test functions defined as part of the WSI Service ([plugin_example_tests](./wsi_service/tests/integration/plugin_example_tests)).
-
-A more complete example of an external plugin integration can be found in the iSyntax integration repository ([wsi-service-plugin-isyntax](https://www.gitlab.com/empaia/services/wsi-service-plugin-isyntax)). That example includes the usage of an external service that is run in an additional docker container due to runtime limitations.
+There are six base plugins that can be used as templates for new plugins. Additionally to the mentioned minimal requirements these plugins use poetry to manage and create the python package. This is highly recommended when creating a plugin. Furthermore, these plugins implement tests based on pytest by defining a number of parameters on top of example integration test functions defined as part of the WSI Service).

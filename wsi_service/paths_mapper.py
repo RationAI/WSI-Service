@@ -10,7 +10,7 @@ from wsi_service.plugins import is_supported_format
 
 # File paths mapper that expects file paths in path>to>file instead of path/to/file
 #  (URL compatibility reasons)
-class LocalMapper:
+class PathsMapper:
     def __init__(self, data_dir):
         self.data_dir = data_dir
 

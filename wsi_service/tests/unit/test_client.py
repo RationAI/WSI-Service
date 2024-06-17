@@ -9,7 +9,7 @@ from wsi_service.singletons import settings
 def get_client_and_slide_manager():
     import wsi_service.app
 
-    settings.local_mode = "wsi_service.local_mapper:LocalMapper"
+    settings.local_mode = "wsi_service.simple_mapper:SimpleMapper"
     settings.mapper_address = "http://testserver/slides/{slide_id}"
     settings.data_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
     settings.image_handle_cache_size = 2

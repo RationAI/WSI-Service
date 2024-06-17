@@ -10,13 +10,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper
 from wsi_service.custom_models.old_v3.storage import SlideStorage, StorageAddress
-
+from wsi_service.singletons import logger
 
 class CSVMapperSettings(BaseSettings):
     source: str = 'data.csv'
     separator: str = '\t'
-    institution: int = 0
-    project: int = 1
+    group_1: int = 0
+    group_2: int = 1
     slide_id: int = 2
     case_id: int = 3
     path: int = 4
@@ -27,38 +27,38 @@ class CSVMapperSettings(BaseSettings):
 
 
 class IteratedCaseLocalMapper(CaseLocalMapper):
-    institution: str
-    project: str
+    group_1: str
+    group_2: str
     context_id: str
     namespace: uuid.UUID
     to_import: bool
 
 
 class IteratedSlideLocalMapper(SlideLocalMapper):
-    institution: str
-    project: str
+    group_1: str
+    group_2: str
     context_id: str
     to_import: bool
 
 
 def create_case_object(settings, row):
     context_id = row[settings.case_id]
-    institution = row[settings.institution]
-    project = row[settings.project]
+    group_1 = row[settings.group_1]
+    group_2 = row[settings.group_2]
     type = "c"
 
     # todo pydantic
-    assert len(project) <= 5
-    assert len(institution) <= 5
+    assert len(group_2) <= 5
+    assert len(group_1) <= 5
 
     namespace = uuid.uuid5(uuid.NAMESPACE_DNS, context_id)
-    local_id = institution + "." + project + "." + type + "." + context_id
+    local_id = group_1 + "." + group_2 + "." + type + "." + context_id
     case = IteratedCaseLocalMapper(
         id=local_id,
         context_id=context_id,
         namespace=namespace,
-        institution=institution,
-        project=project,
+        group_1=group_1,
+        group_2=group_2,
         local_id=local_id,
         slides=[],
         to_import=True,
@@ -70,15 +70,15 @@ def create_slide_object(settings, case, row):
     slide_local_id = row[settings.slide_id]
     type = "w"
 
-    local_id = case.institution + "." + case.project + "." + type + "." + str(slide_local_id)
+    local_id = case.group_1 + "." + case.group_2 + "." + type + "." + str(slide_local_id)
 
     slide = IteratedSlideLocalMapper(
         id=local_id,
         context_id=str(slide_local_id),
         local_id=local_id,
         case_local_id=case.local_id,
-        institution=case.institution,
-        project=case.project,
+        group_1=case.group_1,
+        group_2=case.group_2,
         to_import=True,
         slide_storage=SlideStorage(
             slide_id=local_id,
@@ -99,14 +99,14 @@ def create_slide_object(settings, case, row):
 class CSVMapper:
     """
     CSV Mapper will read CSV file definitions: (indexes are configurable)
-    INSTITUTION   PROJECT     SLIDE_ID     CASE        PATH
+    GROUP_1       GROUP_2     SLIDE_ID     CASE        PATH
     <ID>          <VALUE>     <ID>         <CASE_ID>   <WSI-PATH>
 
-    The slide ID will be created as such:   institution.project.w.slide_id
+    The slide ID will be created as such:   group_1.group_2.w.slide_id
     and mapped to the given path of the slide, which must be relative to the server root!
     All slides that belong to the same case must specify case id, which will be created as
-    institution.project.c.case_id (of the first institution/project found). All slides
-    of a case should be within same project and institution.
+    group_1.group_2.c.case_id (of the first group_1/group_2 found). All slides
+    of a case should be within same group_2 and group_1.
     """
 
     def __init__(self, data_dir):
@@ -144,21 +144,56 @@ class CSVMapper:
                     self.slide_map = data["slide_map"]
                 self.hash = self._get_updated_hash()
 
-    def _read_csv_data(self):
+    def _read_csv_file(self, path):
         settings = self.settings
-        self.case_map = {}
-        self.slide_map = {}
-        with open(self.settings.source, 'r') as file:
+        case_map = {}
+        slide_map = {}
+        with open(path, 'r') as file:
             reader = csv.reader(file, delimiter=settings.separator)
             for data in reader:
                 case_id = data[settings.case_id]
-                case = self.case_map.get(case_id, None)
+                case = case_map.get(case_id, None)
                 if case is None:
                     case = create_case_object(settings=settings, row=data)
-                    self.case_map[case.id] = case
+                    case_map[case.id] = case
                 slide = create_slide_object(settings=settings, case=case, row=data)
                 case.slides.append(slide.id)
-                self.slide_map[slide.id] = slide
+                slide_map[slide.id] = slide
+        # successful: merge only now
+        self.case_map.update(case_map)
+        self.slide_map.update(slide_map)
+
+    def _read_csv_data(self):
+        self.case_map = {}
+        self.slide_map = {}
+        path = self.settings.source
+        if os.path.isdir(path):
+            found_data = False
+            the_error = None
+            for root, dirs, files in os.walk(path):
+                for file in files:
+                    if file.endswith('.csv') or file.endswith('.tsv'):
+                        try:
+                            file_path = os.path.join(root, file)
+                            self._read_csv_file(file_path)
+                            found_data = True
+                        except Exception as e:
+                            the_error = e
+            if not found_data and the_error is not None:
+                logger.error(f"Directory {path} does not contain a valid data definition .tsv or .csv files!")
+                raise HTTPException(status_code=500, detail=f"Invalid CSV source data!") from the_error
+            elif not found_data:
+                logger.info(f"Directory {path} does not contain any data.")
+
+        elif os.path.isfile(path):
+            try:
+                self._read_csv_file(path)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Target CSV data definition is not a valid file!") from e
+
+        else:
+            logger.error(f"Path {path} is neither a file nor a directory.")
+            raise HTTPException(status_code=500, detail=f"Invalid CSV source data!")
 
     def _get_updated_hash(self):
         return hashlib.md5(open("local_mapper.p", "rb").read()).hexdigest()

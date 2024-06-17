@@ -118,14 +118,6 @@ class Slide(BaseSlide):
             if level.shape[0] == slide_level.extent.y:
                 return level
 
-    def __get_levels_tiff(self):
-        levels = self.tiff_slide.levels
-        level_count = len(levels)
-        level_dimensions = [[level.shape[1], level.shape[0]] for level in levels]
-        level_downsamples = [level_dimensions[0][0] / dims[0] for dims in level_dimensions]
-
-        original_levels = get_original_levels(level_count, level_dimensions, level_downsamples)
-        return original_levels
 
     def __read_region_of_page(self, page, channel_index, start_x, start_y, size_x, size_y, padding_color):
         page_frame = page.keyframe
@@ -265,9 +257,6 @@ class Slide(BaseSlide):
         original_levels = get_original_levels(level_count, level_dimensions, level_downsamples)
         return original_levels
 
-    def __get_xml_namespace(self):
-        m = re.match(r"\{.*\}", self.parsed_metadata.tag)
-        return m.group(0) if m else ""
 
     def __get_channels_tif(self):
         # todo rename function and really compute the true value
