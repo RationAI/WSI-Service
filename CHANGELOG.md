@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.0
+
+- Slow Removal of Empaia-related workflows. 
+- Removal of ``slide_id`` from path, as such IDs are then limited, and 
+we are unable to reference slides by paths.
+
 ## 0.12.12
 
 - Reverted wsidicom to 0.17.0

@@ -1,5 +1,12 @@
 from fastapi import Query
 
+
+SlideQuery = Query(
+    ...,
+    example="b10648a7-340d-43fc-a2d9-4d91cc86f33f",
+    description="""Provide slide id to access.""",
+)
+
 ImageFormatsQuery = Query(
     "jpeg", description="Image format (e.g. bmp, gif, jpeg, png, tiff). For raw image data choose tiff."
 )

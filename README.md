@@ -37,13 +37,13 @@ Regions of the WSI can be requested on any of the available levels. There is als
 
 There are several endpoints made available by this service:
 
-- `GET /v3/slides/{slide_id}/info` - Get slide info
-- `GET /v3/slides/{slide_id}/download` - Download slide
-- `GET /v3/slides/{slide_id}/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}` - Get slide region
-- `GET /v3/slides/{slide_id}/tile/level/{level}/tile/{tile_x}/{tile_y}` - Get slide tile
-- `GET /v3/slides/{slide_id}/thumbnail/max_size/{max_x}/{max_y}` - Get slide thumbnail image
-- `GET /v3/slides/{slide_id}/label/max_size/{max_x}/{max_y}` - Get slide label image
-- `GET /v3/slides/{slide_id}/macro/max_size/{max_x}/{max_y}` - Get slide macro image
+- `GET /v3/slides/info` - Get slide info
+- `GET /v3/slides/download` - Download slide
+- `GET /v3/slides/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}` - Get slide region
+- `GET /v3/slides/tile/level/{level}/tile/{tile_x}/{tile_y}` - Get slide tile
+- `GET /v3/slides/thumbnail/max_size/{max_x}/{max_y}` - Get slide thumbnail image
+- `GET /v3/slides/label/max_size/{max_x}/{max_y}` - Get slide label image
+- `GET /v3/slides/macro/max_size/{max_x}/{max_y}` - Get slide macro image
 
 The last five endpoints all return image data. The image format and its quality (e.g. for jpeg) can be selected. Formats include jpeg, png, tiff, bmp, gif.
 
@@ -169,8 +169,8 @@ If you want to have this feature matured, please feel free to contribute.
 Similar to mappers, you can provide a custom authentication logics.
 Sample env text files show you how to configure an OAuth2 (JWT-based)
 authentication, and a Life Science RI (LSAAI) authorization scripts 
-are also available. Injected AAA logics also drives what ENV variables are
-available.
+are also available. **Injected AAA logics also drives what ENV variables are
+available / necessary to configure.**
 
 Example OAuth2 authorization (no authentication) based on Keycloak:
 ````bash

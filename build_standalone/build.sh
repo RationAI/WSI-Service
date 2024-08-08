@@ -12,7 +12,7 @@ fi
 
 git submodule update
 
-IMAGE_NAME_TAG="${RAT_IMAGE_WBS:=wsi-service-standalone:v0.0.1}"
+IMAGE_NAME_TAG="${RAT_IMAGE_WBS:=wsi-service-standalone:v0.13.0}"
 
 echo
 echo "Starting build: docker build -t "$IMAGE_NAME_TAG" -f $BASEDIR/Dockerfile ."
