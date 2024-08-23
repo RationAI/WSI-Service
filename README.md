@@ -13,13 +13,6 @@ numerous WSI formats. The service is managed & features are added by RationAI.
 
 API versions prior ``v3`` are not supported.
 
-Direct file access slides path must replace reserved character `/` with `>`, e.g. `v3/slides/path>to>my>file.mrxs/info`.
-
-The Setup chapter in this README is outdated: we will try to provide simple quickstart and setup options if
-there will be interest. For now, refer to ``build_rationai`` which builds a cloud-ready docker image
-(meant for balance loaders). Or `build_standalone` which uses gunicorn to spin up standalone service (meant for docker compose).
-Each folder contains ``build.sh`` file that automates image creation.
-
 ## Overview
 
 The _WSI Service_ enables users to stream Whole Slide Images (WSI) tile-based via HTTP. It is based on a FastAPI webserver and a number of plugins to access whole slide image data.
