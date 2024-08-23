@@ -12,6 +12,7 @@ services:
       ]
     ports:
       - 5678:5678
+      - 8080:8080
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
@@ -19,3 +20,4 @@ services:
       - WS_IMAGE_HANDLE_CACHE_SIZE=6
     volumes:
       - .:/wsi-service
+      - ${COMPOSE_DATA_DIR}:/data

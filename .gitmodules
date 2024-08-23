@@ -1,12 +1,3 @@
 [submodule "wsi_service/models"]
 	path = wsi_service/models
 	url = https://gitlab.com/empaia/services/models.git
-[submodule "wsi_service/empaia_sender_auth"]
-	path = wsi_service/empaia_sender_auth
-	url = https://gitlab.com/empaia/integration/empaia-sender-auth.git
-[submodule "wsi_service/empaia_receiver_auth"]
-	path = wsi_service/empaia_receiver_auth
-	url = https://gitlab.com/empaia/integration/empaia-receiver-auth.git
-[submodule "rationai_receiver_auth"]
-	path = wsi_service/rationai_receiver_auth
-	url = https://github.com/RationAI/pyOIDCIntegration.git

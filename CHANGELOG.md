@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.0
+- Cleanup
+
+## 0.14.0
+- Changes in routes, now all slide/case data are query parameters.
+
 ## 0.13.0
 
 - Slow Removal of Empaia-related workflows. 

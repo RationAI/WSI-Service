@@ -35,15 +35,15 @@ Regarding the slide's metadata, it provides the extent of the base level (origin
 
 Regions of the WSI can be requested on any of the available levels. There is also a way to access tiles of a predefined size of each level (e.g. useful for a [viewer](wsi_service/api/root/viewer.html)). Furthermore, it is possible to get a thumbnail, label and macro image.
 
-There are several endpoints made available by this service:
+There are several endpoints made available by this service. All endpoints require ``slide`` query parameter.
 
-- `GET /v3/slides/info` - Get slide info
-- `GET /v3/slides/download` - Download slide
-- `GET /v3/slides/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}` - Get slide region
-- `GET /v3/slides/tile/level/{level}/tile/{tile_x}/{tile_y}` - Get slide tile
-- `GET /v3/slides/thumbnail/max_size/{max_x}/{max_y}` - Get slide thumbnail image
-- `GET /v3/slides/label/max_size/{max_x}/{max_y}` - Get slide label image
-- `GET /v3/slides/macro/max_size/{max_x}/{max_y}` - Get slide macro image
+- `GET /v3/slides/info?slide={slide-íd}` - Get slide info
+- `GET /v3/slides/download?slide={slide-íd}` - Download slide
+- `GET /v3/slides/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?slide={slide-íd}` - Get slide region
+- `GET /v3/slides/tile/level/{level}/tile/{tile_x}/{tile_y}?slide={slide-íd}` - Get slide tile
+- `GET /v3/slides/thumbnail/max_size/{max_x}/{max_y}?slide={slide-íd}` - Get slide thumbnail image
+- `GET /v3/slides/label/max_size/{max_x}/{max_y}?slide={slide-íd}` - Get slide label image
+- `GET /v3/slides/macro/max_size/{max_x}/{max_y}?slide={slide-íd}` - Get slide macro image
 
 The last five endpoints all return image data. The image format and its quality (e.g. for jpeg) can be selected. Formats include jpeg, png, tiff, bmp, gif.
 
@@ -81,14 +81,14 @@ The server then offers these sets of endpoints that allow you querying the slide
 and case relationship:
 
 - `GET /cases/` - Get cases
-- `GET /cases/{case_id}/slides/` - Get available slides
-- `GET /slides/{slide_id}` - Get slide
-- `GET /slides/{slide_id}/storage` - Get slide storage information
+- `GET /cases/slides?case={case}` - Get available slides
+- `GET /slides?slide={slide}` - Get slide
+- `GET /slides/storage?slide={slide}` - Get slide storage information
 
 Get a detailed description of each endpoint by running the WSI Service (see _Getting started_ section) and accessing the included Swagger UI [http://localhost:8080/docs](http://localhost:8080/docs).
 
 
-#### Mapper: Local Mapper
+#### Mapper: Simple Mapper
 > ``WS_LOCAL_MODE=wsi_service.simple_mapper:SimpleMapper``
 
 Simple mapper will create the case > slide hierarchy from your filesystem.
@@ -101,96 +101,6 @@ data
 ├── case2
 │   └── slide2_1
 ...
-`````
-It's simple, but inflexible. IDs are generated randomly as UUID4.
-
-
-#### Mapper: Paths Mapper
-> ``WS_LOCAL_MODE=wsi_service.paths_mapper:PathsMapper``
-
-The paths mapper does not yet support cases. You can access
-any slide by its path relative to the server data directory root.
-But since paths are provided in the URL, you have to replace ``/`` slash with `>`.
-If your data is available as ``/data/path/to/slide.tiff``, then
-you query with slide ID ``path>to>slide.tiff``.
-
-This mapper is manily for fast-use, debugging purposes. It is not matured enough.
-
-#### Mapper: Paths Mapper
-> ``WS_LOCAL_MODE=wsi_service.paths_mapper:PathsMapper``
-
-The paths mapper does not yet support cases. You can access
-any slide by its path relative to the server data directory root.
-But since paths are provided in the URL, you have to replace ``/`` slash with `>`.
-If your data is available as ``/data/path/to/slide.tiff``, then
-you query with slide ID ``path>to>slide.tiff``.
-
-This mapper is mainly for fast-use, debugging purposes. It is not matured enough.
-
-
-#### Mapper: CSV Mapper
->  ````
->   WS_LOCAL_MODE=wsi_service.csv_mapper:CSVMapper
->   CSWS_SOURCE='data.csv'  # can be also a directory
->   CSWS_SEPARATOR='\t'
->   CSWS_GROUP_1=0
->   CSWS_GROUP_2=1
->   CSWS_SLIDE_ID=2
->   CSWS_CASE_ID=3
->   CSWS_PATH=4
-> ````
-> 
-
-The CSV Mapper is more flexible option. It allows you to configure the
-file or directory to scan for csv (scanned files are *.csv and *.tsv),
-the separator character, and the order of columns. Above are shown ``CSWS_*``
-default values - you don't have to define them if they are sufficient for your use.
-
-The slide and case IDs are constructed then like this: ``group_1.group_2.w.slide_id``
-and ``group_1.group_2.c.case_id``. This can come in handy when you want to implement
-custom authorization logics and want to avoid explicit databases - where you can group
-your data to collections and resolve access on these.
-
-
-#### Mapper: Iterator Mapper
->  ````
->   WS_LOCAL_MODE=wsi_service.mapper_iterator.iterator:IteratorMapper
-> ````
-
-This is a proof-of-concept implementation of a directory-walking logics.
-It allows you to scan a filesystem for supported files, and automatically
-register these with the help of wildcard specifications that guite the
-detection process. It is not documented yet as it is not finished.
-If you want to have this feature matured, please feel free to contribute.
-
-
-### Authentication
-
-Similar to mappers, you can provide a custom authentication logics.
-Sample env text files show you how to configure an OAuth2 (JWT-based)
-authentication, and a Life Science RI (LSAAI) authorization scripts 
-are also available. **Injected AAA logics also drives what ENV variables are
-available / necessary to configure.**
-
-Example OAuth2 authorization (no authentication) based on Keycloak:
-````bash
-WS_API_V3_INTEGRATION=wsi_service.api.v3.integrations.empaia:EmpaiaApiIntegration
-WS_IDP_URL=http://domain.url:port/auth/realms/MY_REALM
-WS_CLIENT_ID=my_client
-WS_CLIENT_SECRET=my_client_secret
-WS_ORGANIZATION_ID=my_organization
-WS_AUDIENCE=my_audience
-WS_OPENAPI_TOKEN_URL=http://domain.url:port/auth/realms/MY_REALM/protocol/openid-connect/token
-WS_OPENAPI_AUTH_URL=http://domain.url:port/auth/realms/MY_REALM/protocol/openid-connect/auth
-WS_REWRITE_URL_IN_WELLKNOWN=http://domain.url:port/auth/realms/MY_REALM
-WS_REFRESH_INTERVAL=300
-````
-Where you have to replace all ``my_*`` values with actual values from your Keycloak deployment, which lives
-on `domain.url:port`.
-
-Example setup without authentication:
-`````bash
-WS_API_V3_INTEGRATION=wsi_service.api.v3.integrations.disable_auth:DisableAuth
 `````
 
 ## Supported formats
@@ -233,7 +143,7 @@ WS_CORS_ALLOW_CREDENTIALS=False
 WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DEBUG=False
 WS_DISABLE_OPENAPI=False
-WS_MAPPER_ADDRESS=http://localhost:8080/slides/{slide_id}/storage
+WS_MAPPER_ADDRESS=http://localhost:8080/slides/storage?slide={slide_id}
 WS_LOCAL_MODE=wsi_service.simple_mapper:SimpleMapper
 WS_ENABLE_VIEWER_ROUTES=True
 WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600

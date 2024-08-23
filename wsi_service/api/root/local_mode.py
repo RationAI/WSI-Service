@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 
 from wsi_service.api.v3.singletons import MapperClass
 from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper, SlideStorage
+from wsi_service.custom_models.queries import CaseQuery, SlideQuery
+
 
 def add_routes_local_mode(app, settings):
     localmapper = MapperClass(settings.data_dir)
@@ -17,19 +19,19 @@ def add_routes_local_mode(app, settings):
         return cases
 
     @app.get(
-        "/cases/{case_id}/slides/",
+        "/cases/slides/",
         response_model=List[SlideLocalMapper],
         tags=["Additional Routes (Standalone WSI Service)"],
     )
-    async def _(case_id: str):
+    async def _(case_id: str = CaseQuery):
         """
         (Only in standalone mode) Browse the local case directory and return slide ids for each available file.
         """
         slides = localmapper.get_slides(case_id)
         return slides
 
-    @app.get("/slides/{slide_id}", response_model=SlideLocalMapper, tags=["Additional Routes (Standalone WSI Service)"])
-    async def _(slide_id: str):
+    @app.get("/slides", response_model=SlideLocalMapper, tags=["Additional Routes (Standalone WSI Service)"])
+    async def _(slide_id: str = SlideQuery):
         """
         (Only in standalone mode) Return slide data for a given slide ID.
         """
@@ -37,11 +39,11 @@ def add_routes_local_mode(app, settings):
         return slide
 
     @app.get(
-        "/slides/{slide_id}/storage",
+        "/slides/storage",
         response_model=SlideStorage,
         tags=["Additional Routes (Standalone WSI Service)"],
     )
-    async def _(slide_id: str):
+    async def _(slide_id: str = SlideQuery):
         """
         (Only in standalone mode) Return slide storage data for a given slide ID.
         """

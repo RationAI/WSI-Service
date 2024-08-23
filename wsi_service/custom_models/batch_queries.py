@@ -3,6 +3,7 @@ from fastapi import Query
 
 SlideListQuery = Query(
     ...,
+    alias="slides",
     example="b10648a7-340d-43fc-a2d9-4d91cc86f33f,b10648a7-340d-43fc-a2d9-4d91cc86f33f",
     description="""Provide slide list to access simultaneously via batch queries.""",
 )
