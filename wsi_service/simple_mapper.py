@@ -102,7 +102,7 @@ class SimpleMapper:
         return list(self.case_map.values())
 
     def get_slides(self, case_id):
-        self.load()
+        self.refresh()
         if case_id not in self.case_map:
             raise HTTPException(status_code=404, detail=f"Case with case_id {case_id} does not exist")
         slide_data = []
