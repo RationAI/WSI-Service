@@ -2,21 +2,6 @@ FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.2.8@s
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-    meson ninja-build zlib1g-dev libzstd-dev libpng-dev \
-    libjpeg-dev libtiff-dev libopenjp2-7-dev libgdk-pixbuf2.0-dev \
-    libxml2-dev sqlite3 libcairo2-dev libglib2.0-dev libdcmtk-dev \
-    libjpeg-turbo8-dev libzstd-dev
-
-# Building from branch not original source
-# https://github.com/openslide/openslide/pull/605
-RUN git clone https://github.com/iewchen/openslide.git /openslide-lib \
-  && cd /openslide-lib \
-  && meson setup builddir \
-  && meson compile -C builddir \
-  && meson install -C builddir
-
 COPY . /wsi-service
 
 WORKDIR /wsi-service
@@ -96,5 +81,23 @@ ENV WEB_CONCURRENCY=8
 EXPOSE 8080/tcp
 
 WORKDIR /usr/local/lib/python3.10/dist-packages/wsi_service
+
+# TODO move openslide build elsewhere to avoid expensive task last
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    build-essential meson ninja-build zlib1g-dev libzstd-dev libpng-dev \
+    libjpeg-dev libtiff-dev libopenjp2-7-dev libgdk-pixbuf2.0-dev \
+    libxml2-dev sqlite3 libsqlite3-dev libcairo2-dev libglib2.0-dev libdcmtk-dev \
+    libjpeg-turbo8-dev libzstd-dev libjxr-dev cmake git checkinstall
+
+# We currently use a forked version of openslide, once this is merged to openslide, adjust the
+# Dockerfile to use the original source including dynamic versioning
+
+# Building from branch not original source
+# https://github.com/openslide/openslide/pull/605
+RUN git clone https://github.com/iewchen/openslide.git /openslide-lib \
+  && cd /openslide-lib \
+  && meson setup builddir \
+  && meson compile -C builddir \
+  && meson install -C builddir
 
 CMD ["python3", "-m", "uvicorn", "wsi_service.app:app", "--host", "0.0.0.0", "--port", "8080", "--loop=uvloop", "--http=httptools"]
