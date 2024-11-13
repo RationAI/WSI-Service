@@ -20,6 +20,11 @@ class SlideManager:
         self.lock = asyncio.Lock()
         self.storage_locks = {}
         self.event_loop = asyncio.get_event_loop()
+        self.local_mapper = None
+
+    def with_local_mapper(self, local_mapper):
+        self.local_mapper = local_mapper
+        return self
 
     async def get_slide(self, slide_id, plugin=None):
         cache_id = slide_id + f" ({plugin})" if plugin else slide_id
@@ -87,6 +92,8 @@ class SlideManager:
         logger.debug("Set expiration timer for storage address (%s): %s", cache_id, self.timeout)
 
     async def _get_slide_storage_addresses(self, slide_id):
+        if self.local_mapper:
+            return self.local_mapper.get_slide(slide_id).slide_storage
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(self.mapper_address.format(slide_id=slide_id)) as r:
