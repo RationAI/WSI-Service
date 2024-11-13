@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 from wsi_service.api.v3.singletons import localmapper, api_integration
 from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper, SlideStorage
-from wsi_service.custom_models.queries import CaseQuery, SlideQuery
+from wsi_service.custom_models.queries import IdQuery
 
 def add_routes_local_mode(app, settings):
 
@@ -25,7 +25,7 @@ def add_routes_local_mode(app, settings):
         tags=["Additional Routes (Standalone WSI Service)"],
     )
     async def _(
-        case_id: str = CaseQuery,
+        case_id: str = IdQuery,
         payload=api_integration.global_depends()
     ):
         """
@@ -37,7 +37,7 @@ def add_routes_local_mode(app, settings):
 
     @app.get("/slides", response_model=SlideLocalMapper, tags=["Additional Routes (Standalone WSI Service)"])
     async def _(
-        slide_id: str = SlideQuery,
+        slide_id: str = IdQuery,
         payload=api_integration.global_depends()
     ):
         """
@@ -53,7 +53,7 @@ def add_routes_local_mode(app, settings):
         tags=["Additional Routes (Standalone WSI Service)"],
     )
     async def _(
-        slide_id: str = SlideQuery,
+        slide_id: str = IdQuery,
         payload=api_integration.global_depends()
     ):
         """

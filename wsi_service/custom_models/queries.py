@@ -1,10 +1,10 @@
 from fastapi import Query
 
 
-SlideQuery = Query(
+IdQuery = Query(
     ...,
     example="b10648a7-340d-43fc-a2d9-4d91cc86f33f",
-    description="""Provide slide id to access.""",
+    description="""Provide id.""",
 )
 
 ImageFormatsQuery = Query(

@@ -92,25 +92,33 @@ class SlideManager:
         logger.debug("Set expiration timer for storage address (%s): %s", cache_id, self.timeout)
 
     async def _get_slide_storage_addresses(self, slide_id):
+        slide = None
         if self.local_mapper:
-            return self.local_mapper.get_slide(slide_id).slide_storage
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(self.mapper_address.format(slide_id=slide_id)) as r:
-                    if r.status == 404:
-                        raise HTTPException(
-                            status_code=404, detail=f"Could not find a storage address for slide id {slide_id}."
-                        )
-                    slide = await r.json()
-        except aiohttp.ClientConnectorError:
-            raise HTTPException(
-                status_code=503, detail="WSI Service is unable to connect to the Storage Mapper Service."
-            )
+            slide = self.local_mapper.get_slide(slide_id)
+            if not slide:
+                raise HTTPException(
+                    status_code=404, detail=f"Could not find a storage address for slide id {slide_id}."
+                )
+            slide = slide.slide_storage.model_dump()
+        else:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(self.mapper_address.format(slide_id=slide_id)) as r:
+                        if r.status == 404:
+                            raise HTTPException(
+                                status_code=404, detail=f"Could not find a storage address for slide id {slide_id}."
+                            )
+                        slide = await r.json()
+            except aiohttp.ClientConnectorError:
+                raise HTTPException(
+                    status_code=503, detail="WSI Service is unable to connect to the Storage Mapper Service."
+                )
         return slide["storage_addresses"]
 
     async def _get_slide_main_storage_address(self, slide_id):
         storage_addresses = await self._get_slide_storage_addresses(slide_id)
         for storage_address in storage_addresses:
+            print(storage_address)
             if storage_address["main_address"]:
                 return storage_address
         return storage_addresses[0]

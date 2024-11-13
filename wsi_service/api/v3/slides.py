@@ -12,7 +12,7 @@ from wsi_service.custom_models.queries import (
     ImagePaddingColorQuery,
     ImageQualityQuery,
     PluginQuery,
-    ZStackQuery, SlideQuery,
+    ZStackQuery, IdQuery,
 )
 from wsi_service.custom_models.responses import ImageRegionResponse, ImageResponses
 from wsi_service.models.v3.slide import SlideInfo
@@ -51,7 +51,7 @@ from .singletons import api_integration
 
 def add_routes_slides(app, settings, slide_manager):
     @app.get("/slides/info", response_model=SlideInfo, tags=["Main Routes"])
-    async def _(slide_id: SlideQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
+    async def _(slide_id=IdQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
         """
         Get metadata information for a slide given its ID
         """
@@ -67,7 +67,7 @@ def add_routes_slides(app, settings, slide_manager):
         tags=["Main Routes"],
     )
     async def _(
-            slide_id: SlideQuery,
+            slide_id=IdQuery,
             max_x: int = Path(
                 examples=[100], ge=1, le=settings.max_thumbnail_size, description="Maximum width of thumbnail"
             ),
@@ -102,7 +102,7 @@ def add_routes_slides(app, settings, slide_manager):
         tags=["Main Routes"],
     )
     async def _(
-            slide_id: SlideQuery,
+            slide_id=IdQuery,
             max_x: int = Path(examples=[100], description="Maximum width of label image"),
             max_y: int = Path(examples=[100], description="Maximum height of label image"),
             image_format: str = ImageFormatsQuery,
@@ -134,7 +134,7 @@ def add_routes_slides(app, settings, slide_manager):
         tags=["Main Routes"],
     )
     async def _(
-            slide_id: SlideQuery,
+            slide_id=IdQuery,
             max_x: int = Path(examples=[100], description="Maximum width of macro image"),
             max_y: int = Path(examples=[100], description="Maximum height of macro image"),
             image_format: str = ImageFormatsQuery,
@@ -166,7 +166,7 @@ def add_routes_slides(app, settings, slide_manager):
         tags=["Main Routes"],
     )
     async def _(
-            slide_id: SlideQuery,
+            slide_id=IdQuery,
             level: int = Path(ge=0, examples=[0], description="Pyramid level of region"),
             start_x: int = Path(examples=[0], description="x component of start coordinate of requested region"),
             start_y: int = Path(examples=[0], description="y component of start coordinate of requested region"),
@@ -245,7 +245,7 @@ def add_routes_slides(app, settings, slide_manager):
         tags=["Main Routes"],
     )
     async def _(
-            slide_id: SlideQuery,
+            slide_id=IdQuery,
             level: int = Path(ge=0, examples=[0], description="Pyramid level of region"),
             tile_x: int = Path(examples=[0], description="Request the tile_x-th tile in x dimension"),
             tile_y: int = Path(examples=[0], description="Request the tile_y-th tile in y dimension"),
@@ -313,7 +313,7 @@ def add_routes_slides(app, settings, slide_manager):
         return make_response(slide, image_tile, image_format, image_quality, image_channels)
 
     @app.get("/slides/download", tags=["Main Routes"])
-    async def _(slide_id: SlideQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
+    async def _(slide_id=IdQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
         """
         Download raw slide data as zip
         """
