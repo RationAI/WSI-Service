@@ -20,7 +20,7 @@ class Slide(BaseSlide):
         "leica",
         "trestle",
         "philips",
-        "vsf",
+        "zeiss",
     ]
 
     async def open(self, filepath):

@@ -37,13 +37,13 @@ Regions of the WSI can be requested on any of the available levels. There is als
 
 There are several endpoints made available by this service:
 
-- `GET /v3/slides/info` - Get slide info
-- `GET /v3/slides/download` - Download slide
-- `GET /v3/slides/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}` - Get slide region
-- `GET /v3/slides/tile/level/{level}/tile/{tile_x}/{tile_y}` - Get slide tile
-- `GET /v3/slides/thumbnail/max_size/{max_x}/{max_y}` - Get slide thumbnail image
-- `GET /v3/slides/label/max_size/{max_x}/{max_y}` - Get slide label image
-- `GET /v3/slides/macro/max_size/{max_x}/{max_y}` - Get slide macro image
+- `GET /v3/slides/info?slide={slide-íd}` - Get slide info
+- `GET /v3/slides/download?slide={slide-íd}` - Download slide
+- `GET /v3/slides/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?slide={slide-íd}` - Get slide region
+- `GET /v3/slides/tile/level/{level}/tile/{tile_x}/{tile_y}?slide={slide-íd}` - Get slide tile
+- `GET /v3/slides/thumbnail/max_size/{max_x}/{max_y}?slide={slide-íd}` - Get slide thumbnail image
+- `GET /v3/slides/label/max_size/{max_x}/{max_y}?slide={slide-íd}` - Get slide label image
+- `GET /v3/slides/macro/max_size/{max_x}/{max_y}?slide={slide-íd}` - Get slide macro image
 
 The last five endpoints all return image data. The image format and its quality (e.g. for jpeg) can be selected. Formats include jpeg, png, tiff, bmp, gif.
 
@@ -69,7 +69,7 @@ which will get instantiated. These classes usually also define their own set of
 environmental variables which become recognized as soon as a particular injected
 logics is used.
 
-### Mappers
+## Mappers
 
 The WSI Service detects its data using mappers. A mapper fulfills the function of 
 a data detector which defines what cases, slides are available and what is their relationship.
@@ -81,13 +81,29 @@ The server then offers these sets of endpoints that allow you querying the slide
 and case relationship:
 
 - `GET /cases/` - Get cases
-- `GET /cases/{case_id}/slides/` - Get available slides
-- `GET /slides/{slide_id}` - Get slide
-- `GET /slides/{slide_id}/storage` - Get slide storage information
+- `GET /cases/slides?case={case}` - Get available slides
+- `GET /slides?slide={slide}` - Get slide
+- `GET /slides/storage?slide={slide}` - Get slide storage information
 
 Get a detailed description of each endpoint by running the WSI Service (see _Getting started_ section) and accessing the included Swagger UI [http://localhost:8080/docs](http://localhost:8080/docs).
 
+### External Data Mappers
+If you want to configure custom mapper, it needs to return ``SlideStorage`` model. Then, you can configure
+in the env:
+`````bash
+WS_MAPPER_ADDRESS=http://url.to.service/endpoint
+WS_LOCAL_MODE=
+WS_ENABLE_LOCAL_ROUTES=False
+`````
 
+### Local Data Mappers
+Out of the box, local mappers are supported like so:
+`````bash
+WS_MAPPER_ADDRESS=
+WS_LOCAL_MODE=<PYTHON MODULE PATH - SEE BELOW>
+WS_ENABLE_LOCAL_ROUTES=True  # or False, but then local mode endpoints will not be available
+`````
+Following subsections describe all builtin local mappers:
 #### Mapper: Local Mapper
 > ``WS_LOCAL_MODE=wsi_service.simple_mapper:SimpleMapper``
 
@@ -202,7 +218,7 @@ Different formats are supported by plugins for accessing image data. Five base p
   - HAMAMATSU (\*.ndpi)
   - LEICA (\*.scn)
   - VENTANA (\*.bif)
-  - VSF (\*.vsf)
+  - ZEISS (\*.czi)
 
 - [pil](./wsi_service_base_plugins/pil/)
   - JPEG (\*.jpeg, \*.jpg)
@@ -274,15 +290,18 @@ docker-compose up --build
 
 It is not recommened to run the python package outside the specified docker image due to issues with library dependencies on different platforms.
 
-## Update OpenSlide version
+## OpenSlide version
 
-The WSI-Service uses a customized version of OpenSlide to support the VSF-format.
+A [fork](https://github.com/openslide/openslide/pull/605) of original openslide library is currently used to support ZEISS `.czi` images with JPEG XR compression. Once this feature is merged to
+[openslide](https://github.com/openslide/openslide) the source of openslide library will be updated.
+
+The WSI-Service originaly used a customized version of [OpenSlide](https://github.com/EMPAIA/openslide) to support the VSF-format...
+
 
 If you want to update the version of OpenSlide some steps are needed:
 
-1. Update OpenSlide: the source code can be found here: [https://github.com/EMPAIA/openslide](https://github.com/EMPAIA/openslide)
-2. Build the updated OpenSlide version. See here for more information: [https://gitlab.com/empaia/integration/ci-openslide](https://gitlab.com/empaia/integration/ci-openslide)
-3. Update the value of `OPENSLIDE_VERSION` in the `Dockerfile`. Use the same value (commit hash in GitHub) as in step **2.**
+1. Update OpenSlide: the source code can be found here: [https://github.com/openslide/openslide](https://github.com/openslide/openslide)
+2. Build the updated OpenSlide version.
 
 ## Development
 

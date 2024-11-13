@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.1 
+- Local Mode Cleanup: authentication, direct query.
+- Update README on v13 changes.
+- Support for Zeiss files `.czi`
+- Openslide lib update
+- Remove support for VSF files
+
 ## 0.13.0
 
 - Slow Removal of Empaia-related workflows. 
