@@ -107,7 +107,6 @@ class LSAAIIntegration(OAuthIntegration):
 
         except Exception as e:
             traceback.print_exc()
-            print(e)
             raise HTTPException(401, "Token or user info endpoint data is invalid!") from e
 
         raise HTTPException(403, f"Slide {slide_id} not available to the user!")

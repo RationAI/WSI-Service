@@ -118,7 +118,6 @@ class SlideManager:
     async def _get_slide_main_storage_address(self, slide_id):
         storage_addresses = await self._get_slide_storage_addresses(slide_id)
         for storage_address in storage_addresses:
-            print(storage_address)
             if storage_address["main_address"]:
                 return storage_address
         return storage_addresses[0]
