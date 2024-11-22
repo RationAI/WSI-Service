@@ -108,3 +108,5 @@ WORKDIR /usr/local/lib/python3.10/dist-packages/wsi_service
 COPY --chown=appuser ./build_standalone/gunicorn_conf.py .
 
 ENTRYPOINT ["/usr/bin/tini", "--", "./run.sh"]
+
+LABEL org.opencontainers.image.source="https://github.com/rationAI/WSI-Service"
