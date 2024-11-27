@@ -2,7 +2,7 @@ WS_CORS_ALLOW_CREDENTIALS=False
 WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DEBUG=False
 WS_DISABLE_OPENAPI=False
-WS_MAPPER_ADDRESS=http://localhost:8080/slides/storage?slide={slide_id}
+WS_MAPPER_ADDRESS=http://localhost:8080/v3/slides/storage?slide={slide_id}
 WS_LOCAL_MODE=True
 WS_ENABLE_VIEWER_ROUTES=True
 WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600
