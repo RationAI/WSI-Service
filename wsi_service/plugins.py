@@ -24,7 +24,6 @@ async def load_slide(filepath, plugin=None):
         raise HTTPException(status_code=500, detail="There is no plugin available that does support this slide.")
 
     if plugin:
-        print("chosen plugin", plugin)
         if plugin in supported_plugins.keys():
             return await _open_slide(supported_plugins[plugin], plugin, filepath)
         else:
@@ -33,11 +32,9 @@ async def load_slide(filepath, plugin=None):
                 detail=f"Selected plugin {plugin} is not available or does not support this slide. Please specify another plugin.",
             )
 
-    print("supported", supported_plugins)
     exception_details = ""
     for plugin_name, plugin in _get_sorted_plugins(supported_plugins):
         try:
-            print("trying", plugin_name)
             return await _open_slide(plugin, plugin_name, filepath)
         except HTTPException as e:
             exception_details += e.detail + ". "

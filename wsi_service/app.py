@@ -35,6 +35,7 @@ app = FastAPI(
     openapi_url="/openapi.json" if not settings.disable_openapi else "",
     root_path=settings.root_path,
     lifespan=lifespan,
+    debug=settings.debug
 )
 
 add_routes_root(app, settings)

@@ -1,18 +1,10 @@
 from fastapi import Query
 
 
-CaseQuery = Query(
+IdQuery = Query(
     ...,
-    alias="case",
     example="b10648a7-340d-43fc-a2d9-4d91cc86f33f",
-    description="""Provide case id to access.""",
-)
-
-SlideQuery = Query(
-    ...,
-    alias="slide",
-    example="b10648a7-340d-43fc-a2d9-4d91cc86f33f",
-    description="""Provide slide id to access.""",
+    description="""Provide id.""",
 )
 
 ImageFormatsQuery = Query(

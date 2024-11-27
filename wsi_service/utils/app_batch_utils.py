@@ -76,10 +76,8 @@ def batch_safe_make_response(slides, image_regions, image_format, image_quality,
                         tifffile.imwrite(mem, narray, photometric="minisblack", planarconfig="separate",
                                          compression="DEFLATE")
                     mem.seek(0)
-                    print(f"Writing {i} as file raw")
                     zip.writestr(f't{i + 1}.{image_format}', mem.getvalue())
                 except Exception as ex:
-                    print(f"Writing {i} as err raw")
                     # just indicate error --> empty archive
                     zip.writestr(f't{i + 1}.err', getattr(ex, 'message', repr(ex)))
             else:
@@ -93,10 +91,8 @@ def batch_safe_make_response(slides, image_regions, image_format, image_quality,
                         raise HTTPException(status_code=400, detail="Provided image format parameter not supported")
 
                     mem = save_rgb_image(img, image_format, image_quality)
-                    print(f"Writing {i} as file")
                     zip.writestr(f't{i + 1}.{image_format}', mem.getvalue())
                 except Exception as ex:
-                    print(f"Writing {i} as err")
                     # just indicate error --> empty archive
                     zip.writestr(f't{i + 1}.err', getattr(ex, 'message', repr(ex)))
     return Response(zip_buffer.getvalue(), media_type="application/zip")

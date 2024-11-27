@@ -5,13 +5,27 @@ numerous WSI formats. The service is managed & features are added by RationAI.
 
 ### Features:
 
+:key: Authentication. Pass a token, write a logics of verifying it and provide logics on which slide IDs are
+allowed to view by whom. Or just parse tokens. Or just re-use existing implementation. Or simply disable auth.
+
 :bus: Batch access. Do not fetch single tile per request. 
 
-:black_nib: Custom local access address mappers. Add your own logics on how case and slide IDs are derived.
+:black_nib: Custom local access address mappers. Add your own logics on how case and slide IDs are derived. 
+
+:open_file_folder: Direct file access. We don't force you to use IDs: just select a file mapper and
+access slides by their relative path to the server data root.
+
 
 ### Limitations:
 
 API versions prior ``v3`` are not supported.
+
+Direct file access slides path must replace reserved character `/` with `>`, e.g. `v3/slides/path>to>my>file.mrxs/info`.
+
+The Setup chapter in this README is outdated: we will try to provide simple quickstart and setup options if
+there will be interest. For now, refer to ``build_rationai`` which builds a cloud-ready docker image
+(meant for balance loaders). Or `build_standalone` which uses gunicorn to spin up standalone service (meant for docker compose).
+Each folder contains ``build.sh`` file that automates image creation.
 
 ## Overview
 
@@ -21,7 +35,7 @@ Regarding the slide's metadata, it provides the extent of the base level (origin
 
 Regions of the WSI can be requested on any of the available levels. There is also a way to access tiles of a predefined size of each level (e.g. useful for a [viewer](wsi_service/api/root/viewer.html)). Furthermore, it is possible to get a thumbnail, label and macro image.
 
-There are several endpoints made available by this service. All endpoints require ``slide`` query parameter.
+There are several endpoints made available by this service:
 
 - `GET /v3/slides/info?slide={slide-íd}` - Get slide info
 - `GET /v3/slides/download?slide={slide-íd}` - Download slide
@@ -55,7 +69,7 @@ which will get instantiated. These classes usually also define their own set of
 environmental variables which become recognized as soon as a particular injected
 logics is used.
 
-### Mappers
+## Mappers
 
 The WSI Service detects its data using mappers. A mapper fulfills the function of 
 a data detector which defines what cases, slides are available and what is their relationship.
@@ -73,7 +87,23 @@ and case relationship:
 
 Get a detailed description of each endpoint by running the WSI Service (see _Getting started_ section) and accessing the included Swagger UI [http://localhost:8080/docs](http://localhost:8080/docs).
 
+### External Data Mappers
+If you want to configure custom mapper, it needs to return ``SlideStorage`` model. Then, you can configure
+in the env:
+`````bash
+WS_MAPPER_ADDRESS=http://url.to.service/endpoint
+WS_LOCAL_MODE=
+WS_ENABLE_LOCAL_ROUTES=False
+`````
 
+### Local Data Mappers
+Out of the box, local mappers are supported like so:
+`````bash
+WS_MAPPER_ADDRESS=
+WS_LOCAL_MODE=<PYTHON MODULE PATH - SEE BELOW>
+WS_ENABLE_LOCAL_ROUTES=True  # or False, but then local mode endpoints will not be available
+`````
+Following subsections describe all builtin local mappers:
 #### Mapper: Simple Mapper
 > ``WS_LOCAL_MODE=wsi_service.simple_mapper:SimpleMapper``
 
@@ -88,6 +118,81 @@ data
 │   └── slide2_1
 ...
 `````
+It's simple, but inflexible. IDs are generated randomly as UUID4.
+
+
+#### Mapper: Paths Mapper
+> ``WS_LOCAL_MODE=wsi_service.paths_mapper:PathsMapper``
+
+The paths mapper does not yet support cases. You can access
+any slide by its path relative to the server data directory root.
+
+This mapper is manily for fast-use, debugging purposes. It is not matured enough.
+
+#### Mapper: CSV Mapper
+>  ````
+>   WS_LOCAL_MODE=wsi_service.csv_mapper:CSVMapper
+>   CSWS_SOURCE='data.csv'  # can be also a directory
+>   CSWS_SEPARATOR='\t'
+>   CSWS_GROUP_1=0
+>   CSWS_GROUP_2=1
+>   CSWS_SLIDE_ID=2
+>   CSWS_CASE_ID=3
+>   CSWS_PATH=4
+> ````
+> 
+
+The CSV Mapper is more flexible option. It allows you to configure the
+file or directory to scan for csv (scanned files are *.csv and *.tsv),
+the separator character, and the order of columns. Above are shown ``CSWS_*``
+default values - you don't have to define them if they are sufficient for your use.
+
+The slide and case IDs are constructed then like this: ``group_1.group_2.w.slide_id``
+and ``group_1.group_2.c.case_id``. This can come in handy when you want to implement
+custom authorization logics and want to avoid explicit databases - where you can group
+your data to collections and resolve access on these.
+
+
+#### Mapper: Iterator Mapper
+>  ````
+>   WS_LOCAL_MODE=wsi_service.mapper_iterator.iterator:IteratorMapper
+> ````
+
+This is a proof-of-concept implementation of a directory-walking logics.
+It allows you to scan a filesystem for supported files, and automatically
+register these with the help of wildcard specifications that guite the
+detection process. It is not documented yet as it is not finished.
+If you want to have this feature matured, please feel free to contribute.
+
+
+### Authentication
+
+Similar to mappers, you can provide a custom authentication logics.
+Sample env text files show you how to configure an OAuth2 (JWT-based)
+authentication, and a Life Science RI (LSAAI) authorization scripts 
+are also available. **Injected AAA logics also drives what ENV variables are
+available / necessary to configure.**
+
+Example OAuth2 authorization (no authentication) based on Keycloak:
+````bash
+WS_API_V3_INTEGRATION=wsi_service.api.v3.integrations.empaia:EmpaiaApiIntegration
+WS_IDP_URL=http://domain.url:port/auth/realms/MY_REALM
+WS_CLIENT_ID=my_client
+WS_CLIENT_SECRET=my_client_secret
+WS_ORGANIZATION_ID=my_organization
+WS_AUDIENCE=my_audience
+WS_OPENAPI_TOKEN_URL=http://domain.url:port/auth/realms/MY_REALM/protocol/openid-connect/token
+WS_OPENAPI_AUTH_URL=http://domain.url:port/auth/realms/MY_REALM/protocol/openid-connect/auth
+WS_REWRITE_URL_IN_WELLKNOWN=http://domain.url:port/auth/realms/MY_REALM
+WS_REFRESH_INTERVAL=300
+````
+Where you have to replace all ``my_*`` values with actual values from your Keycloak deployment, which lives
+on `domain.url:port`.
+
+Example setup without authentication:
+`````bash
+WS_API_V3_INTEGRATION=wsi_service.api.v3.integrations.disable_auth:DisableAuth
+`````
 
 ## Supported formats
 
@@ -98,7 +203,7 @@ Different formats are supported by plugins for accessing image data. Five base p
   - HAMAMATSU (\*.ndpi)
   - LEICA (\*.scn)
   - VENTANA (\*.bif)
-  - VSF (\*.vsf)
+  - ZEISS (\*.czi)
 
 - [pil](./wsi_service_base_plugins/pil/)
   - JPEG (\*.jpeg, \*.jpg)
@@ -170,15 +275,18 @@ docker-compose up --build
 
 It is not recommened to run the python package outside the specified docker image due to issues with library dependencies on different platforms.
 
-## Update OpenSlide version
+## OpenSlide version
 
-The WSI-Service uses a customized version of OpenSlide to support the VSF-format.
+A [fork](https://github.com/openslide/openslide/pull/605) of original openslide library is currently used to support ZEISS `.czi` images with JPEG XR compression. Once this feature is merged to
+[openslide](https://github.com/openslide/openslide) the source of openslide library will be updated.
+
+The WSI-Service originally used a customized version of [OpenSlide](https://github.com/EMPAIA/openslide) to support the VSF-format...
+
 
 If you want to update the version of OpenSlide some steps are needed:
 
-1. Update OpenSlide: the source code can be found here: [https://github.com/EMPAIA/openslide](https://github.com/EMPAIA/openslide)
-2. Build the updated OpenSlide version. See here for more information: [https://gitlab.com/empaia/integration/ci-openslide](https://gitlab.com/empaia/integration/ci-openslide)
-3. Update the value of `OPENSLIDE_VERSION` in the `Dockerfile`. Use the same value (commit hash in GitHub) as in step **2.**
+1. Update OpenSlide: the source code can be found here: [https://github.com/openslide/openslide](https://github.com/openslide/openslide)
+2. Build the updated OpenSlide version.
 
 ## Development
 

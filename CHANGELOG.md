@@ -1,10 +1,17 @@
 # Changelog
 
-## 0.15.0
+## 0.13.3
 - Cleanup
 
-## 0.14.0
+## 0.13.2
 - Changes in routes, now all slide/case data are query parameters.
+
+## 0.13.1 
+- Local Mode Cleanup: authentication, direct query.
+- Update README on v13 changes.
+- Support for Zeiss files `.czi`
+- Openslide lib update
+- Remove support for VSF files
 
 ## 0.13.0
 
