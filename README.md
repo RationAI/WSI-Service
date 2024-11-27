@@ -80,10 +80,10 @@ a data detector which defines what cases, slides are available and what is their
 The server then offers these sets of endpoints that allow you querying the slide
 and case relationship:
 
-- `GET /cases/` - Get cases
-- `GET /cases/slides?case={case}` - Get available slides
-- `GET /slides?slide={slide}` - Get slide
-- `GET /slides/storage?slide={slide}` - Get slide storage information
+- `GET /v3/cases/` - Get cases
+- `GET /v3/cases/slides?case={case}` - Get available slides
+- `GET /v3/slides?slide={slide}` - Get slide
+- `GET /v3/slides/storage?slide={slide}` - Get slide storage information
 
 Get a detailed description of each endpoint by running the WSI Service (see _Getting started_ section) and accessing the included Swagger UI [http://localhost:8080/docs](http://localhost:8080/docs).
 
