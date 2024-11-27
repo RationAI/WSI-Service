@@ -3,7 +3,6 @@ import importlib
 from .default import Default
 
 
-
 def get_api_integration(settings, logger, http_client):
     if settings.api_v3_integration:
         module_name, class_name = settings.api_v3_integration.split(":")
