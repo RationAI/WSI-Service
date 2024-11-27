@@ -69,7 +69,7 @@ RUN mkdir /data
 FROM ubuntu:22.04@sha256:c9cf959fd83770dfdefd8fb42cfef0761432af36a764c077aed54bbc5bb25368 AS wsi_service_production
 
 RUN apt-get update \
-  && apt-get install --no-install-recommends -y python3 python3-pip python3-packaging tini nano rsync \
+  && apt-get install --no-install-recommends -y python3 python3-pip python3-packaging tini nano rsync curl \
   && rm -rf /var/lib/apt/lists/* \
   && adduser --disabled-password --gecos '' appuser \
   && mkdir /artifacts && chown appuser:appuser /artifacts \
@@ -113,3 +113,5 @@ RUN git clone https://github.com/iewchen/openslide.git /openslide-lib \
 COPY --chown=appuser ./build_standalone/gunicorn_conf.py .
 
 ENTRYPOINT ["/usr/bin/tini", "--", "./run.sh"]
+
+LABEL org.opencontainers.image.source="https://github.com/rationAI/WSI-Service"

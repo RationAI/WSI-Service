@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.12.1 
+## 0.13.3
+- Cleanup
+
+## 0.13.2
+- Changes in routes, now all slide/case data are query parameters.
+
+## 0.13.1 
 - Local Mode Cleanup: authentication, direct query.
 - Update README on v13 changes.
 - Support for Zeiss files `.czi`
