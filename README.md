@@ -20,8 +20,6 @@ access slides by their relative path to the server data root.
 
 API versions prior ``v3`` are not supported.
 
-Direct file access slides path must replace reserved character `/` with `>`, e.g. `v3/slides/path>to>my>file.mrxs/info`.
-
 The Setup chapter in this README is outdated: we will try to provide simple quickstart and setup options if
 there will be interest. For now, refer to ``build_rationai`` which builds a cloud-ready docker image
 (meant for balance loaders). Or `build_standalone` which uses gunicorn to spin up standalone service (meant for docker compose).
