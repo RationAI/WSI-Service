@@ -104,7 +104,7 @@ WS_LOCAL_MODE=<PYTHON MODULE PATH - SEE BELOW>
 WS_ENABLE_LOCAL_ROUTES=True  # or False, but then local mode endpoints will not be available
 `````
 Following subsections describe all builtin local mappers:
-#### Mapper: Local Mapper
+#### Mapper: Simple Mapper
 > ``WS_LOCAL_MODE=wsi_service.simple_mapper:SimpleMapper``
 
 Simple mapper will create the case > slide hierarchy from your filesystem.
@@ -126,23 +126,8 @@ It's simple, but inflexible. IDs are generated randomly as UUID4.
 
 The paths mapper does not yet support cases. You can access
 any slide by its path relative to the server data directory root.
-But since paths are provided in the URL, you have to replace ``/`` slash with `>`.
-If your data is available as ``/data/path/to/slide.tiff``, then
-you query with slide ID ``path>to>slide.tiff``.
 
 This mapper is manily for fast-use, debugging purposes. It is not matured enough.
-
-#### Mapper: Paths Mapper
-> ``WS_LOCAL_MODE=wsi_service.paths_mapper:PathsMapper``
-
-The paths mapper does not yet support cases. You can access
-any slide by its path relative to the server data directory root.
-But since paths are provided in the URL, you have to replace ``/`` slash with `>`.
-If your data is available as ``/data/path/to/slide.tiff``, then
-you query with slide ID ``path>to>slide.tiff``.
-
-This mapper is mainly for fast-use, debugging purposes. It is not matured enough.
-
 
 #### Mapper: CSV Mapper
 >  ````
@@ -249,7 +234,7 @@ WS_CORS_ALLOW_CREDENTIALS=False
 WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DEBUG=False
 WS_DISABLE_OPENAPI=False
-WS_MAPPER_ADDRESS=http://localhost:8080/slides/{slide_id}/storage
+WS_MAPPER_ADDRESS=http://localhost:8080/slides/storage?slide={slide_id}
 WS_LOCAL_MODE=wsi_service.simple_mapper:SimpleMapper
 WS_ENABLE_VIEWER_ROUTES=True
 WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600
@@ -295,7 +280,7 @@ It is not recommened to run the python package outside the specified docker imag
 A [fork](https://github.com/openslide/openslide/pull/605) of original openslide library is currently used to support ZEISS `.czi` images with JPEG XR compression. Once this feature is merged to
 [openslide](https://github.com/openslide/openslide) the source of openslide library will be updated.
 
-The WSI-Service originaly used a customized version of [OpenSlide](https://github.com/EMPAIA/openslide) to support the VSF-format...
+The WSI-Service originally used a customized version of [OpenSlide](https://github.com/EMPAIA/openslide) to support the VSF-format...
 
 
 If you want to update the version of OpenSlide some steps are needed:

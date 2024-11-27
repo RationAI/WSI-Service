@@ -342,7 +342,7 @@ def add_routes_slides(app, settings, slide_manager):
         """
         Get metadata information for a slide set (see description above sister function)
         """
-        slide_ids = [path.replace('/', '>') for path in paths.split(",")]
+        slide_ids = paths.split(",")
         requests = map(lambda sid: slide_manager.get_slide_info(sid, slide_info_model=SlideInfo, plugin=plugin),
                        slide_ids)
         slide_list = await asyncio.gather(*requests)
@@ -371,7 +371,7 @@ def add_routes_slides(app, settings, slide_manager):
         """
         Get slide SET thumbnails image  given its ID. (see description above sister function)
         """
-        slide_ids = [path.replace('/', '>') for path in paths.split(",")]
+        slide_ids = paths.split(",")
         requests = [
             api_integration.allow_access_slide(auth_payload=payload, slide_id=sid, manager=slide_manager, plugin=plugin)
             for sid in slide_ids
@@ -404,7 +404,7 @@ def add_routes_slides(app, settings, slide_manager):
         """
         Get the label image of a slide set given path(s). (see description above sister function)
         """
-        slide_ids = [path.replace('/', '>') for path in paths.split(",")]
+        slide_ids = paths.split(",")
         requests = [
             api_integration.allow_access_slide(auth_payload=payload, slide_id=sid, manager=slide_manager, plugin=plugin)
             for sid in slide_ids
@@ -443,7 +443,7 @@ def add_routes_slides(app, settings, slide_manager):
         """
         Get the macro image of a slide set given path(s). (see description above sister function)
         """
-        slide_ids = [path.replace('/', '>') for path in paths.split(",")]
+        slide_ids = paths.split(",")
         requests = [
             api_integration.allow_access_slide(auth_payload=payload, slide_id=sid, manager=slide_manager, plugin=plugin)
             for sid in slide_ids]
@@ -491,7 +491,7 @@ def add_routes_slides(app, settings, slide_manager):
     #     validate_image_request(image_format, image_quality)
     #     validate_image_size(size_x, size_y)
     #
-    #     requests = map(lambda path: safe_get_slide(slide_manager, path.replace('/', '>'), plugin=plugin),
+    #     requests = map(lambda path: safe_get_slide(slide_manager, path, plugin=plugin),
     #                    paths.split(","))
     #     slides = await asyncio.gather(*requests)
     #     requests = map(safe_get_slide_info, slides)
@@ -525,7 +525,7 @@ def add_routes_slides(app, settings, slide_manager):
         """
         Get a tile of a slide given its path (see description above sister function)
         """
-        slide_ids = [path.replace('/', '>') for path in paths.split(",")]
+        slide_ids = paths.split(",")
         requests = [
             api_integration.allow_access_slide(auth_payload=payload, slide_id=sid, manager=slide_manager, plugin=plugin)
             for sid in slide_ids]
@@ -569,7 +569,7 @@ def add_routes_slides(app, settings, slide_manager):
         """
         Get a tile of a slide given its path (see description above sister function)
         """
-        slide_ids = [path.replace('/', '>') for path in paths.split(",")]
+        slide_ids = paths.split(",")
         requests = [
             api_integration.allow_access_slide(auth_payload=payload, slide_id=sid, manager=slide_manager, plugin=plugin)
             for sid in slide_ids]

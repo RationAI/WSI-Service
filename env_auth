@@ -2,7 +2,7 @@ WS_CORS_ALLOW_CREDENTIALS=False
 WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DEBUG=False
 WS_DISABLE_OPENAPI=False
-WS_MAPPER_ADDRESS=http://localhost:8080/slides/{slide_id}/storage
+WS_MAPPER_ADDRESS=http://localhost:8080/slides/storage?slide={slide_id}
 WS_LOCAL_MODE=wsi_service.simple_mapper:SimpleMapper
 WS_ENABLE_LOCAL_ROUTES=True
 WS_ENABLE_VIEWER_ROUTES=True
