@@ -338,7 +338,7 @@ def add_routes_slides(app, settings, slide_manager):
     # NEW API ALLOWING BATCH ACCESS
     ##
     @app.get("/files/info", response_model=List[SlideInfo], tags=["Main Routes"])
-    async def _(paths: str = IdListQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
+    async def info(paths: str = IdListQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
         """
         Get metadata information for a slide set (see description above sister function)
         """
@@ -357,7 +357,7 @@ def add_routes_slides(app, settings, slide_manager):
         response_class=StreamingResponse,
         tags=["Main Routes"],
     )
-    async def _(
+    async def thumbnail(
             paths: str = IdListQuery,
             max_x: int = Path(example=100, ge=1, le=settings.max_thumbnail_size,
                               description="Maximum width of thumbnail"),
@@ -392,7 +392,7 @@ def add_routes_slides(app, settings, slide_manager):
         response_class=StreamingResponse,
         tags=["Main Routes"],
     )
-    async def _(
+    async def label(
             paths: str = IdListQuery,
             max_x: int = Path(example=100, description="Maximum width of label image"),
             max_y: int = Path(example=100, description="Maximum height of label image"),
@@ -431,7 +431,7 @@ def add_routes_slides(app, settings, slide_manager):
         response_class=StreamingResponse,
         tags=["Main Routes"],
     )
-    async def _(
+    async def macro(
             paths: str = IdListQuery,
             max_x: int = Path(example=100, description="Maximum width of macro image"),
             max_y: int = Path(example=100, description="Maximum height of macro image"),
@@ -463,45 +463,6 @@ def add_routes_slides(app, settings, slide_manager):
             image_quality
         )
 
-    # ## Regions not supported, probably not necessary in large load apps
-    # @app.get(
-    #     "/files/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}",
-    #     responses=ImageRegionResponse,
-    #     response_class=StreamingResponse,
-    #     tags=["Main Routes"],
-    # )
-    # async def _(
-    #         paths: str = IdListQuery,
-    #         level: int = Path(ge=0, example=0, description="Pyramid level of region"),
-    #         start_x: int = Path(example=0, description="x component of start coordinate of requested region"),
-    #         start_y: int = Path(example=0, description="y component of start coordinate of requested region"),
-    #         size_x: int = Path(gt=0, example=1024, description="Width of requested region"),
-    #         size_y: int = Path(gt=0, example=1024, description="Height of requested region"),
-    #         image_channels: List[int] = ImageChannelQuery,
-    #         z: int = ZStackQuery,
-    #         padding_color: str = ImagePaddingColorQuery,
-    #         image_format: str = ImageFormatsQuery,
-    #         image_quality: int = ImageQualityQuery,
-    #         plugin: str = PluginQuery,
-    # ):
-    #     """
-    #     Get a region of a slide SET given path(s) (see description in the above sister implementation)
-    #     """
-    #     vp_color = validate_hex_color_string(padding_color)
-    #     validate_image_request(image_format, image_quality)
-    #     validate_image_size(size_x, size_y)
-    #
-    #     requests = map(lambda path: safe_get_slide(slide_manager, path, plugin=plugin),
-    #                    paths.split(","))
-    #     slides = await asyncio.gather(*requests)
-    #     requests = map(safe_get_slide_info, slides)
-    #     slide_infos = await asyncio.gather(*requests)
-    #     requests = map(lambda i: batch_safe_get_region(slides[i], slide_infos[i],
-    #                                                        level, start_x, start_y, size_x, size_y,
-    #                                                        image_channels, vp_color, z),
-    #                    range(slides.__len__()))
-    #     regions = await asyncio.gather(*requests)
-    #     return batch_safe_make_response(slides, regions, image_format, image_quality, image_channels)
 
     @app.get(
         "/files/tile/level/{level}/tile/{tile_x}/{tile_y}",
@@ -509,7 +470,7 @@ def add_routes_slides(app, settings, slide_manager):
         response_class=StreamingResponse,
         tags=["Main Routes"],
     )
-    async def _(
+    async def tile(
             paths: str = IdListQuery,
             level: int = Path(ge=0, example=0, description="Pyramid level of region"),
             tile_x: int = Path(example=0, description="Request the tile_x-th tile in x dimension"),
@@ -553,7 +514,7 @@ def add_routes_slides(app, settings, slide_manager):
         response_class=StreamingResponse,
         tags=["Main Routes"],
     )
-    async def _(
+    async def batch(
             paths: str = IdListQuery,
             levels: str = TileLevelListQuery,
             xs: str = TileXListQuery,
@@ -593,3 +554,100 @@ def add_routes_slides(app, settings, slide_manager):
 
         regions = await asyncio.gather(*requests)
         return batch_safe_make_response(slides, regions, image_format, image_quality, image_channels)
+
+    #############################################
+    # OLD ENDPOINTS FOR BACKWARDS COMPATIBILITY #
+    #############################################
+    @app.get("/batch/info", response_model=List[SlideInfo], tags=["Main Routes"])
+    async def _(slides: str = IdListQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
+        return info(slides, plugin, payload)
+    @app.get(
+        "/batch/thumbnail/max_size/{max_x}/{max_y}",
+        responses=ImageResponses,
+        response_class=StreamingResponse,
+        tags=["Main Routes"],
+    )
+    async def _(
+            slides: str = IdListQuery,
+            max_x: int = Path(example=100, ge=1, le=settings.max_thumbnail_size,
+                              description="Maximum width of thumbnail"),
+            max_y: int = Path(example=100, ge=1, le=settings.max_thumbnail_size,
+                              description="Maximum height of thumbnail"),
+            image_format: str = ImageFormatsQuery,
+            image_quality: int = ImageQualityQuery,
+            plugin: str = PluginQuery,
+            payload=api_integration.global_depends(),
+    ):
+        return thumbnail(slides, max_x, max_y, image_format, image_quality, plugin, payload)
+    @app.get(
+        "/batch/label/max_size/{max_x}/{max_y}",
+        responses=ImageResponses,
+        response_class=StreamingResponse,
+        tags=["Main Routes"],
+    )
+    async def _(
+            slides: str = IdListQuery,
+            max_x: int = Path(example=100, description="Maximum width of label image"),
+            max_y: int = Path(example=100, description="Maximum height of label image"),
+            image_format: str = ImageFormatsQuery,
+            image_quality: int = ImageQualityQuery,
+            plugin: str = PluginQuery,
+            payload=api_integration.global_depends(),
+    ):
+        return label(slides, max_x, max_y, image_format, image_quality, plugin, payload)
+    @app.get(
+        "/batch/macro/max_size/{max_x}/{max_y}",
+        responses=ImageResponses,
+        response_class=StreamingResponse,
+        tags=["Main Routes"],
+    )
+    async def _(
+            slides: str = IdListQuery,
+            max_x: int = Path(example=100, description="Maximum width of macro image"),
+            max_y: int = Path(example=100, description="Maximum height of macro image"),
+            image_format: str = ImageFormatsQuery,
+            image_quality: int = ImageQualityQuery,
+            plugin: str = PluginQuery,
+            payload=api_integration.global_depends(),
+    ):
+        return macro(slides, max_x, max_y, image_format, image_quality, plugin, payload)
+    @app.get(
+        "/batch/tile/level/{level}/tile/{tile_x}/{tile_y}",
+        responses=ImageResponses,
+        response_class=StreamingResponse,
+        tags=["Main Routes"],
+    )
+    async def _(
+            slides: str = IdListQuery,
+            level: int = Path(ge=0, example=0, description="Pyramid level of region"),
+            tile_x: int = Path(example=0, description="Request the tile_x-th tile in x dimension"),
+            tile_y: int = Path(example=0, description="Request the tile_y-th tile in y dimension"),
+            image_channels: List[int] = ImageChannelQuery,
+            z: int = ZStackQuery,
+            padding_color: str = ImagePaddingColorQuery,
+            image_format: str = ImageFormatsQuery,
+            image_quality: int = ImageQualityQuery,
+            plugin: str = PluginQuery,
+            payload=api_integration.global_depends(),
+    ):
+        return tile(slides, level, tile_x, tile_y, image_channels, z, padding_color, image_format, image_quality, plugin, payload)
+    @app.get(
+        "/batch/batch/",
+        responses=ImageResponses,
+        response_class=StreamingResponse,
+        tags=["Main Routes"],
+    )
+    async def _(
+            slides: str = IdListQuery,
+            levels: str = TileLevelListQuery,
+            xs: str = TileXListQuery,
+            ys: str = TileYListQuery,
+            image_channels: List[int] = ImageChannelQuery,
+            z: int = ZStackQuery,  # TODO also?
+            padding_color: str = ImagePaddingColorQuery,
+            image_format: str = ImageFormatsQuery,
+            image_quality: int = ImageQualityQuery,
+            plugin: str = PluginQuery,
+            payload=api_integration.global_depends(),
+    ):
+        return batch(slides, levels, xs, ys, image_channels, z, padding_color, image_format, image_quality, plugin, payload)

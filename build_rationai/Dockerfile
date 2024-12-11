@@ -85,7 +85,7 @@ RUN apt-get update \
   && usermod --non-unique --uid 1000 www-data \
   && mkdir /artifacts && chown www-data:www-data /artifacts \
   && mkdir -p /opt/app/bin && chown www-data:www-data /opt/app/bin \
-  && chmod u+x /usr/local/lib/python3.10/dist-packages/wsi_service/pod.run.sh \
+  && chmod a+x /usr/local/lib/python3.10/dist-packages/wsi_service/pod.run.sh \
   && chown www-data -R /usr/local/lib/python3.10/dist-packages/wsi_service \
   && mkdir -p modules
 EXPOSE 8080/tcp
