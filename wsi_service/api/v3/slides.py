@@ -560,7 +560,7 @@ def add_routes_slides(app, settings, slide_manager):
     #############################################
     @app.get("/batch/info", response_model=List[SlideInfo], tags=["Main Routes"])
     async def _(slides: str = IdListQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
-        return info(slides, plugin, payload)
+        return await info(slides, plugin, payload)
     @app.get(
         "/batch/thumbnail/max_size/{max_x}/{max_y}",
         responses=ImageResponses,
@@ -578,7 +578,7 @@ def add_routes_slides(app, settings, slide_manager):
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
-        return thumbnail(slides, max_x, max_y, image_format, image_quality, plugin, payload)
+        return await thumbnail(slides, max_x, max_y, image_format, image_quality, plugin, payload)
     @app.get(
         "/batch/label/max_size/{max_x}/{max_y}",
         responses=ImageResponses,
@@ -594,7 +594,7 @@ def add_routes_slides(app, settings, slide_manager):
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
-        return label(slides, max_x, max_y, image_format, image_quality, plugin, payload)
+        return await label(slides, max_x, max_y, image_format, image_quality, plugin, payload)
     @app.get(
         "/batch/macro/max_size/{max_x}/{max_y}",
         responses=ImageResponses,
@@ -610,7 +610,7 @@ def add_routes_slides(app, settings, slide_manager):
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
-        return macro(slides, max_x, max_y, image_format, image_quality, plugin, payload)
+        return await macro(slides, max_x, max_y, image_format, image_quality, plugin, payload)
     @app.get(
         "/batch/tile/level/{level}/tile/{tile_x}/{tile_y}",
         responses=ImageResponses,
@@ -630,7 +630,7 @@ def add_routes_slides(app, settings, slide_manager):
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
-        return tile(slides, level, tile_x, tile_y, image_channels, z, padding_color, image_format, image_quality, plugin, payload)
+        return await tile(slides, level, tile_x, tile_y, image_channels, z, padding_color, image_format, image_quality, plugin, payload)
     @app.get(
         "/batch/batch/",
         responses=ImageResponses,
@@ -650,4 +650,4 @@ def add_routes_slides(app, settings, slide_manager):
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
-        return batch(slides, levels, xs, ys, image_channels, z, padding_color, image_format, image_quality, plugin, payload)
+        return await batch(slides, levels, xs, ys, image_channels, z, padding_color, image_format, image_quality, plugin, payload)
