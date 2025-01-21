@@ -35,13 +35,13 @@ Regions of the WSI can be requested on any of the available levels. There is als
 
 There are several endpoints made available by this service:
 
-- `GET /v3/slides/info?slide={slide-íd}` - Get slide info
-- `GET /v3/slides/download?slide={slide-íd}` - Download slide
-- `GET /v3/slides/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?slide={slide-íd}` - Get slide region
-- `GET /v3/slides/tile/level/{level}/tile/{tile_x}/{tile_y}?slide={slide-íd}` - Get slide tile
-- `GET /v3/slides/thumbnail/max_size/{max_x}/{max_y}?slide={slide-íd}` - Get slide thumbnail image
-- `GET /v3/slides/label/max_size/{max_x}/{max_y}?slide={slide-íd}` - Get slide label image
-- `GET /v3/slides/macro/max_size/{max_x}/{max_y}?slide={slide-íd}` - Get slide macro image
+- `GET /v3/slides/info?slide={slide_íd}` - Get slide info
+- `GET /v3/slides/download?slide={slide_íd}` - Download slide
+- `GET /v3/slides/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?slide={slide_íd}` - Get slide region
+- `GET /v3/slides/tile/level/{level}/tile/{tile_x}/{tile_y}?slide={slide_íd}` - Get slide tile
+- `GET /v3/slides/thumbnail/max_size/{max_x}/{max_y}?slide={slide_íd}` - Get slide thumbnail image
+- `GET /v3/slides/label/max_size/{max_x}/{max_y}?slide={slide_íd}` - Get slide label image
+- `GET /v3/slides/macro/max_size/{max_x}/{max_y}?slide={slide_íd}` - Get slide macro image
 
 The last five endpoints all return image data. The image format and its quality (e.g. for jpeg) can be selected. Formats include jpeg, png, tiff, bmp, gif.
 
@@ -79,9 +79,9 @@ The server then offers these sets of endpoints that allow you querying the slide
 and case relationship:
 
 - `GET /v3/cases/` - Get cases
-- `GET /v3/cases/slides?case={case}` - Get available slides
-- `GET /v3/slides?slide={slide}` - Get slide
-- `GET /v3/slides/storage?slide={slide}` - Get slide storage information
+- `GET /v3/cases/slides?case_id={case}` - Get available slides
+- `GET /v3/slides?slide_id={slide}` - Get slide
+- `GET /v3/slides/storage?slide_id={slide}` - Get slide storage information
 
 Get a detailed description of each endpoint by running the WSI Service (see _Getting started_ section) and accessing the included Swagger UI [http://localhost:8080/docs](http://localhost:8080/docs).
 
