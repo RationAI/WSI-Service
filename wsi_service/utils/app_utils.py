@@ -202,7 +202,7 @@ def local_mode_collect_secondary_files_v3(main_address: str, storage_address_id:
             StorageAddress(
                 address=local_mode_abs_file_path_to_relative(f, relative_to),
                 main_address=False,
-                storage_address_id=uuid.uuid4(),
+                storage_address_id=str(uuid.uuid4()),
                 slide_id=slide_id,
         ), glob.glob(os.path.join(abspath, "*.dcm"))))
 
@@ -217,7 +217,7 @@ def local_mode_collect_secondary_files_v3(main_address: str, storage_address_id:
             StorageAddress(
                 address=local_mode_abs_file_path_to_relative(f, relative_to),
                 main_address=False,
-                storage_address_id=uuid.uuid4(),
+                storage_address_id=str(uuid.uuid4()),
                 slide_id=slide_id)
             for f in additional_files
         ]
