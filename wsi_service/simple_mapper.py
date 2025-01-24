@@ -9,7 +9,8 @@ from filelock import FileLock
 from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper
 from wsi_service.custom_models.old_v3.storage import SlideStorage, StorageAddress
 from wsi_service.plugins import is_supported_format
-
+from wsi_service.utils.app_utils import local_mode_collect_secondary_files_v3
+from wsi_service.singletons import logger
 
 class SimpleMapper:
     def __init__(self, data_dir):
@@ -79,21 +80,17 @@ class SimpleMapper:
                 slide_id = uuid5(NAMESPACE_URL, local_case_id + case_file).hex
                 if slide_id not in self.slide_map:
                     self.case_map[case_id].slides.append(slide_id)
-                    address = absfile.replace(data_dir + "/", "")
+                    addresses = local_mode_collect_secondary_files_v3(absfile, slide_id, slide_id, data_dir)
+                    logger.info(addresses)
+
+                    # TODO: missing support for secondary storage addresses - download does not work
                     self.slide_map[slide_id] = SlideLocalMapper(
                         id=slide_id,
                         local_id=case_file,
                         slide_storage=SlideStorage(
                             slide_id=slide_id,
                             storage_type="fs",
-                            storage_addresses=[
-                                StorageAddress(
-                                    address=address,
-                                    main_address=True,
-                                    storage_address_id=slide_id,
-                                    slide_id=slide_id,
-                                )
-                            ],
+                            storage_addresses=addresses,
                         ),
                     )
 

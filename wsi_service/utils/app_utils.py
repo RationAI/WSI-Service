@@ -1,5 +1,9 @@
+import glob
 import re
+import uuid
 from io import BytesIO
+import os
+from pathlib import Path
 
 import numpy as np
 import tifffile
@@ -7,7 +11,8 @@ from fastapi import HTTPException
 from PIL import Image
 from starlette.responses import Response
 
-from wsi_service.singletons import settings
+from wsi_service.custom_models.old_v3.storage import StorageAddress
+from wsi_service.singletons import settings, logger
 from wsi_service.utils.image_utils import (
     convert_narray_to_pil_image,
     convert_rgb_image_for_channels,
@@ -175,3 +180,56 @@ def validate_image_level(slide_info, level):
             detail="The requested pyramid level is not available. "
             + f"The coarsest available level is {len(slide_info.levels) - 1}.",
         )
+
+
+def local_mode_abs_file_path_to_relative(filepath: str, server_data_root: str):
+    if not server_data_root.endswith("/"):
+        server_data_root = server_data_root + "/"
+    return filepath.replace(server_data_root, "")
+
+
+def local_mode_collect_secondary_files_v3(main_address: str, storage_address_id: str, slide_id: str, relative_to: str):
+    abspath = relpath = main_address
+    if main_address.startswith(relative_to):
+        relpath = abspath.replace(relative_to + "/", "")
+    else:
+        abspath = os.path.join(relative_to, relpath)
+
+    logger.info(f"{abspath } { relpath }  { relative_to}")
+    # Dicom
+    if os.path.isdir(abspath):
+        result = list(map(lambda f:
+            StorageAddress(
+                address=local_mode_abs_file_path_to_relative(f, relative_to),
+                main_address=False,
+                storage_address_id=uuid.uuid4(),
+                slide_id=slide_id,
+        ), glob.glob(os.path.join(abspath, "*.dcm"))))
+
+    # MIRAX
+    elif abspath.endswith(".mrxs"):
+        path = Path(abspath)
+        parent_folder = path.parent
+        file_basename = path.stem
+
+        additional_files = glob.glob(os.path.join(parent_folder, file_basename, "*"))
+        result = [
+            StorageAddress(
+                address=local_mode_abs_file_path_to_relative(f, relative_to),
+                main_address=False,
+                storage_address_id=uuid.uuid4(),
+                slide_id=slide_id)
+            for f in additional_files
+        ]
+
+    # Other supported files are typically single file
+    else:
+        result = []
+
+    result.append(StorageAddress(
+        address=relpath,
+        main_address=True,
+        storage_address_id=storage_address_id,
+        slide_id=slide_id,
+    ))
+    return result

@@ -10,6 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper
 from wsi_service.custom_models.old_v3.storage import SlideStorage, StorageAddress
+from wsi_service.utils.app_utils import local_mode_collect_secondary_files_v3
 from wsi_service.singletons import logger
 
 class CSVMapperSettings(BaseSettings):
@@ -66,12 +67,12 @@ def create_case_object(settings, row):
     return case
 
 
-def create_slide_object(settings, case, row):
+def create_slide_object(settings, case, row, server_root):
     slide_local_id = row[settings.slide_id]
     type = "w"
 
     local_id = case.group_1 + "." + case.group_2 + "." + type + "." + str(slide_local_id)
-
+    addresses = local_mode_collect_secondary_files_v3(row[settings.path], local_id, local_id, server_root)
     slide = IteratedSlideLocalMapper(
         id=local_id,
         context_id=str(slide_local_id),
@@ -83,14 +84,7 @@ def create_slide_object(settings, case, row):
         slide_storage=SlideStorage(
             slide_id=local_id,
             storage_type="fs",
-            storage_addresses=[
-                StorageAddress(
-                    address=row[settings.path],
-                    main_address=True,
-                    storage_address_id=local_id,
-                    slide_id=local_id,
-                )
-            ],
+            storage_addresses=addresses,
         ),
     )
     return slide
@@ -156,7 +150,7 @@ class CSVMapper:
                 if case is None:
                     case = create_case_object(settings=settings, row=data)
                     case_map[case.id] = case
-                slide = create_slide_object(settings=settings, case=case, row=data)
+                slide = create_slide_object(settings=settings, case=case, row=data, server_root=self.data_dir)
                 case.slides.append(slide.id)
                 slide_map[slide.id] = slide
         # successful: merge only now

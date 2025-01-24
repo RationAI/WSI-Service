@@ -23,8 +23,45 @@ WORKDIR /wsi-service/wsi_service_base_plugins/wsidicom
 RUN poetry build && poetry export -f requirements.txt > requirements.txt
 
 
+# Todo dev image does not install properly requirements from plugins...
 FROM wsi_service_build AS wsi_service_dev
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    build-essential meson ninja-build zlib1g-dev libzstd-dev libpng-dev \
+    libjpeg-dev libtiff-dev libopenjp2-7-dev libgdk-pixbuf2.0-dev \
+    libxml2-dev sqlite3 libsqlite3-dev libcairo2-dev libglib2.0-dev libdcmtk-dev \
+    libjpeg-turbo8-dev libzstd-dev libjxr-dev cmake git checkinstall
 
+# We currently use a forked version of openslide, once this is merged to openslide, adjust the
+# Dockerfile to use the original source including dynamic versioning
+
+# Building from branch not original source
+# https://github.com/openslide/openslide/pull/605
+RUN git clone https://github.com/iewchen/openslide.git /openslide-lib \
+  && cd /openslide-lib \
+  && meson setup builddir \
+  && meson compile -C builddir \
+  && meson install -C builddir
+
+WORKDIR /wsi-service
+RUN poetry lock --no-update && poetry install --no-root
+
+# Install dependencies for each plugin using Poetry
+WORKDIR /wsi-service/wsi_service_base_plugins/openslide
+RUN poetry install --no-root
+
+WORKDIR /wsi-service/wsi_service_base_plugins/pil
+RUN poetry install --no-root
+
+WORKDIR /wsi-service/wsi_service_base_plugins/tifffile
+RUN poetry install --no-root
+
+WORKDIR /wsi-service/wsi_service_base_plugins/tiffslide
+RUN poetry install --no-root
+
+WORKDIR /wsi-service/wsi_service_base_plugins/wsidicom
+RUN poetry install --no-root
+
+# Return to the main service
 WORKDIR /wsi-service
 RUN poetry install
 
