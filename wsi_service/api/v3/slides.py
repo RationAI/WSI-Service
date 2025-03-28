@@ -332,7 +332,6 @@ def add_routes_slides(app, settings, slide_manager):
     ##
     @app.get("/files/info", response_model=List[SlideInfo], tags=["Main Routes"])
     async def _(paths: str = IdListQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
-        logger.info("TEST")
         return await info(paths, plugin, payload, slide_manager)
 
     @app.get(
@@ -437,8 +436,6 @@ def add_routes_slides(app, settings, slide_manager):
     #############################################
     @app.get("/batch/info", response_model=List[SlideInfo], tags=["Main Routes"])
     async def _(slides: str = IdListQuery2, plugin: str = PluginQuery, payload=api_integration.global_depends()):
-        logger.info("TEST SLIDES")
-
         return await info(slides, plugin, payload, slide_manager)
 
     @app.get(
