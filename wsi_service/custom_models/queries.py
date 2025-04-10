@@ -8,7 +8,7 @@ IdQuery = Query(
 )
 
 ImageFormatsQuery = Query(
-    "jpeg", description="Image format (e.g. bmp, gif, jpeg, png, tiff). For raw image data choose tiff."
+    "jpeg", description="Image format (e.g. bmp, gif, jpeg, png, tiff). For raw image data choose 'tiff'. For raw byte stream choose 'raw'."
 )
 
 ImageQualityQuery = Query(
