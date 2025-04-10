@@ -91,6 +91,9 @@ class Slide(BaseSlide):
             padding_color,
         )
 
+    async def get_icc_profile(self):
+        raise HTTPException(404, "Icc profile not supported.")
+
     # private
 
     def __get_associated_image(self, associated_image_name):

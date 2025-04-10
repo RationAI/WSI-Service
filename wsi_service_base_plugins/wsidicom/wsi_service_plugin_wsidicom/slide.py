@@ -70,6 +70,9 @@ class Slide(BaseSlide):
         tile = self.dicom_slide.read_tile(level_dicom, (tile_x, tile_y))
         return rgba_to_rgb_with_background_color(tile, padding_color)
 
+    async def get_icc_profile(self):
+        raise HTTPException(404, "Icc profile not supported.")
+
     # private
 
     def __get_levels_dicom(self):

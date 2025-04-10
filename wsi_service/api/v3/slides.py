@@ -39,7 +39,7 @@ from wsi_service.utils.image_utils import (
     get_extended_tile,
 )
 from .singletons import api_integration
-from .slides_batch_api_helpers import thumbnail, info, tile, macro, label, batch
+from .slides_batch_api_helpers import thumbnail, info, tile, macro, label, batch, icc_profile
 
 
 def add_routes_slides(app, settings, slide_manager):
@@ -327,6 +327,17 @@ def add_routes_slides(app, settings, slide_manager):
             },
         )
 
+    @app.get("/slides/icc_profile", tags=["Main Routes"])
+    async def _(slide_id=IdQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
+        """
+        Download icc profile for a slide
+        """
+        await api_integration.allow_access_slide(auth_payload=payload, slide_id=slide_id, manager=slide_manager,
+                                                 plugin=plugin)
+        slide = await slide_manager.get_slide(slide_id, plugin=plugin)
+        profile = await slide.get_icc_profile()
+        return make_response(slide, image_tile, image_format, image_quality, image_channels)
+
     ##
     # NEW API ALLOWING BATCH ACCESS
     ##
@@ -431,6 +442,13 @@ def add_routes_slides(app, settings, slide_manager):
     ):
         return await batch(paths, levels, xs, ys, image_channels, z, padding_color, image_format, image_quality, plugin, payload, slide_manager)
 
+    @app.get("/files/icc_profile", tags=["Main Routes"])
+    async def _(paths: str = IdListQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
+        """
+        Download icc profile for a slide
+        """
+        return await icc_profile(paths, plugin, payload, slide_manager)
+
     #############################################
     # OLD ENDPOINTS FOR BACKWARDS COMPATIBILITY #
     #############################################
@@ -534,3 +552,10 @@ def add_routes_slides(app, settings, slide_manager):
             payload=api_integration.global_depends(),
     ):
         return await batch(slides, levels, xs, ys, image_channels, z, padding_color, image_format, image_quality, plugin, payload, slide_manager)
+
+    @app.get("/batch/icc_profile", tags=["Main Routes"])
+    async def _(paths: str = IdListQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
+        """
+        Download icc profile for a slide
+        """
+        return await icc_profile(paths, plugin, payload, slide_manager)

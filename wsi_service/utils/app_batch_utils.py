@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from PIL import Image
 from starlette.responses import Response
 
+from wsi_service.singletons import logger
 from wsi_service.models.v3.slide import SlideInfo
 from wsi_service.utils.image_utils import (
     save_rgb_image
@@ -21,10 +22,12 @@ from wsi_service.utils.app_utils import (
     alternative_spellings
 )
 
+
 async def safe_get_slide(slide_manager, path, plugin):
     try:
         return await slide_manager.get_slide(path, plugin=plugin)
     except Exception as e:
+        logger.error(e)
         return None  # todo consider keeping the error message
 
 
@@ -41,6 +44,17 @@ async def safe_get_slide_info(slide):
     try:
         return await slide.get_info()
     except Exception as e:
+        logger.error(e)
+        return None  # todo consider keeping the error message
+
+
+async def safe_get_slide_icc_profile(slide):
+    if slide is None:
+        return None
+    try:
+        return await slide.get_icc_profile()
+    except Exception as e:
+        logger.error(e)
         return None  # todo consider keeping the error message
 
 
@@ -52,12 +66,15 @@ def batch_safe_make_response(slides, image_regions, image_format, image_quality,
             image_region = image_regions[i]
             slide = slides[i]
 
-            if isinstance(image_region, bytes):
-                if image_format == "jpeg":
-                    zip.writestr(f't{i + 1}.jpeg', image_region)
-                    continue
-                else:
-                    image_region = Image.open(BytesIO(image_region))
+            if image_format != "raw":
+                if isinstance(image_region, bytes):
+                    if image_format == "jpeg":
+                        zip.writestr(f't{i + 1}.jpeg', image_region)
+                        continue
+                    else:
+                        image_region = Image.open(BytesIO(image_region))
+            else:
+                zip.writestr(f't{i + 1}.raw', image_region)
 
             if image_format == "tiff":
                 mem = BytesIO()
@@ -120,6 +137,7 @@ async def batch_safe_get_region(slide,
         #         slide.get_region, slide_info, level, start_x, start_y, size_x, size_y, padding_color=vp_color, z=z)
         return await slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=vp_color, z=z)
     except Exception as e:
+        logger.error(e)
         return None
 
 
@@ -144,4 +162,5 @@ async def batch_safe_get_tile(slide,
         tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
         return tile
     except Exception as e:
+        logger.error(e)
         return None

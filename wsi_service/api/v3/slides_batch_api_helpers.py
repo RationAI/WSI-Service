@@ -13,6 +13,7 @@ from wsi_service.utils.app_batch_utils import (
     batch_safe_get_tile,
     safe_get_slide,
     safe_get_slide_info,
+    safe_get_slide_icc_profile
 )
 from .singletons import api_integration
 
@@ -203,3 +204,23 @@ async def batch(
 
     regions = await asyncio.gather(*requests)
     return batch_safe_make_response(slides, regions, image_format, image_quality, image_channels)
+
+
+async def icc_profile(
+        paths: str,
+        plugin: str,
+        payload,
+        slide_manager
+):
+    slide_ids = paths.split(",")
+    requests = [
+        api_integration.allow_access_slide(auth_payload=payload, slide_id=sid, manager=slide_manager, plugin=plugin)
+        for sid in slide_ids]
+    await asyncio.gather(*requests)
+
+    requests = map(lambda sid: safe_get_slide(slide_manager, sid, plugin=plugin), slide_ids)
+    slides = await asyncio.gather(*requests)
+
+    requests = map(safe_get_slide_icc_profile, slides)
+    profiles = await asyncio.gather(*requests)
+    return batch_safe_make_response(slides, profiles, "raw", None, None)

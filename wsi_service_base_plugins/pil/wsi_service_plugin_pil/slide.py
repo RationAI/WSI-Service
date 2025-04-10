@@ -62,14 +62,19 @@ class Slide(BaseSlide):
             z=z,
         )
 
-    def _get_associated_image(self, associated_image_name):
-        raise HTTPException(
-            status_code=404,
-            detail=f"Associated image {associated_image_name} does not exist.",
-        )
-
     async def get_label(self):
         self._get_associated_image("label")
 
     async def get_macro(self):
         self._get_associated_image("macro")
+
+    async def get_icc_profile(self):
+        raise HTTPException(404, "Icc profile not supported.")
+
+    # private
+
+    def _get_associated_image(self, associated_image_name):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Associated image {associated_image_name} does not exist.",
+        )

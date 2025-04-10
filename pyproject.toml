@@ -6,7 +6,7 @@ authors = ["RationAI <469130@mail.muni.cz>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = ">=3.10,<3.12"
 pydantic = {extras = ["dotenv"], version = "^2.0.0"}
 fastapi = "^0.109.0"
 requests = "^2.27.1"
@@ -27,6 +27,8 @@ pydantic-settings = "^2.0.2"
 six = "^1.16.0"
 PyJWT = "^2.1.0"
 cryptography = "^42.0.0"
+# This is because
+botocore = "==1.29.123"
 
 [tool.poetry.dev-dependencies]
 aioresponses = "^0.7.3"
@@ -46,6 +48,7 @@ wsi-service-plugin-pil = { path = "wsi_service_base_plugins/pil", develop = true
 wsi-service-plugin-tifffile = { path = "wsi_service_base_plugins/tifffile", develop = true }
 wsi-service-plugin-tiffslide = { path = "wsi_service_base_plugins/tiffslide", develop = true }
 wsi-service-plugin-wsidicom = { path = "wsi_service_base_plugins/wsidicom", develop = true }
+wsi-service-plugin-bioio = { path = "wsi_service_base_plugins/bioio", develop = true }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

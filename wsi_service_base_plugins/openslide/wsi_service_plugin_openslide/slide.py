@@ -4,12 +4,15 @@ import os
 import openslide
 from fastapi import HTTPException
 
+from PIL import ImageCms
+from io import BytesIO
+
 from wsi_service.models.v3.slide import SlideExtent, SlideInfo, SlidePixelSizeNm
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
 from wsi_service.utils.image_utils import rgba_to_rgb_with_background_color
 from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list
-
+from wsi_service.singletons import logger
 
 class Slide(BaseSlide):
     supported_vendors = [
@@ -21,6 +24,7 @@ class Slide(BaseSlide):
         "trestle",
         "philips",
         "zeiss",
+        "dicom"
     ]
 
     async def open(self, filepath):
@@ -30,6 +34,9 @@ class Slide(BaseSlide):
         self.slide_info = self.__get_slide_info_openslide()
         await self.close()
         await self.open_slide()
+        self.__read_icc()
+
+        self.__prof = ImageCms.createProfile('sRGB')
 
     async def open_slide(self):
         try:
@@ -53,6 +60,11 @@ class Slide(BaseSlide):
         )
         try:
             img = self.slide.read_region(level_0_location, level, (size_x, size_y))
+
+
+            transform = ImageCms.buildTransform(self.slide.color_profile, self.__prof, 'RGBA', 'RGBA')
+            img = ImageCms.applyTransform(img, transform)
+
         except openslide.OpenSlideError as e:
             raise HTTPException(status_code=500, detail=f"OpenSlideError: {e}")
         rgb_img = rgba_to_rgb_with_background_color(img, padding_color)
@@ -86,13 +98,21 @@ class Slide(BaseSlide):
             padding_color,
         )
 
+    async def get_icc_profile(self):
+        profile = self.slide.color_profile
+        if profile:
+            return profile.tobytes()
+
+        raise HTTPException(404, "Icc profile not supported.")
+
     # private
 
     def __check_and_adapt_filepath(self, filepath):
         if os.path.isdir(filepath):
-            vsf_files = glob.glob(os.path.join(filepath, "*.vsf"))
-            if len(vsf_files) > 0:
-                filepath = vsf_files[0]
+            # dir_files = glob.glob(os.path.join(filepath, "*.vsf"))
+            dir_files = glob.glob(os.path.join(filepath, "*.dcm"))
+            if len(dir_files) > 0:
+                filepath = dir_files[0]
         return filepath
 
     def __get_associated_image(self, associated_image_name):
