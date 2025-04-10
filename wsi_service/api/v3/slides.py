@@ -336,7 +336,7 @@ def add_routes_slides(app, settings, slide_manager):
                                                  plugin=plugin)
         slide = await slide_manager.get_slide(slide_id, plugin=plugin)
         profile = await slide.get_icc_profile()
-        return make_response(slide, image_tile, image_format, image_quality, image_channels)
+        return make_response(slide, profile, "raw", None, None)
 
     ##
     # NEW API ALLOWING BATCH ACCESS
