@@ -32,7 +32,7 @@ class Slide(BaseSlide):
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0, icc_intent=None):
         if padding_color is None:
             padding_color = settings.padding_color
         downsample_factor = self.slide_info.levels[level].downsample_factor
@@ -48,12 +48,13 @@ class Slide(BaseSlide):
         rgb_img = rgba_to_rgb_with_background_color(img, padding_color)
         return rgb_img
 
-    async def get_thumbnail(self, max_x, max_y):
+    async def get_thumbnail(self, max_x, max_y, icc_intent=None):
         if not hasattr(self, "thumbnail"):
             try:
                 self.thumbnail = self.__get_associated_image("thumbnail")
             except HTTPException:
-                self.thumbnail = await self.__get_thumbnail(settings.max_thumbnail_size, settings.max_thumbnail_size)
+                self.thumbnail = await self.__get_thumbnail(settings.max_thumbnail_size,
+                                                            settings.max_thumbnail_size, icc_intent)
         thumbnail = self.thumbnail.copy()
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
@@ -61,10 +62,10 @@ class Slide(BaseSlide):
     async def get_label(self):
         return self.__get_associated_image("label")
 
-    async def get_macro(self):
+    async def get_macro(self, icc_intent=None):
         return self.__get_associated_image("macro")
 
-    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0, icc_intent=None):
         if self.is_jpeg_compression:
             tif_level = self.__get_tif_level_for_slide_level(level)
             page = tif_level.pages[0]
@@ -79,6 +80,7 @@ class Slide(BaseSlide):
                 self.slide_info.tile_extent.x,
                 self.slide_info.tile_extent.y,
                 padding_color,
+                icc_intent
             )
 
     async def get_icc_profile(self):
@@ -158,7 +160,7 @@ class Slide(BaseSlide):
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
 
-    async def __get_thumbnail(self, max_x, max_y):
+    async def __get_thumbnail(self, max_x, max_y, icc_intent):
         level = self.__get_best_level_for_thumbnail(max_x, max_y)
 
         try:
@@ -168,6 +170,7 @@ class Slide(BaseSlide):
                 0,
                 self.slide_info.levels[level].extent.x,
                 self.slide_info.levels[level].extent.y,
+                icc_intent
             )
         except HTTPException as e:
             raise HTTPException(

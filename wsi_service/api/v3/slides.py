@@ -12,7 +12,7 @@ from wsi_service.custom_models.queries import (
     ImagePaddingColorQuery,
     ImageQualityQuery,
     PluginQuery,
-    ZStackQuery, IdQuery,
+    ZStackQuery, IdQuery, ICCProfileIntent,
 )
 from wsi_service.custom_models.responses import ImageRegionResponse, ImageResponses
 from wsi_service.models.v3.slide import SlideInfo
@@ -69,6 +69,7 @@ def add_routes_slides(app, settings, slide_manager):
             ),
             image_format: str = ImageFormatsQuery,
             image_quality: int = ImageQualityQuery,
+            apply_icc_intent: str = ICCProfileIntent,
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
@@ -85,7 +86,7 @@ def add_routes_slides(app, settings, slide_manager):
         await api_integration.allow_access_slide(auth_payload=payload, slide_id=slide_id, manager=slide_manager,
                                                  plugin=plugin)
         slide = await slide_manager.get_slide(slide_id, plugin=plugin)
-        thumbnail = await slide.get_thumbnail(max_x, max_y)
+        thumbnail = await slide.get_thumbnail(max_x, max_y, apply_icc_intent)
         return make_response(slide, thumbnail, image_format, image_quality)
 
     @app.get(
@@ -132,6 +133,7 @@ def add_routes_slides(app, settings, slide_manager):
             max_y: int = Path(examples=[100], description="Maximum height of macro image"),
             image_format: str = ImageFormatsQuery,
             image_quality: int = ImageQualityQuery,
+            apply_icc_intent: str = ICCProfileIntent,
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
@@ -148,7 +150,7 @@ def add_routes_slides(app, settings, slide_manager):
         await api_integration.allow_access_slide(auth_payload=payload, slide_id=slide_id, manager=slide_manager,
                                                  plugin=plugin)
         slide = await slide_manager.get_slide(slide_id, plugin=plugin)
-        macro = await slide.get_macro()
+        macro = await slide.get_macro(apply_icc_intent)
         macro.thumbnail((max_x, max_y), Image.Resampling.LANCZOS)
         return make_response(slide, macro, image_format, image_quality)
 
@@ -170,6 +172,7 @@ def add_routes_slides(app, settings, slide_manager):
             padding_color: str = ImagePaddingColorQuery,
             image_format: str = ImageFormatsQuery,
             image_quality: int = ImageQualityQuery,
+            apply_icc_intent: str = ICCProfileIntent,
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
@@ -223,11 +226,13 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_level(slide_info, level)
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
-        if check_complete_region_overlap(slide_info, level, start_x, start_y, size_x, size_y):
-            image_region = await slide.get_region(level, start_x, start_y, size_x, size_y, padding_color=vp_color, z=z)
+        if not settings.apply_padding or check_complete_region_overlap(slide_info, level, start_x, start_y, size_x, size_y):
+            image_region = await slide.get_region(level, start_x, start_y, size_x, size_y,
+                                                  padding_color=vp_color, z=z, icc_intent=apply_icc_intent)
         else:
             image_region = await get_extended_region(
-                slide.get_region, slide_info, level, start_x, start_y, size_x, size_y, padding_color=vp_color, z=z
+                slide.get_region, slide_info, level, start_x, start_y, size_x, size_y,
+                padding_color=vp_color, z=z, icc_intent=apply_icc_intent
             )
         return make_response(slide, image_region, image_format, image_quality, image_channels)
 
@@ -247,6 +252,7 @@ def add_routes_slides(app, settings, slide_manager):
             padding_color: str = ImagePaddingColorQuery,
             image_format: str = ImageFormatsQuery,
             image_quality: int = ImageQualityQuery,
+            apply_icc_intent: str = ICCProfileIntent,
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
@@ -297,11 +303,11 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_level(slide_info, level)
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
-        if check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
-            image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z)
+        if not settings.apply_padding or check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
+            image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z, icc_intent=apply_icc_intent)
         else:
             image_tile = await get_extended_tile(
-                slide.get_tile, slide_info, level, tile_x, tile_y, padding_color=vp_color, z=z
+                slide.get_tile, slide_info, level, tile_x, tile_y, padding_color=vp_color, z=z, icc_intent=apply_icc_intent
             )
         return make_response(slide, image_tile, image_format, image_quality, image_channels)
 
@@ -359,10 +365,11 @@ def add_routes_slides(app, settings, slide_manager):
                               description="Maximum height of thumbnail"),
             image_format: str = ImageFormatsQuery,
             image_quality: int = ImageQualityQuery,
+            apply_icc_intent: str = ICCProfileIntent,
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
-        return await thumbnail(paths, max_x, max_y, image_format, image_quality, plugin, payload, slide_manager)
+        return await thumbnail(paths, max_x, max_y, image_format, image_quality, plugin, payload, slide_manager, apply_icc_intent)
 
     @app.get(
         "/files/label/max_size/{max_x}/{max_y}",
@@ -393,10 +400,12 @@ def add_routes_slides(app, settings, slide_manager):
             max_y: int = Path(example=100, description="Maximum height of macro image"),
             image_format: str = ImageFormatsQuery,
             image_quality: int = ImageQualityQuery,
+            apply_icc_intent: str = ICCProfileIntent,
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
-        return await macro(paths, max_x, max_y, image_format, image_quality, plugin, payload, slide_manager)
+        return await macro(paths, max_x, max_y, image_format, image_quality, apply_icc_intent,
+                           plugin, payload, slide_manager)
 
     @app.get(
         "/files/tile/level/{level}/tile/{tile_x}/{tile_y}",
@@ -414,10 +423,12 @@ def add_routes_slides(app, settings, slide_manager):
             padding_color: str = ImagePaddingColorQuery,
             image_format: str = ImageFormatsQuery,
             image_quality: int = ImageQualityQuery,
+            apply_icc_intent: str = ICCProfileIntent,
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
-        return await tile(paths, level, tile_x, tile_y, image_channels, z, padding_color, image_format, image_quality, plugin, payload, slide_manager)
+        return await tile(paths, level, tile_x, tile_y, image_channels, z, padding_color, image_format, image_quality,
+                          apply_icc_intent, plugin, payload, slide_manager)
 
 
     # To allow for diverse regions etc..
@@ -437,10 +448,12 @@ def add_routes_slides(app, settings, slide_manager):
             padding_color: str = ImagePaddingColorQuery,
             image_format: str = ImageFormatsQuery,
             image_quality: int = ImageQualityQuery,
+            apply_icc_intent: str = ICCProfileIntent,
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
-        return await batch(paths, levels, xs, ys, image_channels, z, padding_color, image_format, image_quality, plugin, payload, slide_manager)
+        return await batch(paths, levels, xs, ys, image_channels, z, padding_color, image_format, image_quality,
+                           apply_icc_intent, plugin, payload, slide_manager)
 
     @app.get("/files/icc_profile", tags=["Main Routes"])
     async def _(paths: str = IdListQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):
@@ -470,10 +483,12 @@ def add_routes_slides(app, settings, slide_manager):
                               description="Maximum height of thumbnail"),
             image_format: str = ImageFormatsQuery,
             image_quality: int = ImageQualityQuery,
+            apply_icc_intent: str = ICCProfileIntent,
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
-        return await thumbnail(slides, max_x, max_y, image_format, image_quality, plugin, payload, slide_manager)
+        return await thumbnail(slides, max_x, max_y, image_format, image_quality, apply_icc_intent,
+                               plugin, payload, slide_manager)
 
     @app.get(
         "/batch/label/max_size/{max_x}/{max_y}",
@@ -504,10 +519,12 @@ def add_routes_slides(app, settings, slide_manager):
             max_y: int = Path(example=100, description="Maximum height of macro image"),
             image_format: str = ImageFormatsQuery,
             image_quality: int = ImageQualityQuery,
+            apply_icc_intent: str = ICCProfileIntent,
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
-        return await macro(slides, max_x, max_y, image_format, image_quality, plugin, payload, slide_manager)
+        return await macro(slides, max_x, max_y, image_format, image_quality, apply_icc_intent,
+                           plugin, payload, slide_manager)
 
     @app.get(
         "/batch/tile/level/{level}/tile/{tile_x}/{tile_y}",
@@ -525,11 +542,12 @@ def add_routes_slides(app, settings, slide_manager):
             padding_color: str = ImagePaddingColorQuery,
             image_format: str = ImageFormatsQuery,
             image_quality: int = ImageQualityQuery,
+            apply_icc_intent: str = ICCProfileIntent,
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
         return await tile(slides, level, tile_x, tile_y, image_channels, z,
-                          padding_color, image_format, image_quality,
+                          padding_color, image_format, image_quality, apply_icc_intent,
                           plugin, payload, slide_manager)
 
     @app.get(
@@ -548,10 +566,12 @@ def add_routes_slides(app, settings, slide_manager):
             padding_color: str = ImagePaddingColorQuery,
             image_format: str = ImageFormatsQuery,
             image_quality: int = ImageQualityQuery,
+            apply_icc_intent: str = ICCProfileIntent,
             plugin: str = PluginQuery,
             payload=api_integration.global_depends(),
     ):
-        return await batch(slides, levels, xs, ys, image_channels, z, padding_color, image_format, image_quality, plugin, payload, slide_manager)
+        return await batch(slides, levels, xs, ys, image_channels, z, padding_color, image_format, image_quality,
+                           apply_icc_intent, plugin, payload, slide_manager)
 
     @app.get("/batch/icc_profile", tags=["Main Routes"])
     async def _(paths: str = IdListQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):

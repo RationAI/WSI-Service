@@ -33,7 +33,7 @@ class Slide(BaseSlide):
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0, icc_intent=None):
         if padding_color is None:
             padding_color = settings.padding_color
         region = self.slide_image.crop(
@@ -46,12 +46,12 @@ class Slide(BaseSlide):
         )
         return region
 
-    async def get_thumbnail(self, max_x, max_y):
+    async def get_thumbnail(self, max_x, max_y, icc_intent=None):
         thumbnail = self.slide_image.copy()
         thumbnail.thumbnail((max_x, max_y))
         return thumbnail
 
-    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0, icc_intent=None):
         return await self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
@@ -60,12 +60,13 @@ class Slide(BaseSlide):
             self.slide_info.tile_extent.y,
             padding_color=padding_color,
             z=z,
+            icc_intent=icc_intent
         )
 
     async def get_label(self):
         self._get_associated_image("label")
 
-    async def get_macro(self):
+    async def get_macro(self, icc_intent=None):
         self._get_associated_image("macro")
 
     async def get_icc_profile(self):

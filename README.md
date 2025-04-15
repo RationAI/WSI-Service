@@ -51,6 +51,19 @@ The region and the tile endpoint also offer the selection of a layer with the in
 
 Get a detailed description of each endpoint by running the WSI Service (see _Getting started_ section) and accessing the included Swagger UI [http://localhost:8080/v3/docs](http://localhost:8080/v3/docs).
 
+### ICC Profiles
+
+Icc profiles can be requested by endpoint:
+
+- `GET /v3/slides/icc_profile?slide={slide_íd}` - Get icc profile bytes (gzipped)
+
+Or requested to be applied on the server. The request is an optional query parameter
+``apply_icc_intent`` with one of `'PERCEPTUAL', 'RELATIVE_COLORIMETRIC', 'SATURATION', 'ABSOLUTE_COLORIMETRIC'`.
+The application is, however, optional and up to the server to decide.
+
+> **Note:** For now only tile and region endpoints for ``openslide`` plugin implement the icc profile functionality.
+
+
 ## The Ecosystem
 
 In the original Empaia implementation, the WSI service interacted with other 
