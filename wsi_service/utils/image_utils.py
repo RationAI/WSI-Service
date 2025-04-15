@@ -153,7 +153,8 @@ def check_complete_region_overlap(slide_info, level, start_x, start_y, size_x, s
     )
 
 
-async def get_extended_region(get_region, slide_info, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+async def get_extended_region(get_region, slide_info, level, start_x, start_y, size_x, size_y,
+                              padding_color=None, z=0, icc_intent=None):
     # check overlap of requested region and slide
     overlap = (start_x + size_x > 0 and start_x < slide_info.levels[level].extent.x) and (
         start_y + size_y > 0 and start_y < slide_info.levels[level].extent.y
@@ -182,6 +183,7 @@ async def get_extended_region(get_region, slide_info, level, start_x, start_y, s
             overlap_size_y,
             padding_color=padding_color,
             z=z,
+            icc_intent=icc_intent
         )
     # create empty region based on returned region data type
     if overlap:
@@ -219,13 +221,13 @@ def check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
     return tile_x >= 0 and tile_y >= 0 and tile_x < tile_count_x and tile_y < tile_count_y
 
 
-async def get_extended_tile(get_tile, slide_info, level, tile_x, tile_y, padding_color=None, z=0):
+async def get_extended_tile(get_tile, slide_info, level, tile_x, tile_y, padding_color=None, z=0, icc_intent=None):
     overlap_size_x = slide_info.levels[level].extent.x - tile_x * slide_info.tile_extent.x
     overlap_size_y = slide_info.levels[level].extent.y - tile_y * slide_info.tile_extent.y
     overlap = tile_x >= 0 and tile_y >= 0 and overlap_size_x > 0 and overlap_size_y > 0
     # get overlapping tile if there is an overlap
     if overlap:
-        image_tile_overlap = await get_tile(level, tile_x, tile_y, padding_color=padding_color, z=z)
+        image_tile_overlap = await get_tile(level, tile_x, tile_y, padding_color=padding_color, z=z, icc_intent=icc_intent)
         if isinstance(image_tile_overlap, bytes):
             image_tile_overlap = Image.open(BytesIO(image_tile_overlap))
     # create empty tile based on returned tile data type

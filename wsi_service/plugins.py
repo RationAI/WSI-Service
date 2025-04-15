@@ -6,6 +6,8 @@ from importlib.metadata import version as version_from_name
 
 from fastapi import HTTPException
 
+from wsi_service.singletons import logger
+
 from wsi_service.custom_models.service_status import PluginInfo
 
 plugins = {
@@ -14,12 +16,13 @@ plugins = {
     if name.startswith("wsi_service_plugin_")
 }
 
-
 async def load_slide(filepath, plugin=None):
     if not (os.path.exists(filepath)):
         raise HTTPException(status_code=500, detail=f"File {filepath} not found.")
 
     supported_plugins = _get_supported_plugins(filepath)
+    logger.info("Slide supports %s", supported_plugins)
+
     if len(supported_plugins) == 0:
         raise HTTPException(status_code=500, detail="There is no plugin available that does support this slide.")
 
@@ -35,6 +38,7 @@ async def load_slide(filepath, plugin=None):
     exception_details = ""
     for plugin_name, plugin in _get_sorted_plugins(supported_plugins):
         try:
+            logger.info("ATTEMPT TO USE %s", plugin_name)
             return await _open_slide(plugin, plugin_name, filepath)
         except HTTPException as e:
             exception_details += e.detail + ". "
@@ -84,6 +88,7 @@ def _get_plugin_priority(plugin_item):
 
 async def _open_slide(plugin, plugin_name, filepath):
     try:
+        logger.info("Using plugin %s", plugin_name)
         slide = await plugin.open(filepath)
         slide.plugin = plugin_name
     except HTTPException as e:

@@ -4,12 +4,13 @@ import os
 import openslide
 from fastapi import HTTPException
 
+from PIL import ImageCms
+
 from wsi_service.models.v3.slide import SlideExtent, SlideInfo, SlidePixelSizeNm
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
 from wsi_service.utils.image_utils import rgba_to_rgb_with_background_color
 from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list
-
 
 class Slide(BaseSlide):
     supported_vendors = [
@@ -21,6 +22,7 @@ class Slide(BaseSlide):
         "trestle",
         "philips",
         "zeiss",
+        "dicom"
     ]
 
     async def open(self, filepath):
@@ -28,8 +30,7 @@ class Slide(BaseSlide):
         await self.open_slide()
         self.format = self.slide.detect_format(self.filepath)
         self.slide_info = self.__get_slide_info_openslide()
-        await self.close()
-        await self.open_slide()
+        self.__transform = None
 
     async def open_slide(self):
         try:
@@ -43,7 +44,7 @@ class Slide(BaseSlide):
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0, icc_intent=None):
         if padding_color is None:
             padding_color = settings.padding_color
         downsample_factor = self.slide_info.levels[level].downsample_factor
@@ -53,18 +54,25 @@ class Slide(BaseSlide):
         )
         try:
             img = self.slide.read_region(level_0_location, level, (size_x, size_y))
+
+            if not self.__transform:
+                self.__transform = ImageCms.buildTransform(self.slide.color_profile,
+                                                           ImageCms.createProfile('sRGB'), 'RGBA', 'RGBA')
+            img = ImageCms.applyTransform(img, self.__transform)
+
         except openslide.OpenSlideError as e:
             raise HTTPException(status_code=500, detail=f"OpenSlideError: {e}")
         rgb_img = rgba_to_rgb_with_background_color(img, padding_color)
         return rgb_img
 
-    async def get_thumbnail(self, max_x, max_y):
+    async def get_thumbnail(self, max_x, max_y, icc_intent=None):
+        # Todo: icc_intent not applied here and or macro, also not implemented in any other plugins
         if not hasattr(self, "thumbnail"):
             try:
                 self.thumbnail = self.__get_associated_image("thumbnail")
             except HTTPException:
                 self.thumbnail = await self.__get_thumbnail_openslide(
-                    settings.max_thumbnail_size, settings.max_thumbnail_size
+                    settings.max_thumbnail_size, settings.max_thumbnail_size, icc_intent
                 )
         thumbnail = self.thumbnail.copy()
         thumbnail.thumbnail((max_x, max_y))
@@ -73,10 +81,10 @@ class Slide(BaseSlide):
     async def get_label(self):
         return self.__get_associated_image("label")
 
-    async def get_macro(self):
+    async def get_macro(self, icc_intent=None):
         return self.__get_associated_image("macro")
 
-    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0, icc_intent=None):
         return await self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
@@ -84,15 +92,24 @@ class Slide(BaseSlide):
             self.slide_info.tile_extent.x,
             self.slide_info.tile_extent.y,
             padding_color,
+            icc_intent,
         )
+
+    async def get_icc_profile(self):
+        profile = self.slide.color_profile
+        if profile:
+            return profile.tobytes()
+
+        raise HTTPException(404, "Icc profile not supported.")
 
     # private
 
     def __check_and_adapt_filepath(self, filepath):
         if os.path.isdir(filepath):
-            vsf_files = glob.glob(os.path.join(filepath, "*.vsf"))
-            if len(vsf_files) > 0:
-                filepath = vsf_files[0]
+            # dir_files = glob.glob(os.path.join(filepath, "*.vsf"))
+            dir_files = glob.glob(os.path.join(filepath, "*.dcm"))
+            if len(dir_files) > 0:
+                filepath = dir_files[0]
         return filepath
 
     def __get_associated_image(self, associated_image_name):
@@ -177,7 +194,7 @@ class Slide(BaseSlide):
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
 
-    async def __get_thumbnail_openslide(self, max_x, max_y):
+    async def __get_thumbnail_openslide(self, max_x, max_y, icc_intent):
         level = self.__get_best_level_for_thumbnail(max_x, max_y)
         try:
             thumbnail = await self.get_region(
@@ -186,6 +203,7 @@ class Slide(BaseSlide):
                 0,
                 self.slide_info.levels[level].extent.x,
                 self.slide_info.levels[level].extent.y,
+                icc_intent
             )
         except HTTPException as e:
             raise HTTPException(

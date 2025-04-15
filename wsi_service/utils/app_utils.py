@@ -4,6 +4,7 @@ import uuid
 from io import BytesIO
 import os
 from pathlib import Path
+import gzip
 
 import numpy as np
 import tifffile
@@ -73,11 +74,26 @@ def process_image_region_raw(image_region, image_channels):
 
 
 def make_response(slide, image_region, image_format, image_quality, image_channels=None):
-    if isinstance(image_region, bytes):
-        if image_format == "jpeg":
-            return Response(image_region, media_type=supported_image_formats[image_format])
-        else:
-            image_region = Image.open(BytesIO(image_region))
+    if image_format != "raw":
+        if isinstance(image_region, bytes):
+            if image_format == "jpeg":
+                return Response(image_region, media_type=supported_image_formats[image_format])
+            else:
+                image_region = Image.open(BytesIO(image_region))
+    else:
+        buf = BytesIO()
+        with gzip.GzipFile(fileobj=buf, mode="wb") as f:
+            f.write(image_region)
+        compressed_data = buf.getvalue()
+        return Response(
+            content=compressed_data,
+            media_type="application/octet-stream",
+            headers={
+                "Content-Encoding": "gzip",
+                "Content-Length": str(len(compressed_data)),
+            }
+        )
+
     if image_format == "tiff":
         # return raw image region as tiff
         narray = process_image_region_raw(image_region, image_channels)

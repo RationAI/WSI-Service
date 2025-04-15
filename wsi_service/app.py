@@ -7,6 +7,8 @@ from wsi_service.api.root import add_routes_root
 from wsi_service.api.v3 import add_routes_v3
 from wsi_service.singletons import settings
 from wsi_service.slide_manager import SlideManager
+from wsi_service.plugins import plugins
+from wsi_service.singletons import logger
 
 openapi_url = "/openapi.json"
 if settings.disable_openapi:
@@ -22,7 +24,17 @@ slide_manager = SlideManager(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("🚀 LIFESPAN: startup")
+    for plugin_name, plugin in plugins.items():
+        if hasattr(plugin, "start") and callable(getattr(plugin, "start")):
+            plugin.start()
+
     yield
+
+    logger.info("💥 LIFESPAN: shutdown")
+    for plugin_name, plugin in plugins.items():
+        if hasattr(plugin, "stop") and callable(getattr(plugin, "stop")):
+            plugin.stop()
     slide_manager.close()
 
 

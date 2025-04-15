@@ -1,3 +1,5 @@
+from typing import Optional, Literal
+
 from fastapi import Query
 
 
@@ -8,7 +10,7 @@ IdQuery = Query(
 )
 
 ImageFormatsQuery = Query(
-    "jpeg", description="Image format (e.g. bmp, gif, jpeg, png, tiff). For raw image data choose tiff."
+    "jpeg", description="Image format (e.g. bmp, gif, jpeg, png, tiff). For raw image data choose 'tiff'. For raw byte stream choose 'raw'."
 )
 
 ImageQualityQuery = Query(
@@ -34,3 +36,9 @@ ImagePaddingColorQuery = Query(
 PluginQuery = Query(None, description="Select a specific WSI Service Plugin.")
 
 ZStackQuery = Query(0, ge=0, description="Z-Stack layer index z")
+
+ICCProfileIntent: Optional[Literal[
+    'PERCEPTUAL', 'RELATIVE_COLORIMETRIC', 'SATURATION', 'ABSOLUTE_COLORIMETRIC'
+]] = Query(
+    default=None, example="PERCEPTUAL", description="Request to apply icc profiles on data using desired intent."
+)

@@ -42,7 +42,7 @@ class Slide(BaseSlide):
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0, icc_intent=None):
         if padding_color is None:
             padding_color = settings.padding_color
         level_slide = self.slide_info.levels[level]
@@ -54,7 +54,7 @@ class Slide(BaseSlide):
         result = np.concatenate(result_array, axis=0)[:, :, :, 0]
         return result
 
-    async def get_thumbnail(self, max_x, max_y):
+    async def get_thumbnail(self, max_x, max_y, icc_intent=None):
         thumb_level = len(self.slide_info.levels) - 1
         for i, level in enumerate(self.slide_info.levels):
             if level.extent.x < max_x or level.extent.y < max_y:
@@ -67,17 +67,18 @@ class Slide(BaseSlide):
             max_y = max_y * (level_extent_y / level_extent_x)
         else:
             max_x = max_x * (level_extent_x / level_extent_y)
-        thumbnail_org = await self.get_region(thumb_level, 0, 0, level_extent_x, level_extent_y, settings.padding_color)
+        thumbnail_org = await self.get_region(thumb_level, 0, 0, level_extent_x, level_extent_y,
+                                              settings.padding_color, 0, icc_intent)
         thumbnail_resized = util.img_as_uint(transform.resize(thumbnail_org, (thumbnail_org.shape[0], max_y, max_x)))
         return thumbnail_resized
 
     async def get_label(self):
         self.__get_associated_image("label")
 
-    async def get_macro(self):
+    async def get_macro(self, icc_intent=None):
         self.__get_associated_image("macro")
 
-    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0, icc_intent=None):
         return await self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
@@ -85,7 +86,11 @@ class Slide(BaseSlide):
             self.slide_info.tile_extent.x,
             self.slide_info.tile_extent.y,
             padding_color,
+            icc_intent
         )
+
+    async def get_icc_profile(self):
+        raise HTTPException(404, "Icc profile not supported.")
 
     # private
 

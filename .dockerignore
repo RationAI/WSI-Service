@@ -1,3 +1,4 @@
 *__pycache__*
 wsi_service/tests/data/*
 .venv
+Dockerfile

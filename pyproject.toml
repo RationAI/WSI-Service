@@ -6,7 +6,7 @@ authors = ["RationAI <469130@mail.muni.cz>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = ">=3.10,<3.12"
 pydantic = {extras = ["dotenv"], version = "^2.0.0"}
 fastapi = "^0.109.0"
 requests = "^2.27.1"
@@ -27,6 +27,8 @@ pydantic-settings = "^2.0.2"
 six = "^1.16.0"
 PyJWT = "^2.1.0"
 cryptography = "^42.0.0"
+# This is because
+botocore = "==1.29.123"
 
 [tool.poetry.dev-dependencies]
 aioresponses = "^0.7.3"

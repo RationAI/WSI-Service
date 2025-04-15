@@ -11,10 +11,9 @@ from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_l
 
 class Slide(BaseSlide):
     async def open(self, filepath):
+        self.filepath = filepath
         await self.open_slide()
         self.slide_info = self.__get_slide_info_dicom()
-        await self.close()
-        await self.open_slide()
 
     async def open_slide(self):
         try:
@@ -28,7 +27,7 @@ class Slide(BaseSlide):
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0, icc_intent=None):
         if padding_color is None:
             padding_color = settings.padding_color
         level_dicom = self.dicom_slide.levels[level].level
@@ -40,7 +39,7 @@ class Slide(BaseSlide):
         rgb_img = rgba_to_rgb_with_background_color(img, padding_color)
         return rgb_img
 
-    async def get_thumbnail(self, max_x, max_y):
+    async def get_thumbnail(self, max_x, max_y, icc_intent=None):
         if not hasattr(self, "thumbnail"):
             self.thumbnail = await self.__get_thumbnail_dicom(settings.max_thumbnail_size, settings.max_thumbnail_size)
         thumbnail = self.thumbnail.copy()
@@ -56,7 +55,7 @@ class Slide(BaseSlide):
                 detail="Label image does not exist.",
             ) from e
 
-    async def get_macro(self):
+    async def get_macro(self, icc_intent=None):
         try:
             return self.dicom_slide.read_overview()
         except WsiDicomNotFoundError as e:
@@ -65,10 +64,13 @@ class Slide(BaseSlide):
                 detail="Macro image does not exist.",
             ) from e
 
-    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0, icc_intent=None):
         level_dicom = self.dicom_slide.levels[level].level
         tile = self.dicom_slide.read_tile(level_dicom, (tile_x, tile_y))
         return rgba_to_rgb_with_background_color(tile, padding_color)
+
+    async def get_icc_profile(self):
+        raise HTTPException(404, "Icc profile not supported.")
 
     # private
 
