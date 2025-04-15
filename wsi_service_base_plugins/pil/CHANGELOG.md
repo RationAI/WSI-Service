@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+
+- Increased tile size for better behavior
+
 ## 0.4.1
 
 - Updated dependencies

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.13.4
+- PIL plugin speed improvements
+
 ## 0.13.3
 - Cleanup
 

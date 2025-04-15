@@ -15,6 +15,8 @@ class Slide(BaseSlide):
             raise HTTPException(status_code=500, detail="PIL Unidentified Image Error")
         self.slide_image = Image.open(filepath).convert("RGB")
         width, height = self.slide_image.size
+
+
         channels = get_rgb_channel_list()
         self.slide_info = SlideInfo(
             id="",
@@ -23,7 +25,7 @@ class Slide(BaseSlide):
             extent=SlideExtent(x=width, y=height, z=1),
             num_levels=1,
             pixel_size_nm=SlidePixelSizeNm(x=-1, y=-1),  # pixel size unknown
-            tile_extent=SlideExtent(x=256, y=256, z=1),
+            tile_extent=SlideExtent(x=width, y=height, z=1) if width < 5000 and height < 5000 else SlideExtent(x=1024, y=1024, z=1),
             levels=[SlideLevel(extent=SlideExtent(x=width, y=height, z=1), downsample_factor=1.0)],
         )
 
