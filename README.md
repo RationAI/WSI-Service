@@ -25,6 +25,8 @@ there will be interest. For now, refer to ``build_rationai`` which builds a clou
 (meant for balance loaders). Or `build_standalone` which uses gunicorn to spin up standalone service (meant for docker compose).
 Each folder contains ``build.sh`` file that automates image creation.
 
+> Standalone server (gunicorn) docker image is [available here](https://github.com/RationAI/WSI-Service/pkgs/container/wsi-service).
+
 ## Overview
 
 The _WSI Service_ enables users to stream Whole Slide Images (WSI) tile-based via HTTP. It is based on a FastAPI webserver and a number of plugins to access whole slide image data.
