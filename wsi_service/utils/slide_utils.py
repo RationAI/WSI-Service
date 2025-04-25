@@ -39,6 +39,17 @@ class LRUCache:
         return self.cache.pop(key)
 
 
+def get_tile_width(slide_info, level, tile_x, tile_y):
+    level_extent = slide_info.levels[level].extent
+    tile_extent = slide_info.tile_extent
+    tile_count_x = int(level_extent.x / tile_extent.x)
+    tile_count_y = int(level_extent.y / tile_extent.y)
+    return (
+        tile_extent.x if tile_x < tile_count_x else level_extent.x % tile_extent.x,
+        tile_extent.y if tile_y < tile_count_y else level_extent.y %tile_extent.y,
+    )
+
+
 def get_original_levels(level_count, level_dimensions, level_downsamples):
     levels = []
     for level in range(level_count):

@@ -6,7 +6,7 @@ from wsi_service.models.v3.slide import SlideExtent, SlideInfo, SlidePixelSizeNm
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
 from wsi_service.utils.image_utils import rgba_to_rgb_with_background_color
-from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list
+from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list, get_tile_width
 
 
 class Slide(BaseSlide):
@@ -65,19 +65,22 @@ class Slide(BaseSlide):
         return self.__get_associated_image("macro")
 
     async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
-        if self.is_jpeg_compression:
-            tif_level = self.__get_tif_level_for_slide_level(level)
-            page = tif_level.pages[0]
-            tile_data = await self.__read_raw_tile(page, tile_x, tile_y)
-            self.__add_jpeg_headers(page, tile_data, self.color_transform)
-            return bytes(tile_data)
-        else:
+        # todo: this returns padded tile with black colors
+        # if self.is_jpeg_compression:
+        #     tif_level = self.__get_tif_level_for_slide_level(level)
+        #     page = tif_level.pages[0]
+        #     tile_data = await self.__read_raw_tile(page, tile_x, tile_y)
+        #     self.__add_jpeg_headers(page, tile_data, self.color_transform)
+        #     return bytes(tile_data)
+        # else:
+            tile_width, tile_height = get_tile_width(self.slide_info, level, tile_x, tile_y)
+
             return await self.get_region(
                 level,
                 tile_x * self.slide_info.tile_extent.x,
                 tile_y * self.slide_info.tile_extent.y,
-                self.slide_info.tile_extent.x,
-                self.slide_info.tile_extent.y,
+                tile_width,
+                tile_height,
                 padding_color,
             )
 
