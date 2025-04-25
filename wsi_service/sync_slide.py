@@ -11,6 +11,7 @@ from wsi_service.utils.image_utils import (
     get_extended_region,
     get_extended_tile,
 )
+from wsi_service.singletons import settings
 
 
 class Slide:
@@ -52,7 +53,7 @@ class Slide:
         return self._to_numpy_array(region)
 
     def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
-        if check_complete_tile_overlap(self.slide_info, level, tile_x, tile_y):
+        if not settings.get_tile_apply_padding or check_complete_tile_overlap(self.slide_info, level, tile_x, tile_y):
             tile = asyncio.run(self.async_slide.get_tile(level, tile_x, tile_y, padding_color=padding_color, z=z))
         else:
             tile = asyncio.run(

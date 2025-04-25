@@ -238,6 +238,8 @@ WS_ENABLE_VIEWER_ROUTES=True
 WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600
 WS_MAX_RETURNED_REGION_SIZE=25000000
 WS_MAX_THUMBNAIL_SIZE=500
+# get_region endpoint is padded by a color if no data avaialble, turn on also for get_tile if desired
+WSI_GET_TILE_APPLY_PADDING=False
 
 COMPOSE_RESTART=no
 COMPOSE_NETWORK=default

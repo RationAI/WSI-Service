@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.13.5
+- WSI_GET_TILE_APPLY_PADDING introduced.
+
 ## 0.13.4
 - PIL plugin speed improvements
 
