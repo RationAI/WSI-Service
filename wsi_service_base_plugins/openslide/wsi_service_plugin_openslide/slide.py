@@ -1,4 +1,5 @@
 import glob
+import io
 import os
 
 import openslide
@@ -56,9 +57,12 @@ class Slide(BaseSlide):
             img = self.slide.read_region(level_0_location, level, (size_x, size_y))
 
             if not self.__transform:
-                self.__transform = ImageCms.buildTransform(self.slide.color_profile,
-                                                           ImageCms.createProfile('sRGB'), 'RGBA', 'RGBA')
-            img = ImageCms.applyTransform(img, self.__transform)
+                profile_data = self.slide.color_profile
+                if profile_data:
+                    self.__transform = ImageCms.buildTransform(profile_data, ImageCms.createProfile('sRGB'), 'RGBA', 'RGBA')
+                    img = ImageCms.applyTransform(img, self.__transform)
+            else:
+                img = ImageCms.applyTransform(img, self.__transform)
 
         except openslide.OpenSlideError as e:
             raise HTTPException(status_code=500, detail=f"OpenSlideError: {e}")

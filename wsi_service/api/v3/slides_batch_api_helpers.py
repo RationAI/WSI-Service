@@ -159,7 +159,7 @@ async def tile(
     slide_infos = await asyncio.gather(*requests)
     requests = map(lambda i: batch_safe_get_tile(slides[i], slide_infos[i],
                                                  level, tile_x, tile_y,
-                                                 image_channels, vp_color, z),
+                                                 image_channels, vp_color, z, icc_intent),
                    range(slides.__len__()))
     regions = await asyncio.gather(*requests)
     return batch_safe_make_response(slides, regions, image_format, image_quality, image_channels)
