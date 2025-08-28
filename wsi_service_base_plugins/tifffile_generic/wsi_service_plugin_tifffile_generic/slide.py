@@ -1,7 +1,5 @@
-import re
-import xml.etree.ElementTree as xml
 from threading import Lock
-from tkinter import Image
+from PIL import Image
 
 import numpy as np
 import tifffile
@@ -12,7 +10,7 @@ from wsi_service.models.v3.slide import SlideChannel, SlideColor, SlideExtent, S
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
 from wsi_service.utils.icc_profile import ICCProfile, ICCProfileError
-from wsi_service.utils.image_utils import convert_int_to_rgba_array, convert_narray_to_pil_image
+from wsi_service.utils.image_utils import convert_narray_to_pil_image
 from wsi_service.utils.slide_utils import get_original_levels
 
 

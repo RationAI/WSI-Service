@@ -1,10 +1,25 @@
+import gzip
 import io
 from http.client import HTTPException
 from typing import Optional
 
 from PIL import Image, ImageCms
 
-from .slide_utils import get_success_response_with_payload, get_error_response, compress_gzip
+
+def compress_gzip(data):
+    # compress data as gzip
+    buf = io.BytesIO()
+    with gzip.GzipFile(fileobj=buf, mode="wb") as f:
+        f.write(data)
+    return buf.getvalue()
+
+
+def get_error_response(status_code: int, detail: str):
+    return {
+        "rep": "error",
+        "status_code": status_code,
+        "detail": detail,
+    }
 
 
 class ICCProfileError(Exception):

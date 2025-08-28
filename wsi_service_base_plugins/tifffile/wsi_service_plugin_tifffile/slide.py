@@ -1,7 +1,7 @@
 import re
 import xml.etree.ElementTree as xml
 from threading import Lock
-from tkinter import Image
+from PIL import Image
 
 import numpy as np
 import tifffile
