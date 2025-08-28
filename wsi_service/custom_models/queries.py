@@ -1,3 +1,5 @@
+from enum import Enum
+
 from fastapi import Query
 
 
@@ -8,7 +10,7 @@ IdQuery = Query(
 )
 
 ImageFormatsQuery = Query(
-    "jpeg", description="Image format (e.g. bmp, gif, jpeg, png, tiff). For raw image data choose tiff."
+    "jpeg", description="Image format (e.g. bmp, gif, jpeg, png, tiff). For raw image data choose 'tiff'. For raw byte stream choose 'raw'."
 )
 
 ImageQualityQuery = Query(
@@ -34,3 +36,23 @@ ImagePaddingColorQuery = Query(
 PluginQuery = Query(None, description="Select a specific WSI Service Plugin.")
 
 ZStackQuery = Query(0, ge=0, description="Z-Stack layer index z")
+
+
+class ICCProfileIntent(str, Enum):
+    PERCEPTUAL = "perceptual"
+    RELATIVE_COLORIMETRIC = "relative_colorimetric"
+    SATURATION = "saturation"
+    ABSOLUTE_COLORIMETRIC = "absolute_colorimetric"
+
+
+ICCProfileIntentQuery = Query(
+    default=None,
+    example="perceptual",
+    description="""Request to apply icc profiles on data using desired intent. 
+    When no intent is defined, no icc profiles are applied.
+    """,
+)
+
+ICCProfileIsStrictQuery = Query(
+    default=False, description="Require icc profile application. If True, icc_profile_intent must be defined."
+)

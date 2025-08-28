@@ -1,6 +1,7 @@
 import re
 import xml.etree.ElementTree as xml
 from threading import Lock
+from tkinter import Image
 
 import numpy as np
 import tifffile
@@ -10,7 +11,8 @@ from skimage import transform, util
 from wsi_service.models.v3.slide import SlideChannel, SlideColor, SlideExtent, SlideInfo, SlidePixelSizeNm
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
-from wsi_service.utils.image_utils import convert_int_to_rgba_array
+from wsi_service.utils.icc_profile import ICCProfile, ICCProfileError
+from wsi_service.utils.image_utils import convert_int_to_rgba_array, convert_narray_to_pil_image
 from wsi_service.utils.slide_utils import get_original_levels
 
 
@@ -35,14 +37,17 @@ class Slide(BaseSlide):
         except Exception as ex:
             raise HTTPException(status_code=400, detail=f"Could not obtain ome metadata ({ex})")
         self.slide_info = self.__get_slide_info_ome_tif()
+        self._icc = ICCProfile()
 
     async def close(self):
         self.tif_slide.close()
+        self._icc.free_cache()
 
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0):
+    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0,
+                         icc_profile_intent: str = None, icc_profile_strict: bool = False):
         if padding_color is None:
             padding_color = settings.padding_color
         level_slide = self.slide_info.levels[level]
@@ -52,9 +57,20 @@ class Slide(BaseSlide):
             temp_channel = self.__read_region_of_page(page, i, start_y, start_x, size_y, size_x, padding_color)
             result_array.append(temp_channel)
         result = np.concatenate(result_array, axis=0)[:, :, :, 0]
+
+        if icc_profile_intent is not None:
+            try:
+                profile = tif_level.pages[0].tags.get("ICCProfile")
+                result_data = convert_narray_to_pil_image(narray=result)
+                result = self._icc.process_pil_image(
+                    result_data, profile, icc_profile_strict, icc_profile_intent, True
+                )
+            except ICCProfileError as e:
+                raise HTTPException(status_code=e.payload["status_code"], detail=e.payload["detail"]) from e
+
         return result
 
-    async def get_thumbnail(self, max_x, max_y):
+    async def get_thumbnail(self, max_x, max_y, icc_profile_intent: str = None, icc_profile_strict: bool = False):
         thumb_level = len(self.slide_info.levels) - 1
         for i, level in enumerate(self.slide_info.levels):
             if level.extent.x < max_x or level.extent.y < max_y:
@@ -67,17 +83,22 @@ class Slide(BaseSlide):
             max_y = max_y * (level_extent_y / level_extent_x)
         else:
             max_x = max_x * (level_extent_x / level_extent_y)
-        thumbnail_org = await self.get_region(thumb_level, 0, 0, level_extent_x, level_extent_y, settings.padding_color)
-        thumbnail_resized = util.img_as_uint(transform.resize(thumbnail_org, (thumbnail_org.shape[0], max_y, max_x)))
+        thumbnail_org = await self.get_region(thumb_level, 0, 0, level_extent_x, level_extent_y,
+                                              settings.padding_color, 0, icc_profile_intent, icc_profile_strict)
+        if type(thumbnail_org) is np.ndarray:
+            thumbnail_resized = util.img_as_uint(transform.resize(thumbnail_org, (thumbnail_org.shape[0], max_y, max_x)))
+        else:
+            thumbnail_resized = thumbnail_org.resize((max_x, max_y), Image.LANCZOS)
         return thumbnail_resized
 
     async def get_label(self):
         self.__get_associated_image("label")
 
-    async def get_macro(self):
+    async def get_macro(self, icc_profile_intent: str = None, icc_profile_strict: bool = False):
         self.__get_associated_image("macro")
 
-    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0):
+    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0,
+                       icc_profile_intent: str = None, icc_profile_strict: bool = False):
         return await self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
@@ -85,7 +106,13 @@ class Slide(BaseSlide):
             self.slide_info.tile_extent.x,
             self.slide_info.tile_extent.y,
             padding_color,
+            0,
+            icc_profile_intent,
+            icc_profile_strict,
         )
+
+    async def get_icc_profile(self):
+        return self._icc.get_for_payload(self.tif_slide.series[0].levels[0].pages[0].tags.get("ICCProfile", None))
 
     # private
 

@@ -12,9 +12,9 @@ def is_supported(filepath):
             return False
         return suffix in [".bif", ".mrxs", ".ndpi", ".scn", ".svs", ".tiff", ".tif", ".czi"]
     # VSF is not supported
-    # else:
+    else:
     #     return any(list(pathlib.Path(filepath).glob("*.vsf")))
-
+        return any(list(pathlib.Path(filepath).glob("*.dcm")))
 
 async def open(filepath):
     return await Slide.create(filepath)

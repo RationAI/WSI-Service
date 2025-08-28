@@ -1,7 +1,10 @@
 # Changelog
 
+## 0.14.0
+- ICC Profile Support
+
 ## 0.13.5
-- WSI_GET_TILE_APPLY_PADDING introduced.
+- WS_GET_TILE_APPLY_PADDING introduced.
 
 ## 0.13.4
 - PIL plugin speed improvements
