@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.14.0
+- ICC Profile Support
+
 ## 0.13.4
 - PIL plugin speed improvements
 

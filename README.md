@@ -60,11 +60,12 @@ Icc profiles can be requested by endpoint:
 - `GET /v3/slides/icc_profile?slide={slide_íd}` - Get icc profile bytes (gzipped)
 
 Or requested to be applied on the server. The request is an optional query parameter
-``apply_icc_intent`` with one of `'PERCEPTUAL', 'RELATIVE_COLORIMETRIC', 'SATURATION', 'ABSOLUTE_COLORIMETRIC'`.
-The application is, however, optional and up to the server to decide.
-
-> **Note:** For now only tile and region endpoints for ``openslide`` plugin implement the icc profile functionality.
-
+``icc_profile_intent`` with one of `'PERCEPTUAL', 'RELATIVE_COLORIMETRIC', 'SATURATION', 'ABSOLUTE_COLORIMETRIC'`.
+The application is, however, not guaranteed if the plugin does not support it. The same with reading profile data.
+Endpoints further accept ``icc_profile_strict`` boolean query parameter that enforces the presence of an icc profile.
+In the default, ``False``, the request will proceed successfully even if no icc profile is present and was not applied.
+Otherwise, a 412 error is returned. 500 error is returned if the plugin fails to apply the profile but the profile exists
+and attempt was made to apply it.
 
 ## The Ecosystem
 
