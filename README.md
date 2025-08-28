@@ -35,15 +35,16 @@ Regarding the slide's metadata, it provides the extent of the base level (origin
 
 Regions of the WSI can be requested on any of the available levels. There is also a way to access tiles of a predefined size of each level (e.g. useful for a [viewer](wsi_service/api/root/viewer.html)). Furthermore, it is possible to get a thumbnail, label and macro image.
 
-There are several endpoints made available by this service:
+There are several endpoints made available by this service. There are also ``file`` endpoints and old batch queries - check the OpenAPI documentation at
+http://localhost:8080/v3/docs once the service is running.
 
-- `GET /v3/slides/info?slide={slide_íd}` - Get slide info
-- `GET /v3/slides/download?slide={slide_íd}` - Download slide
-- `GET /v3/slides/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?slide={slide_íd}` - Get slide region
-- `GET /v3/slides/tile/level/{level}/tile/{tile_x}/{tile_y}?slide={slide_íd}` - Get slide tile
-- `GET /v3/slides/thumbnail/max_size/{max_x}/{max_y}?slide={slide_íd}` - Get slide thumbnail image
-- `GET /v3/slides/label/max_size/{max_x}/{max_y}?slide={slide_íd}` - Get slide label image
-- `GET /v3/slides/macro/max_size/{max_x}/{max_y}?slide={slide_íd}` - Get slide macro image
+- `GET /v3/slides/info?slide_id={slide_íd}` - Get slide info
+- `GET /v3/slides/download?slide_id={slide_íd}` - Download slide
+- `GET /v3/slides/region/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}?slide_id={slide_íd}` - Get slide region
+- `GET /v3/slides/tile/level/{level}/tile/{tile_x}/{tile_y}?slide_id={slide_íd}` - Get slide tile
+- `GET /v3/slides/thumbnail/max_size/{max_x}/{max_y}?slide_id={slide_íd}` - Get slide thumbnail image
+- `GET /v3/slides/label/max_size/{max_x}/{max_y}?slide_id={slide_íd}` - Get slide label image
+- `GET /v3/slides/macro/max_size/{max_x}/{max_y}?slide_id={slide_íd}` - Get slide macro image
 
 The last five endpoints all return image data. The image format and its quality (e.g. for jpeg) can be selected. Formats include jpeg, png, tiff, bmp, gif.
 
@@ -57,7 +58,7 @@ Get a detailed description of each endpoint by running the WSI Service (see _Get
 
 Icc profiles can be requested by endpoint:
 
-- `GET /v3/slides/icc_profile?slide={slide_íd}` - Get icc profile bytes (gzipped)
+- `GET /v3/slides/icc_profile?slide_id={slide_íd}` - Get icc profile bytes (gzipped)
 
 Or requested to be applied on the server. The request is an optional query parameter
 ``icc_profile_intent`` with one of `'PERCEPTUAL', 'RELATIVE_COLORIMETRIC', 'SATURATION', 'ABSOLUTE_COLORIMETRIC'`.
@@ -248,12 +249,14 @@ WS_CORS_ALLOW_CREDENTIALS=False
 WS_CORS_ALLOW_ORIGINS=["*"]
 WS_DEBUG=False
 WS_DISABLE_OPENAPI=False
-WS_MAPPER_ADDRESS=http://localhost:8080/slides/storage?slide={slide_id}
+WS_MAPPER_ADDRESS=http://localhost:8080/slides/storage?slide_id={slide_id}
 WS_LOCAL_MODE=wsi_service.simple_mapper:SimpleMapper
 WS_ENABLE_VIEWER_ROUTES=True
 WS_INACTIVE_HISTO_IMAGE_TIMEOUT_SECONDS=600
 WS_MAX_RETURNED_REGION_SIZE=25000000
 WS_MAX_THUMBNAIL_SIZE=500
+# get_region endpoint is padded by a color if no data avaialble, turn on also for get_tile if desired
+WS_GET_TILE_APPLY_PADDING=False
 
 COMPOSE_RESTART=no
 COMPOSE_NETWORK=default

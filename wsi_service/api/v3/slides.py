@@ -311,7 +311,7 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_level(slide_info, level)
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
-        if not settings.apply_padding or check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
+        if not settings.get_tile_apply_padding or check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
             image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z,
                                               icc_profile_intent=icc_profile_intent,
                                               icc_profile_strict=icc_profile_strict,

@@ -1,6 +1,3 @@
-import io
-from PIL import Image
-
 import numpy as np
 import tiffslide
 from fastapi import HTTPException
@@ -10,7 +7,7 @@ from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
 from wsi_service.utils.icc_profile import ICCProfile, ICCProfileError
 from wsi_service.utils.image_utils import rgba_to_rgb_with_background_color
-from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list
+from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list, get_tile_width
 
 
 class Slide(BaseSlide):
@@ -81,37 +78,40 @@ class Slide(BaseSlide):
         return self.__get_associated_image("macro", icc_profile_intent, icc_profile_strict)
 
     async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0, icc_profile_intent: str = None, icc_profile_strict: bool = False):
-        if self.is_jpeg_compression:
-            tif_level = self.__get_tif_level_for_slide_level(level)
-            page = tif_level.pages[0]
-            tile_data = await self.__read_raw_tile(page, tile_x, tile_y)
-            self.__add_jpeg_headers(page, tile_data, self.color_transform)
-            if icc_profile_intent is not None:
-                try:
-                    profile = self.slide._profile
-                    img = Image.open(io.BytesIO(tile_data))
-                    img = self._icc.process_pil_image(
-                        img, profile, icc_profile_strict, icc_profile_intent, True
-                    )
-                    img_byte_array = io.BytesIO()
-                    img.save(img_byte_array)
-                    tile_data = img_byte_array.getvalue()
+        # todo: this returns padded tile with black colors
+        # if self.is_jpeg_compression:
+        #     tif_level = self.__get_tif_level_for_slide_level(level)
+        #     page = tif_level.pages[0]
+        #     tile_data = await self.__read_raw_tile(page, tile_x, tile_y)
+        #     self.__add_jpeg_headers(page, tile_data, self.color_transform)
+        #     if icc_profile_intent is not None:
+        #         try:
+        #             profile = self.slide._profile
+        #             img = Image.open(io.BytesIO(tile_data))
+        #             img = self._icc.process_pil_image(
+        #                 img, profile, icc_profile_strict, icc_profile_intent, True
+        #             )
+        #             img_byte_array = io.BytesIO()
+        #             img.save(img_byte_array)
+        #             tile_data = img_byte_array.getvalue()
+        #
+        #         except ICCProfileError as e:
+        #             raise HTTPException(status_code=e.payload["status_code"], detail=e.payload["detail"]) from e
+        #     return bytes(tile_data)
+        #else:
+        tile_width, tile_height = get_tile_width(self.slide_info, level, tile_x, tile_y)
 
-                except ICCProfileError as e:
-                    raise HTTPException(status_code=e.payload["status_code"], detail=e.payload["detail"]) from e
-            return bytes(tile_data)
-        else:
-            return await self.get_region(
-                level,
-                tile_x * self.slide_info.tile_extent.x,
-                tile_y * self.slide_info.tile_extent.y,
-                self.slide_info.tile_extent.x,
-                self.slide_info.tile_extent.y,
-                padding_color,
-                0,
-                icc_profile_intent,
-                icc_profile_strict
-            )
+        return await self.get_region(
+            level,
+            tile_x * self.slide_info.tile_extent.x,
+            tile_y * self.slide_info.tile_extent.y,
+            tile_width,
+            tile_height,
+            padding_color,
+            0,
+            icc_profile_intent,
+            icc_profile_strict
+        )
 
     async def get_icc_profile(self):
         return self._icc.get_for_payload(self.slide._profile)
