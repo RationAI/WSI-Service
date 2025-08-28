@@ -1,17 +1,17 @@
 import glob
-import io
 import os
 
 import openslide
 from fastapi import HTTPException
 
-from PIL import ImageCms
 
 from wsi_service.models.v3.slide import SlideExtent, SlideInfo, SlidePixelSizeNm
 from wsi_service.singletons import settings
 from wsi_service.slide import Slide as BaseSlide
+from wsi_service.utils.icc_profile import ICCProfile, ICCProfileError
 from wsi_service.utils.image_utils import rgba_to_rgb_with_background_color
 from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list
+
 
 class Slide(BaseSlide):
     supported_vendors = [
@@ -31,7 +31,7 @@ class Slide(BaseSlide):
         await self.open_slide()
         self.format = self.slide.detect_format(self.filepath)
         self.slide_info = self.__get_slide_info_openslide()
-        self.__transform = None
+        self._icc = ICCProfile()
 
     async def open_slide(self):
         try:
@@ -41,11 +41,23 @@ class Slide(BaseSlide):
 
     async def close(self):
         self.slide.close()
+        self._icc.clear()
 
     async def get_info(self):
         return self.slide_info
 
-    async def get_region(self, level, start_x, start_y, size_x, size_y, padding_color=None, z=0, icc_intent=None):
+    async def get_region(
+            self,
+            level,
+            start_x,
+            start_y,
+            size_x,
+            size_y,
+            padding_color=None,
+            z=0,
+            icc_profile_intent: str = None,
+            icc_profile_strict: bool = False,
+    ):
         if padding_color is None:
             padding_color = settings.padding_color
         downsample_factor = self.slide_info.levels[level].downsample_factor
@@ -56,27 +68,24 @@ class Slide(BaseSlide):
         try:
             img = self.slide.read_region(level_0_location, level, (size_x, size_y))
 
-            if not self.__transform:
-                profile_data = self.slide.color_profile
-                if profile_data:
-                    self.__transform = ImageCms.buildTransform(profile_data, ImageCms.createProfile('sRGB'), 'RGBA', 'RGBA')
-                    img = ImageCms.applyTransform(img, self.__transform)
-            else:
-                img = ImageCms.applyTransform(img, self.__transform)
-
+            if icc_profile_intent is not None:
+                img = self._icc.process_pil_image(
+                    img, self.slide.color_profile, icc_profile_strict, icc_profile_intent, True
+                )
+        except ICCProfileError as e:
+            raise HTTPException(status_code=e.payload["status_code"], detail=e.payload["detail"]) from e
         except openslide.OpenSlideError as e:
             raise HTTPException(status_code=500, detail=f"OpenSlideError: {e}")
         rgb_img = rgba_to_rgb_with_background_color(img, padding_color)
         return rgb_img
 
-    async def get_thumbnail(self, max_x, max_y, icc_intent=None):
-        # Todo: icc_intent not applied here and or macro, also not implemented in any other plugins
+    async def get_thumbnail(self, max_x, max_y, icc_profile_intent: str = None, icc_profile_strict: bool = False):
         if not hasattr(self, "thumbnail"):
             try:
-                self.thumbnail = self.__get_associated_image("thumbnail")
+                self.thumbnail = self.__get_associated_image("thumbnail", icc_profile_intent, icc_profile_strict)
             except HTTPException:
                 self.thumbnail = await self.__get_thumbnail_openslide(
-                    settings.max_thumbnail_size, settings.max_thumbnail_size, icc_intent
+                    settings.max_thumbnail_size, settings.max_thumbnail_size, icc_profile_intent, icc_profile_strict
                 )
         thumbnail = self.thumbnail.copy()
         thumbnail.thumbnail((max_x, max_y))
@@ -85,10 +94,11 @@ class Slide(BaseSlide):
     async def get_label(self):
         return self.__get_associated_image("label")
 
-    async def get_macro(self, icc_intent=None):
-        return self.__get_associated_image("macro")
+    async def get_macro(self, icc_profile_intent: str = None, icc_profile_strict: bool = False):
+        return self.__get_associated_image("macro", icc_profile_intent, icc_profile_strict)
 
-    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0, icc_intent=None):
+    async def get_tile(self, level, tile_x, tile_y, padding_color=None, z=0,
+                       icc_profile_intent: str = None, icc_profile_strict: bool = False):
         return await self.get_region(
             level,
             tile_x * self.slide_info.tile_extent.x,
@@ -96,15 +106,14 @@ class Slide(BaseSlide):
             self.slide_info.tile_extent.x,
             self.slide_info.tile_extent.y,
             padding_color,
-            icc_intent,
+            z,
+            icc_profile_intent,
+            icc_profile_strict
         )
 
     async def get_icc_profile(self):
-        profile = self.slide.color_profile
-        if profile:
-            return profile.tobytes()
+        return self._icc.get_for_payload(getattr(self.slide, 'color_profile'))
 
-        raise HTTPException(404, "Icc profile not supported.")
 
     # private
 
@@ -116,14 +125,29 @@ class Slide(BaseSlide):
                 filepath = dir_files[0]
         return filepath
 
-    def __get_associated_image(self, associated_image_name):
-        if associated_image_name not in self.slide.associated_images:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Associated image {associated_image_name} does not exist.",
-            )
-        associated_image_rgba = self.slide.associated_images[associated_image_name]
-        return associated_image_rgba.convert("RGB")
+    def __get_associated_image(
+        self, associated_image_name, icc_profile_intent: str = None, icc_profile_strict: bool = False
+    ):
+        try:
+            if associated_image_name not in self.slide.associated_images:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Associated image {associated_image_name} does not exist.",
+                )
+
+            associated_image_rgba = self.slide.associated_images[associated_image_name]
+
+            if icc_profile_intent is not None:
+                profile = associated_image_rgba.info.get("icc_profile")
+                associated_image_rgba = self._icc.process_pil_image(
+                    associated_image_rgba, profile, icc_profile_strict, icc_profile_intent, False
+                )
+
+            return associated_image_rgba.convert("RGB")
+        except ICCProfileError as e:
+            raise HTTPException(status_code=e.payload["status_code"], detail=e.payload["detail"]) from e
+        except openslide.OpenSlideError as e:
+            raise HTTPException(status_code=500, detail=f"OpenSlideError: associated image: {e}")
 
     def __get_levels_openslide(self):
         original_levels = get_original_levels(
@@ -198,7 +222,9 @@ class Slide(BaseSlide):
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
 
-    async def __get_thumbnail_openslide(self, max_x, max_y, icc_intent):
+    async def __get_thumbnail_openslide(self, max_x, max_y,
+                                        icc_profile_intent: str = None,
+                                        icc_profile_strict: bool = False):
         level = self.__get_best_level_for_thumbnail(max_x, max_y)
         try:
             thumbnail = await self.get_region(
@@ -207,7 +233,10 @@ class Slide(BaseSlide):
                 0,
                 self.slide_info.levels[level].extent.x,
                 self.slide_info.levels[level].extent.y,
-                icc_intent
+                None,
+                0,
+                icc_profile_intent,
+                icc_profile_strict
             )
         except HTTPException as e:
             raise HTTPException(
