@@ -6,14 +6,6 @@ from typing import Optional
 from PIL import Image, ImageCms
 
 
-def compress_gzip(data):
-    # compress data as gzip
-    buf = io.BytesIO()
-    with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-        f.write(data)
-    return buf.getvalue()
-
-
 def get_error_response(status_code: int, detail: str):
     return {
         "rep": "error",
@@ -78,8 +70,7 @@ class ICCProfile(dict):
         if profile_data:
             if isinstance(profile_data, ImageCms.ImageCmsProfile):
                 profile_data = profile_data.tobytes()
-
-            return compress_gzip(profile_data)
+            return profile_data
         raise HTTPException(404, "ICC Profile not available.")
 
     def _get_intent(self, intent: str):
