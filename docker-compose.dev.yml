@@ -1,6 +1,7 @@
 services:
   wsi_service_dev:
     build:
+      dockerfile: "build_standalone/Dockerfile"
       context: "."
       target: wsi_service_dev
     command:

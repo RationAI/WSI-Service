@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing import Optional, Tuple
 
 import numpy as np
 from fastapi import HTTPException
@@ -155,68 +156,140 @@ def check_complete_region_overlap(slide_info, level, start_x, start_y, size_x, s
     )
 
 
-async def get_extended_region(get_region, slide_info, level, start_x, start_y, size_x, size_y,
-                              padding_color=None, z=0, icc_profile_intent: ICCProfileIntent = None,
-                              icc_profile_strict: bool = False):
-    # check overlap of requested region and slide
-    overlap = (start_x + size_x > 0 and start_x < slide_info.levels[level].extent.x) and (
-        start_y + size_y > 0 and start_y < slide_info.levels[level].extent.y
+_REGION_PROTO_CACHE = {}
+
+def _region_intersection(slide_info, level: int, start_x: int, start_y: int, size_x: int, size_y: int):
+    """Compute intersection of requested region with the level extent.
+    Returns: (ov_w, ov_h, src_x, src_y, dst_x, dst_y)
+      - src_* are the clamped coords to request from the slide
+      - dst_* are the paste offsets in the output canvas when extending
+    """
+    lvl_w = slide_info.levels[level].extent.x
+    lvl_h = slide_info.levels[level].extent.y
+
+    # where we can actually read from
+    src_x = max(0, start_x)
+    src_y = max(0, start_y)
+    src_x2 = min(lvl_w, start_x + size_x)
+    src_y2 = min(lvl_h, start_y + size_y)
+
+    ov_w = max(0, src_x2 - src_x)
+    ov_h = max(0, src_y2 - src_y)
+
+    # where to paste the overlap into the requested canvas
+    dst_x = max(0, -start_x)
+    dst_y = max(0, -start_y)
+    return ov_w, ov_h, src_x, src_y, dst_x, dst_y
+
+
+async def _region_prototype(get_region, slide_info, level, padding_color, z, icc_profile_intent, icc_profile_strict):
+    """Fetch a 1×1 sample (once) to preserve type/mode/dtype for empty canvases."""
+    key = (id(slide_info), level)
+    if key in _REGION_PROTO_CACHE:
+        return _REGION_PROTO_CACHE[key]
+    # request something guaranteed in-bounds
+    proto = await get_region(level, 0, 0, 1, 1,
+                             padding_color=padding_color, z=z,
+                             icc_profile_intent=icc_profile_intent,
+                             icc_profile_strict=icc_profile_strict)
+    if isinstance(proto, bytes):
+        proto = Image.open(BytesIO(proto))
+    _REGION_PROTO_CACHE[key] = proto
+    return proto
+
+
+async def get_extended_region(
+    get_region,
+    slide_info,
+    level: int,
+    start_x: int,
+    start_y: int,
+    size_x: int,
+    size_y: int,
+    *,
+    padding_color=None,
+    z: int = 0,
+    icc_profile_intent: ICCProfileIntent = None,
+    icc_profile_strict: bool = False,
+    extend: bool = True,
+):
+    """
+    Normalize edge/out-of-bounds regions.
+
+      - extend=True  -> return a full requested (size_x × size_y) canvas, padding uncovered area.
+      - extend=False -> return only the *real* overlap (shrunk region), possibly smaller than requested.
+
+    Guarantees a single read for partial overlaps. For fully OOB:
+      - extend=True returns a padded canvas
+      - extend=False raises 416
+    """
+    ov_w, ov_h, src_x, src_y, dst_x, dst_y = _region_intersection(
+        slide_info, level, start_x, start_y, size_x, size_y
     )
-    # get overlapping region if there is an overlap
-    if overlap:
-        if start_x < 0:
-            region_request_start_x = 0
-            overlap_start_x = abs(start_x)
+
+    # No overlap at all
+    if ov_w == 0 or ov_h == 0:
+        if not extend:
+            raise HTTPException(status_code=416, detail="Requested region is outside the image extent")
+        proto = await _region_prototype(get_region, slide_info, level, padding_color, z,
+                                        icc_profile_intent, icc_profile_strict)
+        if isinstance(proto, Image.Image):
+            mode = proto.mode or "RGB"
+            return Image.new(mode, (size_x, size_y), padding_color)
         else:
-            region_request_start_x = start_x
-            overlap_start_x = 0
-        if start_y < 0:
-            region_request_start_y = 0
-            overlap_start_y = abs(start_y)
-        else:
-            region_request_start_y = start_y
-            overlap_start_y = 0
-        overlap_size_x = min(slide_info.levels[level].extent.x - region_request_start_x, size_x - overlap_start_x)
-        overlap_size_y = min(slide_info.levels[level].extent.y - region_request_start_y, size_y - overlap_start_y)
-        image_region_overlap = await get_region(
-            level,
-            region_request_start_x,
-            region_request_start_y,
-            overlap_size_x,
-            overlap_size_y,
-            padding_color=padding_color,
-            z=z,
-            icc_profile_intent=icc_profile_intent,
-            icc_profile_strict=icc_profile_strict,
-        )
-    # create empty region based on returned region data type
-    if overlap:
-        image_region_sample = image_region_overlap
+            C = proto.shape[0]
+            out = np.empty((C, size_y, size_x), dtype=proto.dtype)
+            if padding_color is None:
+                out.fill(0)
+            else:
+                if np.isscalar(padding_color):
+                    out[...] = padding_color
+                else:
+                    col = np.asarray(padding_color, dtype=proto.dtype).reshape(-1, 1, 1)
+                    if col.shape[0] != C:
+                        raise ValueError(f"padding_color channels ({col.shape[0]}) != region channels ({C})")
+                    out[...] = col
+            return out
+
+    # Partial or full overlap -> one read
+    src = await get_region(
+        level, src_x, src_y, ov_w, ov_h,
+        padding_color=padding_color, z=z,
+        icc_profile_intent=icc_profile_intent, icc_profile_strict=icc_profile_strict,
+    )
+    if isinstance(src, bytes):
+        src = Image.open(BytesIO(src))
+
+    # Full overlap that exactly matches requested size? (This path is rarely reached because the endpoint
+    # already guards it, but it's safe and avoids extra copies.)
+    if ov_w == size_x and ov_h == size_y and start_x >= 0 and start_y >= 0:
+        return src
+
+    if not extend:
+        # SHRINK: return just the real content
+        return src
+
+    # EXTEND: compose a full requested canvas and paste the overlap at the right offset
+    if isinstance(src, Image.Image):
+        mode = src.mode or "RGB"
+        out = Image.new(mode, (size_x, size_y), padding_color)
+        out.paste(src, (dst_x, dst_y))
+        return out
     else:
-        image_region_sample = await get_region(0, 0, 0, 1, 1)
-    if isinstance(image_region_sample, Image.Image):
-        image_region = Image.new("RGB", (size_x, size_y), padding_color)
-    else:
-        image_region = np.zeros((image_region_sample.shape[0], size_y, size_x), dtype=image_region_sample.dtype)
-    # insert overlapping region into empty region
-    if overlap:
-        if isinstance(image_region_sample, Image.Image):
-            image_region.paste(
-                image_region_overlap,
-                box=(
-                    overlap_start_x,
-                    overlap_start_y,
-                    overlap_start_x + overlap_size_x,
-                    overlap_start_y + overlap_size_y,
-                ),
-            )
+        C = src.shape[0]
+        out = np.empty((C, size_y, size_x), dtype=src.dtype)
+        if padding_color is None:
+            out.fill(0)
         else:
-            image_region[
-                :,
-                overlap_start_y : overlap_start_y + overlap_size_y,
-                overlap_start_x : overlap_start_x + overlap_size_x,
-            ] = image_region_overlap
-    return image_region
+            if np.isscalar(padding_color):
+                out[...] = padding_color
+            else:
+                col = np.asarray(padding_color, dtype=src.dtype).reshape(-1, 1, 1)
+                if col.shape[0] != C:
+                    raise ValueError(f"padding_color channels ({col.shape[0]}) != region channels ({C})")
+                out[...] = col
+        out[:, dst_y:dst_y + ov_h, dst_x:dst_x + ov_w] = src
+        return out
 
 
 def check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
@@ -225,48 +298,100 @@ def check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
     return tile_x >= 0 and tile_y >= 0 and tile_x < tile_count_x and tile_y < tile_count_y
 
 
-async def get_extended_tile(get_tile, slide_info, level, tile_x, tile_y, padding_color=None, z=0,
-                            icc_profile_intent: ICCProfileIntent = None,
-                            icc_profile_strict: bool = False):
-    overlap_size_x = slide_info.levels[level].extent.x - tile_x * slide_info.tile_extent.x
-    overlap_size_y = slide_info.levels[level].extent.y - tile_y * slide_info.tile_extent.y
-    overlap = tile_x >= 0 and tile_y >= 0 and overlap_size_x > 0 and overlap_size_y > 0
-    # get overlapping tile if there is an overlap
-    if overlap:
-        image_tile_overlap = await get_tile(level, tile_x, tile_y, padding_color=padding_color, z=z,
-                                            icc_profile_intent=icc_profile_intent, icc_profile_strict=icc_profile_strict)
-        if isinstance(image_tile_overlap, bytes):
-            image_tile_overlap = Image.open(BytesIO(image_tile_overlap))
-    # create empty tile based on returned tile data type
-    if overlap:
-        image_tile_sample = image_tile_overlap
-    else:
-        image_tile_sample = await get_tile(0, 0, 0)
-        if isinstance(image_tile_sample, bytes):
-            image_tile_sample = Image.open(BytesIO(image_tile_sample))
-    if isinstance(image_tile_sample, Image.Image):
-        image_tile = Image.new("RGB", (slide_info.tile_extent.x, slide_info.tile_extent.y), padding_color)
-    else:
-        image_tile = np.zeros(
-            (image_tile_sample.shape[0], slide_info.tile_extent.x, slide_info.tile_extent.y),
-            dtype=image_tile_sample.dtype,
-        )
-    # insert overlapping tile into empty tile
-    if overlap:
-        if isinstance(image_tile_sample, Image.Image):
-            image_tile.paste(
-                image_tile_overlap.crop((0, 0, overlap_size_x, overlap_size_y)),
-                box=(
-                    0,
-                    0,
-                    overlap_size_x,
-                    overlap_size_y,
-                ),
-            )
+def check_complete_tile_overlap(slide_info, level: int, tile_x: int, tile_y: int) -> bool:
+    """
+    Returns True if the (tile_x, tile_y) tile at 'level' is fully contained within the level extent.
+    """
+    tile_w, tile_h = slide_info.tile_extent.x, slide_info.tile_extent.y
+    lvl_w, lvl_h   = slide_info.levels[level].extent.x, slide_info.levels[level].extent.y
+
+    x0 = tile_x * tile_w
+    y0 = tile_y * tile_h
+    return (x0 >= 0) and (y0 >= 0) and (x0 + tile_w) <= lvl_w and (y0 + tile_h) <= lvl_h
+
+
+def _overlap_wh(slide_info, level: int, tile_x: int, tile_y: int) -> Tuple[int, int]:
+    """Clamped overlap size (width,height) of the tile with the level image."""
+    tile_w, tile_h = slide_info.tile_extent.x, slide_info.tile_extent.y
+    lvl_w,  lvl_h  = slide_info.levels[level].extent.x, slide_info.levels[level].extent.y
+    x0 = tile_x * tile_w
+    y0 = tile_y * tile_h
+    ov_w = max(0, min(tile_w, lvl_w - x0))
+    ov_h = max(0, min(tile_h, lvl_h - y0))
+    return ov_w, ov_h
+
+
+async def get_extended_tile(
+    get_tile,
+    slide_info,
+    level: int,
+    tile_x: int,
+    tile_y: int,
+    *,
+    padding_color=None,
+    z: int = 0,
+    icc_profile_intent=None,
+    icc_profile_strict: bool = False,
+    extend: bool = True,
+):
+    """
+    Wraps `get_tile` and normalizes edge tiles:
+
+      - extend=True  -> return a full-size (tile_w x tile_h) tile, padding the uncovered area.
+      - extend=False -> return a cropped tile containing ONLY real pixels (shrunk edge).
+
+    Guarantees:
+      - Only one call to `get_tile(...)`.
+      - Returns the same type as `get_tile`: PIL.Image.Image or numpy array shaped (C, H, W).
+      - No extra reads to 'sample' type.
+    """
+    tile = await get_tile(
+        level, tile_x, tile_y,
+        padding_color=padding_color,
+        z=z,
+        icc_profile_intent=icc_profile_intent,
+        icc_profile_strict=icc_profile_strict,
+    )
+    if isinstance(tile, bytes):
+        tile = Image.open(BytesIO(tile))
+
+    tile_w, tile_h = slide_info.tile_extent.x, slide_info.tile_extent.y
+    ov_w, ov_h = _overlap_wh(slide_info, level, tile_x, tile_y)
+
+    # Fast path: interior tile (already exact full tile)
+    if ov_w == tile_w and ov_h == tile_h:
+        return tile
+
+    # Edge path
+    if not extend:
+        # --- SHRINK: crop away any padded area / outside-of-level region
+        if isinstance(tile, Image.Image):
+            return tile.crop((0, 0, ov_w, ov_h))
         else:
-            image_tile[
-                :,
-                0:overlap_size_y,
-                0:overlap_size_x,
-            ] = image_tile_overlap[:, 0:overlap_size_y, 0:overlap_size_x]
-    return image_tile
+            # numpy: assume C x H x W
+            return tile[:, :ov_h, :ov_w]
+
+    # --- EXTEND: paste/copy the valid region into a full-size buffer
+    if isinstance(tile, Image.Image):
+        mode = tile.mode or "RGB"
+        bg   = padding_color if padding_color is not None else 0  # 0 works for L/RGB/RGBA (transparent black in RGBA)
+        out = Image.new(mode, (tile_w, tile_h), bg)
+        # only copy real content; avoid re-padding the padded part
+        out.paste(tile.crop((0, 0, ov_w, ov_h)), (0, 0))
+        return out
+    else:
+        # numpy: C x H x W
+        C = tile.shape[0]
+        out = np.empty((C, tile_h, tile_w), dtype=tile.dtype)
+        if padding_color is None:
+            out.fill(0)
+        else:
+            if np.isscalar(padding_color):
+                out[...] = padding_color
+            else:
+                col = np.asarray(padding_color, dtype=tile.dtype).reshape(-1, 1, 1)
+                if col.shape[0] != C:
+                    raise ValueError(f"padding_color channels ({col.shape[0]}) != tile channels ({C})")
+                out[...] = col
+        out[:, :ov_h, :ov_w] = tile[:, :ov_h, :ov_w]
+        return out

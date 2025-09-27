@@ -3,6 +3,7 @@ version: "3.8"
 services:
   wsi_service:
     build:
+      dockerfile: "build_standalone/Dockerfile"
       context: "."
       target: wsi_service_production
       network: "${COMPOSE_NETWORK}"

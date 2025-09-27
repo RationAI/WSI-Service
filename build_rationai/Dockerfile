@@ -1,5 +1,5 @@
 ARG DEPLOY_FOLDER=build_rationai
-FROM cerit.io/rationai/production/build-runner:v0.0.1 AS wsi_service_build
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/test-runner:0.4.11@sha256:a9a05dc857152268cc06ce7c8a2da338921eba66299744b83b21590160f57064 AS wsi_service_build
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -23,33 +23,27 @@ RUN poetry build && poetry export -f requirements.txt > requirements.txt
 WORKDIR /wsi-service/wsi_service_base_plugins/wsidicom
 RUN poetry build && poetry export -f requirements.txt > requirements.txt
 
-# TODO: what about this plugin - needed? not in main Dockerfile
-WORKDIR /wsi-service/wsi_service_base_plugins/tifffile_generic
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
 
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/python-base:0.3.8@sha256:c1a82816aef0f5e2ff605843df0bb2c41bc1bf5df1bec2c2fe9532874f53a9d0 AS wsi_service_intermediate
 
-FROM ubuntu:22.04@sha256:bcc511d82482900604524a8e8d64bf4c53b2461868dac55f4d04d660e61983cb AS wsi_service_intermediate
-
+USER root
 RUN apt-get update \
-  && apt-get install --no-install-recommends -y build-essential python3-pip python3-packaging python3-dev \
+  && apt-get install --no-install-recommends -y build-essential python3-pip python3-dev \
   && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /artifacts
 COPY --from=wsi_service_build /wsi-service/requirements.txt /artifacts
-RUN pip install -r /artifacts/requirements.txt
+RUN pip install -r /artifacts/requirements.txt --break-system-packages
 
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/openslide/requirements.txt /artifacts/requirements_openslide.txt
-RUN pip install -r /artifacts/requirements_openslide.txt
+RUN pip install -r /artifacts/requirements_openslide.txt --break-system-packages
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/pil/requirements.txt /artifacts/requirements_pil.txt
-RUN pip install -r /artifacts/requirements_pil.txt
+RUN pip install -r /artifacts/requirements_pil.txt --break-system-packages
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tifffile/requirements.txt /artifacts/requirements_tiffile.txt
-RUN pip install -r /artifacts/requirements_tiffile.txt
+RUN pip install -r /artifacts/requirements_tiffile.txt --break-system-packages
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tiffslide/requirements.txt /artifacts/requirements_tiffslide.txt
-RUN pip install -r /artifacts/requirements_tiffslide.txt
+RUN pip install -r /artifacts/requirements_tiffslide.txt --break-system-packages
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/wsidicom/requirements.txt /artifacts/requirements_wsidicom.txt
-RUN pip install -r /artifacts/requirements_wsidicom.txt
-COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tifffile_generic/requirements.txt /artifacts/requirements_tiffile_generic.txt
-RUN pip install -r /artifacts/requirements_tiffile_generic.txt
+RUN pip install -r /artifacts/requirements_wsidicom.txt --break-system-packages
 
 COPY --from=wsi_service_build /wsi-service/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/openslide/dist/ /wsi-service/dist/
@@ -57,11 +51,8 @@ COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/pil/dist/ /w
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tifffile/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tiffslide/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/wsidicom/dist/ /wsi-service/dist/
-COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tifffile_generic/dist/ /wsi-service/dist/
 
-RUN pip3 install /wsi-service/dist/*.whl
-
-RUN mkdir /data
+RUN pip3 install /wsi-service/dist/*.whl --break-system-packages
 
 
 
@@ -72,26 +63,24 @@ RUN poetry install
 
 
 
-FROM ubuntu:22.04@sha256:c9cf959fd83770dfdefd8fb42cfef0761432af36a764c077aed54bbc5bb25368 AS wsi_service_production
+FROM registry.gitlab.com/empaia/integration/ci-docker-images/python-base:0.3.8@sha256:c1a82816aef0f5e2ff605843df0bb2c41bc1bf5df1bec2c2fe9532874f53a9d0 AS wsi_service_production
 ARG DEPLOY_FOLDER
+USER root
 
-COPY --chown=www-data --from=wsi_service_intermediate /usr/local/lib/python3.10/dist-packages/ /usr/local/lib/python3.10/dist-packages/
-COPY --chown=www-data --from=wsi_service_intermediate /data /data
-COPY --chown=www-data ${DEPLOY_FOLDER}/pod.run.sh /usr/local/lib/python3.10/dist-packages/wsi_service
+COPY --chown=appuser --from=wsi_service_intermediate /usr/local/lib/python3.12/dist-packages/ /usr/local/lib/python3.12/dist-packages/
+COPY --chown=appuser ${DEPLOY_FOLDER}/pod.run.sh /usr/local/lib/python3.12/dist-packages/wsi_service
 
 RUN apt-get update \
-  && apt-get install --no-install-recommends -y python3 python3-pip python3-packaging tini curl nano \
+  && apt-get install --no-install-recommends -y python3 python3-pip tini curl nano \
   && rm -rf /var/lib/apt/lists/* \
-  && usermod --non-unique --uid 1000 www-data \
-  && mkdir /artifacts && chown www-data:www-data /artifacts \
-  && mkdir -p /opt/app/bin && chown www-data:www-data /opt/app/bin \
-  && chmod a+x /usr/local/lib/python3.10/dist-packages/wsi_service/pod.run.sh \
-  && chown www-data -R /usr/local/lib/python3.10/dist-packages/wsi_service \
+  && mkdir -p /opt/app/bin && chown appuser:appuser /opt/app/bin \
+  && chmod a+x /usr/local/lib/python3.12/dist-packages/wsi_service/pod.run.sh \
+  && chown appuser -R /usr/local/lib/python3.12/dist-packages/wsi_service \
   && mkdir -p modules
 EXPOSE 8080/tcp
 ENV WEB_CONCURRENCY=8
 
-WORKDIR /usr/local/lib/python3.10/dist-packages/wsi_service
+WORKDIR /usr/local/lib/python3.12/dist-packages/wsi_service
 
 # TODO move openslide build elsewhere to avoid expensive task last
 RUN apt-get update && apt-get install --no-install-recommends -y \
@@ -111,7 +100,6 @@ RUN git clone https://github.com/iewchen/openslide.git /openslide-lib \
   && meson compile -C builddir \
   && meson install -C builddir
 
-
-COPY --chown=www-data ./build_rationai/*.env .
-#USER www-data
+COPY --chown=appuser ./build_rationai/*.env .
+USER appuser
 ENTRYPOINT ["./pod.run.sh"]

@@ -231,15 +231,20 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_level(slide_info, level)
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
-        if not settings.apply_padding or check_complete_region_overlap(slide_info, level, start_x, start_y, size_x, size_y):
-            image_region = await slide.get_region(level, start_x, start_y, size_x, size_y,
-                                                  padding_color=vp_color, z=z, icc_profile_intent=icc_profile_intent,
-                                                  icc_profile_strict=icc_profile_strict,)
+        if not settings.apply_padding or check_complete_region_overlap(
+                slide_info, level, start_x, start_y, size_x, size_y):
+            image_region = await slide.get_region(
+                level, start_x, start_y, size_x, size_y,
+                padding_color=vp_color, z=z,
+                icc_profile_intent=icc_profile_intent, icc_profile_strict=icc_profile_strict,
+            )
         else:
+            # edge/out-of-bounds path: pick extend vs shrink based on settings
             image_region = await get_extended_region(
                 slide.get_region, slide_info, level, start_x, start_y, size_x, size_y,
-                padding_color=vp_color, z=z, icc_profile_intent=icc_profile_intent,
-                icc_profile_strict=icc_profile_strict,
+                padding_color=vp_color, z=z,
+                icc_profile_intent=icc_profile_intent, icc_profile_strict=icc_profile_strict,
+                extend=True if settings.apply_padding else False,  # mirror tile behavior
             )
         return make_response(slide, image_region, image_format, image_quality, image_channels)
 
@@ -311,15 +316,28 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_level(slide_info, level)
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
-        if not settings.get_tile_apply_padding or check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
-            image_tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z,
-                                              icc_profile_intent=icc_profile_intent,
-                                              icc_profile_strict=icc_profile_strict,
+
+        if check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
+            image_tile = await slide.get_tile(
+                level, tile_x, tile_y,
+                padding_color=padding_color,
+                z=z,
+                icc_profile_intent=icc_profile_intent,
+                icc_profile_strict=icc_profile_strict,
+            )
+        elif settings.get_tile_apply_padding:
+            image_tile = await get_extended_tile(
+                slide.get_tile, slide_info, level, tile_x, tile_y,
+                padding_color=vp_color, z=z,
+                icc_profile_intent=icc_profile_intent, icc_profile_strict=icc_profile_strict,
+                extend=True,  # pad to full tile
             )
         else:
             image_tile = await get_extended_tile(
-                slide.get_tile, slide_info, level, tile_x, tile_y, padding_color=vp_color, z=z,
+                slide.get_tile, slide_info, level, tile_x, tile_y,
+                padding_color=vp_color, z=z,
                 icc_profile_intent=icc_profile_intent, icc_profile_strict=icc_profile_strict,
+                extend=False,  # pad to full tile
             )
         return make_response(slide, image_tile, image_format, image_quality, image_channels)
 
