@@ -8,23 +8,23 @@ from fastapi import HTTPException
 from filelock import FileLock
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from wsi_service.base_mapper import BaseMapper
 from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper
 from wsi_service.custom_models.old_v3.storage import SlideStorage, StorageAddress
 from wsi_service.utils.app_utils import local_mode_collect_secondary_files_v3
 from wsi_service.singletons import logger
 
+
 class CSVMapperSettings(BaseSettings):
-    source: str = 'data.csv'
-    separator: str = '\t'
+    source: str = "data.csv"
+    separator: str = "\t"
     group_1: int = 0
     group_2: int = 1
     slide_id: int = 2
     case_id: int = 3
     path: int = 4
 
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", env_prefix="csws_"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", env_prefix="csws_")
 
 
 class IteratedCaseLocalMapper(CaseLocalMapper):
@@ -90,7 +90,7 @@ def create_slide_object(settings, case, row, server_root):
     return slide
 
 
-class CSVMapper:
+class CSVMapper(BaseMapper):
     """
     CSV Mapper will read CSV file definitions: (indexes are configurable)
     GROUP_1       GROUP_2     SLIDE_ID     CASE        PATH
@@ -105,7 +105,7 @@ class CSVMapper:
 
     def __init__(self, data_dir):
         self.settings = CSVMapperSettings()
-        self.data_dir = data_dir
+        super().__init__(data_dir)
         self.hash = None
         self.case_map = {}
         self.slide_map = {}
@@ -142,7 +142,7 @@ class CSVMapper:
         settings = self.settings
         case_map = {}
         slide_map = {}
-        with open(path, 'r') as file:
+        with open(path, "r") as file:
             reader = csv.reader(file, delimiter=settings.separator)
             for data in reader:
                 case_id = data[settings.case_id]
@@ -166,7 +166,7 @@ class CSVMapper:
             the_error = None
             for root, dirs, files in os.walk(path):
                 for file in files:
-                    if file.endswith('.csv') or file.endswith('.tsv'):
+                    if file.endswith(".csv") or file.endswith(".tsv"):
                         try:
                             file_path = os.path.join(root, file)
                             self._read_csv_file(file_path)
@@ -200,7 +200,7 @@ class CSVMapper:
                 data_dir_changed = data["data_dir"] != self.data_dir
         return data_dir_changed
 
-    def get_cases(self):
+    def get_cases(self, context=None):
         self.load()
         return list(self.case_map.values())
 

@@ -6,6 +6,7 @@ from uuid import NAMESPACE_URL, uuid5
 from fastapi import HTTPException
 from filelock import FileLock
 
+from wsi_service.base_mapper import BaseMapper
 from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper
 from wsi_service.custom_models.old_v3.storage import SlideStorage, StorageAddress
 from wsi_service.plugins import is_supported_format
@@ -13,9 +14,10 @@ from wsi_service.plugins import is_supported_format
 from .iterator.settings import SettingsIterator
 from .iterator.iterator import iterate
 
-class IteratorMapper:
+
+class IteratorMapper(BaseMapper):
     def __init__(self, data_dir):
-        self.data_dir = data_dir
+        super().__init__(data_dir)
         self.hash = None
         self.case_map = {}
         self.slide_map = {}
@@ -59,7 +61,7 @@ class IteratorMapper:
                 data_dir_changed = data["data_dir"] != self.data_dir
         return data_dir_changed
 
-    def get_cases(self):
+    def get_cases(self, context=None):
         self.load()
         return list(self.case_map.values())
 
