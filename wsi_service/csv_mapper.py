@@ -1,8 +1,8 @@
+import csv
 import hashlib
 import os
 import pickle
 import uuid
-import csv
 
 from fastapi import HTTPException
 from filelock import FileLock
@@ -11,8 +11,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from wsi_service.base_mapper import BaseMapper
 from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper
 from wsi_service.custom_models.old_v3.storage import SlideStorage, StorageAddress
-from wsi_service.utils.app_utils import local_mode_collect_secondary_files_v3
 from wsi_service.singletons import logger
+from wsi_service.utils.app_utils import local_mode_collect_secondary_files_v3
 
 
 class CSVMapperSettings(BaseSettings):
@@ -201,6 +201,8 @@ class CSVMapper(BaseMapper):
         return data_dir_changed
 
     def get_cases(self, context=None):
+        if context is not None:
+            logger.warning(f"CSVMapper: received unexpected context='{context}', ignoring.")
         self.load()
         return list(self.case_map.values())
 

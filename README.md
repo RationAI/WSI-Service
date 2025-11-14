@@ -161,7 +161,7 @@ It's simple, but inflexible. IDs are generated randomly as UUID4.
 
 The Paths Mapper supports accessing both cases and slides by their relative paths to the server data directory root.
 This mapper is **context-dependent** and requires the `context` parameter when listing cases.
-The `context` corresponds to a relative directory path (using `>` as separator instead of `/`) within the server data root.
+The `context` corresponds to a relative directory path within the server data root.
 
 This mapper is manily for fast-use, debugging purposes.
 

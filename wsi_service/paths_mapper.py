@@ -9,9 +9,14 @@ from wsi_service.plugins import is_supported_format
 from wsi_service.utils.app_utils import local_mode_collect_secondary_files_v3
 
 
-# File paths mapper that expects file paths in path>to>file instead of path/to/file
-#  (URL compatibility reasons)
 class PathsMapper(BaseMapper):
+    """
+    Mapper that exposes the directory structure of the data directory.
+
+    The `context` parameter represents a relative path inside `data_dir`.
+    It may use "/" (preferred) or ">" (fallback compatibility, is converted to "/") as a separator.
+    """
+
     def __init__(self, data_dir):
         super().__init__(data_dir)
         self.is_context_dependent = True
@@ -30,14 +35,14 @@ class PathsMapper(BaseMapper):
 
         cases = []
         for d in subdirs:
-            case_id = f"{context}>{d}"
+            case_id = f"{context}/{d}"
             case_path = os.path.join(abs_context_path, d)
 
             slide_ids = []
             for file in os.listdir(case_path):
                 absfile = os.path.join(case_path, file)
                 if os.path.isfile(absfile) and is_supported_format(absfile):
-                    slide_ids.append(f"{case_id}>{file}")
+                    slide_ids.append(f"{case_id}/{file}")
 
             cases.append(
                 CaseLocalMapper(
@@ -62,7 +67,7 @@ class PathsMapper(BaseMapper):
             if not os.path.isfile(absfile):
                 continue
             if is_supported_format(absfile):
-                slide_id = f"{case_id}>{file}"
+                slide_id = f"{case_id}/{file}"
                 addresses = local_mode_collect_secondary_files_v3(absfile, slide_id, slide_id, self.data_dir)
                 slides.append(
                     SlideLocalMapper(

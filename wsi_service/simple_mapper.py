@@ -10,8 +10,8 @@ from wsi_service.base_mapper import BaseMapper
 from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper
 from wsi_service.custom_models.old_v3.storage import SlideStorage, StorageAddress
 from wsi_service.plugins import is_supported_format
-from wsi_service.utils.app_utils import local_mode_collect_secondary_files_v3
 from wsi_service.singletons import logger
+from wsi_service.utils.app_utils import local_mode_collect_secondary_files_v3
 
 
 class SimpleMapper(BaseMapper):
@@ -97,6 +97,8 @@ class SimpleMapper(BaseMapper):
                     )
 
     def get_cases(self, context=None):
+        if context is not None:
+            logger.warning(f"SimpleMapper: received unexpected context='{context}', ignoring.")
         self.load()
         return list(self.case_map.values())
 

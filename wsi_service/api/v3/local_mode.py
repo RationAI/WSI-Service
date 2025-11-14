@@ -3,7 +3,7 @@ from typing import List, Optional
 from fastapi import Query
 from fastapi.responses import JSONResponse
 
-from wsi_service.api.v3.singletons import localmapper, api_integration
+from wsi_service.api.v3.singletons import api_integration, localmapper
 from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper, SlideStorage
 from wsi_service.custom_models.queries import IdQuery
 
@@ -17,7 +17,7 @@ def add_routes_local_mode(app, settings):
     ):
         """
         (Only in standalone mode) Browse the local directory and return case ids for each available directory.
-        If the mapper is context-dependent (PathsMapper), you can pass ?context=some>folder.
+        If the mapper is context-dependent, you can pass ?context=context_value (e.g. ?context=some>folder when using PathsMapper).
         """
         cases = localmapper.get_cases(context=context)
         return cases

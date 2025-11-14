@@ -10,9 +10,10 @@ from wsi_service.base_mapper import BaseMapper
 from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper
 from wsi_service.custom_models.old_v3.storage import SlideStorage, StorageAddress
 from wsi_service.plugins import is_supported_format
+from wsi_service.singletons import logger
 
-from .iterator.settings import SettingsIterator
 from .iterator.iterator import iterate
+from .iterator.settings import SettingsIterator
 
 
 class IteratorMapper(BaseMapper):
@@ -62,6 +63,8 @@ class IteratorMapper(BaseMapper):
         return data_dir_changed
 
     def get_cases(self, context=None):
+        if context is not None:
+            logger.warning(f"IteratorMapper: received unexpected context='{context}', ignoring.")
         self.load()
         return list(self.case_map.values())
 
