@@ -118,6 +118,26 @@ WS_MAPPER_ADDRESS=
 WS_LOCAL_MODE=<PYTHON MODULE PATH - SEE BELOW>
 WS_ENABLE_LOCAL_ROUTES=True  # or False, but then local mode endpoints will not be available
 `````
+
+### Base Mapper Interface
+
+All local mappers now share a unified base interface defined in `BaseMapper`.
+Each mapper provides the following core methods:
+
+- `get_cases(context=None)`
+- `get_slides(case_id)`
+- `get_slide(slide_id)`
+- optionally: `refresh()` and `load()` (used only by context-independent mappers for local cache management)
+
+Each mapper also defines the attribute:
+
+- `is_context_dependent`: indicates whether the mapper requires an additional `context` parameter when listing cases.
+
+Among the built-in mappers:
+- `PathsMapper` is **context-dependent** (`is_context_dependent=True`)
+- `SimpleMapper`, `CSVMapper`, and `IteratorMapper` are **context-independent** (`is_context_dependent=False`)
+
+
 Following subsections describe all builtin local mappers:
 #### Mapper: Simple Mapper
 > ``WS_LOCAL_MODE=wsi_service.simple_mapper:SimpleMapper``
@@ -139,10 +159,11 @@ It's simple, but inflexible. IDs are generated randomly as UUID4.
 #### Mapper: Paths Mapper
 > ``WS_LOCAL_MODE=wsi_service.paths_mapper:PathsMapper``
 
-The paths mapper does not yet support cases. You can access
-any slide by its path relative to the server data directory root.
+The Paths Mapper supports accessing both cases and slides by their relative paths to the server data directory root.
+This mapper is **context-dependent** and requires the `context` parameter when listing cases.
+The `context` corresponds to a relative directory path within the server data root.
 
-This mapper is manily for fast-use, debugging purposes. It is not matured enough.
+This mapper is manily for fast-use, debugging purposes.
 
 #### Mapper: CSV Mapper
 >  ````
