@@ -125,7 +125,8 @@ async def batch_safe_get_region(slide,
                                 image_channels,
                                 vp_color,
                                 z,
-                                icc_intent):
+                                icc_profile_intent,
+                                icc_profile_strict):
     try:
         validate_image_level(slide_info, level)
         validate_image_z(slide_info, z)
@@ -137,7 +138,7 @@ async def batch_safe_get_region(slide,
         #     image_region = await get_extended_region(
         #         slide.get_region, slide_info, level, start_x, start_y, size_x, size_y, padding_color=vp_color, z=z)
         return await slide.get_region(level, start_x, start_y, size_x, size_y,
-                                      padding_color=vp_color, z=z, icc_intent=icc_intent)
+                                      padding_color=vp_color, z=z, icc_profile_intent=icc_profile_intent, icc_profile_strict=icc_profile_strict)
     except Exception as e:
         logger.error(e)
         return None
@@ -151,7 +152,8 @@ async def batch_safe_get_tile(slide,
                               image_channels,
                               vp_color,
                               z,
-                              icc_intent):
+                              icc_profile_intent,
+                              icc_profile_strict):
     try:
         validate_image_level(slide_info, level)
         validate_image_z(slide_info, z)
@@ -162,7 +164,7 @@ async def batch_safe_get_tile(slide,
         # else:
         #     image_tile = await get_extended_tile(
         #         slide.get_tile, slide_info, level, tile_x, tile_y, padding_color=vp_color, z=z)
-        tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z, icc_intent=icc_intent)
+        tile = await slide.get_tile(level, tile_x, tile_y, padding_color=vp_color, z=z, icc_profile_intent=icc_profile_intent, icc_profile_strict=icc_profile_strict)
         return tile
     except Exception as e:
         logger.error(e)
