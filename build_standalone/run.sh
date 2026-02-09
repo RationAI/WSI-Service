@@ -25,4 +25,5 @@ else
 fi
 
 # Start Gunicorn
+echo "gunicorn -k $WORKER_CLASS -c $GUNICORN_CONF $APP_MODULE $@"
 gunicorn -k "$WORKER_CLASS" -c "$GUNICORN_CONF" "$APP_MODULE" $@
