@@ -38,6 +38,7 @@ jobs:
       with:
         file: ./build_standalone/Dockerfile
         context: .
+        target: wsi_service_production
         push: true
         tags: |
           ghcr.io/rationai/wsi-service:${{ env.TAG_NAME }}
@@ -49,6 +50,7 @@ jobs:
       with:
         file: ./build_standalone/Dockerfile
         context: .
+        target: wsi_service_production
         push: true
         tags: |
           ghcr.io/rationai/wsi-service:${{ env.TAG_NAME }}

@@ -11,7 +11,7 @@ if git submodule status | grep --quiet '^-'; then
 fi
 
 git submodule update
-IMAGE_NAME_TAG="${RAT_IMAGE_WBS:=wsi-service-standalone:v0.15.3}"
+IMAGE_NAME_TAG="${RAT_IMAGE_WBS:=wsi-service-standalone:v0.15.0}"
 
 echo
 echo "Starting build: docker build -t "$IMAGE_NAME_TAG" -f $BASEDIR/Dockerfile ."
