@@ -200,18 +200,22 @@ def validate_image_level(slide_info, level):
 
 def local_mode_abs_file_path_to_relative(filepath: str, server_data_root: str):
     if not server_data_root.endswith("/"):
-        server_data_root = server_data_root + "/"
-    return filepath.replace(server_data_root, "")
+        server_data_root += "/"
+    if filepath.startswith(server_data_root):
+        return filepath[len(server_data_root):]
+    return filepath
 
 
 def local_mode_collect_secondary_files_v3(main_address: str, storage_address_id: str, slide_id: str, relative_to: str):
+    if not relative_to.endswith("/"):
+        relative_to += "/"
+
     abspath = relpath = main_address
     if main_address.startswith(relative_to):
-        relpath = abspath.replace(relative_to + "/", "")
+        relpath = main_address.removeprefix(relative_to)
     else:
         abspath = os.path.join(relative_to, relpath)
 
-    logger.info(f"{abspath } { relpath }  { relative_to}")
     # Dicom
     if os.path.isdir(abspath):
         result = list(map(lambda f:
@@ -238,7 +242,6 @@ def local_mode_collect_secondary_files_v3(main_address: str, storage_address_id:
             for f in additional_files
         ]
 
-    # Other supported files are typically single file
     else:
         result = []
 
