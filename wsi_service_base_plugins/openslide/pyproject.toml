@@ -2,7 +2,7 @@
 name = "wsi-service-plugin-openslide"
 version = "1.4.2"
 description = ""
-authors = ["EMPAIA <dev-support@empaia.org>"]
+authors = ["Jirka Horák <horakj@mail.muni.cz>, EMPAIA <dev-support@empaia.org>"]
 license = "MIT"
 
 [tool.poetry.dependencies]

@@ -2,7 +2,7 @@ import asyncio
 from io import BytesIO
 
 import numpy as np
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 from wsi_service.plugins import load_slide
 from wsi_service.utils.image_utils import (
@@ -67,6 +67,9 @@ class Slide:
         if isinstance(data, Image.Image):
             return np.array(data)
         if isinstance(data, bytes):
-            return np.array(Image.open(BytesIO(data)))
+            try:
+                return np.array(Image.open(BytesIO(data)))
+            except UnidentifiedImageError:
+                return data
         if isinstance(data, (np.ndarray, np.generic)):
             return data

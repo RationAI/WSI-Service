@@ -13,12 +13,15 @@ from wsi_service.utils.image_utils import (
 )
 
 from wsi_service.utils.app_utils import (
+    coerce_passthrough_payload,
     process_image_region,
     process_image_region_raw,
+    normalize_image_format,
     validate_image_level,
     validate_image_channels,
     validate_image_z,
     supported_image_formats,
+    supported_passthrough_formats,
     alternative_spellings
 )
 
@@ -65,26 +68,26 @@ def batch_safe_make_response(slides, image_regions, image_format, image_quality,
         for i in range(len(slides)):
             image_region = image_regions[i]
             slide = slides[i]
+            output_format = normalize_image_format(image_format)
 
-            if image_format != "raw":
-                if isinstance(image_region, bytes):
-                    if image_format == "jpeg":
-                        zip.writestr(f't{i + 1}.jpeg', image_region)
-                        continue
-                    else:
-                        image_region = Image.open(BytesIO(image_region))
-            else:
-                zip.writestr(f't{i + 1}.raw', image_region)
+            if output_format in supported_passthrough_formats:
+                payload = coerce_passthrough_payload(image_region, output_format)
+                zip.writestr(f't{i + 1}.{output_format}', payload)
+                continue
 
-            if image_format == "tiff":
+            if isinstance(image_region, bytes):
+                if output_format == "jpeg":
+                    zip.writestr(f't{i + 1}.jpeg', image_region)
+                    continue
+                image_region = Image.open(BytesIO(image_region))
+
+            if output_format == "tiff":
                 mem = BytesIO()
                 try:
                     # return raw image region as tiff
                     narray = process_image_region_raw(image_region, image_channels)
-                    if image_format in alternative_spellings:
-                        image_format = alternative_spellings[image_format]
 
-                    if image_format not in supported_image_formats:
+                    if output_format not in supported_image_formats:
                         raise HTTPException(status_code=400,
                                             detail="Provided image format parameter not supported for OME tiff")
                     if narray.shape[0] == 1:
@@ -93,7 +96,7 @@ def batch_safe_make_response(slides, image_regions, image_format, image_quality,
                         tifffile.imwrite(mem, narray, photometric="minisblack", planarconfig="separate",
                                          compression="DEFLATE")
                     mem.seek(0)
-                    zip.writestr(f't{i + 1}.{image_format}', mem.getvalue())
+                    zip.writestr(f't{i + 1}.{output_format}', mem.getvalue())
                 except Exception as ex:
                     # just indicate error --> empty archive
                     zip.writestr(f't{i + 1}.err', getattr(ex, 'message', repr(ex)))
@@ -108,7 +111,7 @@ def batch_safe_make_response(slides, image_regions, image_format, image_quality,
                         raise HTTPException(status_code=400, detail="Provided image format parameter not supported")
 
                     mem = save_rgb_image(img, image_format, image_quality)
-                    zip.writestr(f't{i + 1}.{image_format}', mem.getvalue())
+                    zip.writestr(f't{i + 1}.{output_format}', mem.getvalue())
                 except Exception as ex:
                     # just indicate error --> empty archive
                     zip.writestr(f't{i + 1}.err', getattr(ex, 'message', repr(ex)))
