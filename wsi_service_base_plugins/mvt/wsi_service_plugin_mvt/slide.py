@@ -106,7 +106,10 @@ class Slide(BaseSlide):
         if self._mbtiles_conn is not None:
             data = self._get_tile_from_mbtiles(zoom, tile_x, tile_y)
             if data[:2] == b"\x1f\x8b":
-                data = gzip.decompress(data)
+                try:
+                    data = gzip.decompress(data)
+                except (OSError, gzip.BadGzipFile) as exc:
+                    raise HTTPException(status_code=500, detail=f"Failed to decompress tile: {exc}") from exc
             return data
 
         if self.root is None:
