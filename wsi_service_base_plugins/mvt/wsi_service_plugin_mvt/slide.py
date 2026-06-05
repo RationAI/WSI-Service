@@ -104,7 +104,10 @@ class Slide(BaseSlide):
             raise HTTPException(status_code=404, detail="Tile does not exist.")
 
         if self._mbtiles_conn is not None:
-            return self._get_tile_from_mbtiles(zoom, tile_x, tile_y)
+            data = self._get_tile_from_mbtiles(zoom, tile_x, tile_y)
+            if data[:2] == b"\x1f\x8b":
+                data = gzip.decompress(data)
+            return data
 
         if self.root is None:
             raise HTTPException(status_code=500, detail="Tile dataset is not initialized correctly.")
@@ -113,7 +116,10 @@ class Slide(BaseSlide):
         for suffix in self._tile_suffixes:
             candidate = self.root / str(zoom) / str(tile_x) / f"{lookup_tile_y}{suffix}"
             if candidate.exists() and candidate.is_file():
-                return candidate.read_bytes()
+                data = candidate.read_bytes()
+                if data[:2] == b"\x1f\x8b":
+                    data = gzip.decompress(data)
+                return data
 
         raise HTTPException(status_code=404, detail="Tile does not exist.")
 
