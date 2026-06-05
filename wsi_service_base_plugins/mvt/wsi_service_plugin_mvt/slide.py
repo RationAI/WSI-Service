@@ -121,7 +121,10 @@ class Slide(BaseSlide):
             if candidate.exists() and candidate.is_file():
                 data = candidate.read_bytes()
                 if data[:2] == b"\x1f\x8b":
-                    data = gzip.decompress(data)
+                    try:
+                        data = gzip.decompress(data)
+                    except (OSError, gzip.BadGzipFile) as exc:
+                        raise HTTPException(status_code=500, detail=f"Failed to decompress tile: {exc}") from exc
                 return data
 
         raise HTTPException(status_code=404, detail="Tile does not exist.")
