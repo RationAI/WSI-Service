@@ -104,7 +104,15 @@ class Slide(BaseSlide):
             raise HTTPException(status_code=404, detail="Tile does not exist.")
 
         if self._mbtiles_conn is not None:
-            return self._get_tile_from_mbtiles(zoom, tile_x, tile_y)
+            data = self._get_tile_from_mbtiles(zoom, tile_x, tile_y)
+            # if gzip magic bytes
+            # todo: consider support for keeping the data gzipped so that upstream server can avoid re-zipping
+            if data[:2] == b"\x1f\x8b":
+                try:
+                    data = gzip.decompress(data)
+                except (OSError, gzip.BadGzipFile) as exc:
+                    raise HTTPException(status_code=500, detail=f"Failed to decompress tile: {exc}") from exc
+            return data
 
         if self.root is None:
             raise HTTPException(status_code=500, detail="Tile dataset is not initialized correctly.")
@@ -113,7 +121,15 @@ class Slide(BaseSlide):
         for suffix in self._tile_suffixes:
             candidate = self.root / str(zoom) / str(tile_x) / f"{lookup_tile_y}{suffix}"
             if candidate.exists() and candidate.is_file():
-                return candidate.read_bytes()
+                data = candidate.read_bytes()
+                # if gzip magic bytes
+                # todo: consider support for keeping the data gzipped so that upstream server can avoid re-zipping
+                if data[:2] == b"\x1f\x8b":
+                    try:
+                        data = gzip.decompress(data)
+                    except (OSError, gzip.BadGzipFile) as exc:
+                        raise HTTPException(status_code=500, detail=f"Failed to decompress tile: {exc}") from exc
+                return data
 
         raise HTTPException(status_code=404, detail="Tile does not exist.")
 
