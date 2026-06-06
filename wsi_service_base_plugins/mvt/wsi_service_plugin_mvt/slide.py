@@ -105,6 +105,8 @@ class Slide(BaseSlide):
 
         if self._mbtiles_conn is not None:
             data = self._get_tile_from_mbtiles(zoom, tile_x, tile_y)
+            # if gzip magic bytes
+            # todo: consider support for keeping the data gzipped so that upstream server can avoid re-zipping
             if data[:2] == b"\x1f\x8b":
                 try:
                     data = gzip.decompress(data)
@@ -120,6 +122,8 @@ class Slide(BaseSlide):
             candidate = self.root / str(zoom) / str(tile_x) / f"{lookup_tile_y}{suffix}"
             if candidate.exists() and candidate.is_file():
                 data = candidate.read_bytes()
+                # if gzip magic bytes
+                # todo: consider support for keeping the data gzipped so that upstream server can avoid re-zipping
                 if data[:2] == b"\x1f\x8b":
                     try:
                         data = gzip.decompress(data)
