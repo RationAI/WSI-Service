@@ -42,6 +42,7 @@ pytest-asyncio = "^0.23.0"
 pytest-cov = "^4.0.0"
 pytest = "^8.0.0"
 requests-mock = "^1.9.3"
+wsi-service-plugin-mvt = { path = "wsi_service_base_plugins/mvt", develop = true }
 wsi-service-plugin-openslide = { path = "wsi_service_base_plugins/openslide", develop = true }
 wsi-service-plugin-pil = { path = "wsi_service_base_plugins/pil", develop = true }
 wsi-service-plugin-tifffile = { path = "wsi_service_base_plugins/tifffile", develop = true }

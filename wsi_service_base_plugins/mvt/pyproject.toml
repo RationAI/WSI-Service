@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "wsi-service-plugin-mvt"
+version = "0.1.0"
+description = "WSI-Service plugin for passthrough vector and JSON tile datasets"
+authors = ["Jirka Horák <horakj@mail.muni.cz>"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "wsi_service_plugin_mvt" }]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<4.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

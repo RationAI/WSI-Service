@@ -5,6 +5,7 @@ from io import BytesIO
 import os
 from pathlib import Path
 import gzip
+import json
 
 import numpy as np
 import tifffile
@@ -30,7 +31,83 @@ supported_image_formats = {
     "tiff": "image/tiff",
 }
 
-alternative_spellings = {"jpg": "jpeg", "tif": "tiff"}
+supported_passthrough_formats = {
+    "raw": "application/octet-stream",
+    "json": "application/json",
+    "geojson": "application/geo+json",
+    "mvt": "application/vnd.mapbox-vector-tile",
+    "pbf": "application/vnd.mapbox-vector-tile",
+}
+
+alternative_spellings = {
+    "jpg": "jpeg",
+    "tif": "tiff",
+    "geo+json": "geojson",
+    "mapbox-vector-tile": "mvt",
+}
+
+
+def normalize_image_format(image_format):
+    if image_format is None:
+        return None
+    return alternative_spellings.get(image_format, image_format)
+
+
+def is_passthrough_format(image_format):
+    return normalize_image_format(image_format) in supported_passthrough_formats
+
+
+def _is_gzipped(payload):
+    return isinstance(payload, (bytes, bytearray)) and len(payload) >= 2 and payload[:2] == b"\x1f\x8b"
+
+
+def coerce_passthrough_payload(payload, image_format):
+    image_format = normalize_image_format(image_format)
+
+    if isinstance(payload, memoryview):
+        return payload.tobytes()
+    if isinstance(payload, bytearray):
+        return bytes(payload)
+    if isinstance(payload, bytes):
+        return payload
+    if isinstance(payload, str):
+        return payload.encode("utf-8")
+
+    if image_format in {"json", "geojson"}:
+        try:
+            return json.dumps(payload).encode("utf-8")
+        except TypeError as ex:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Failed to serialize passthrough payload for format '{image_format}': {ex}",
+            ) from ex
+
+    raise HTTPException(
+        status_code=400,
+        detail=f"Failed to read passthrough payload for format '{image_format}'. Expected bytes or string payload.",
+    )
+
+
+def make_passthrough_response(payload, image_format, compress_raw=True):
+    image_format = normalize_image_format(image_format)
+
+    if image_format not in supported_passthrough_formats:
+        raise HTTPException(status_code=400, detail="Provided image format parameter not supported")
+
+    payload = coerce_passthrough_payload(payload, image_format)
+    headers = {"Content-Length": str(len(payload))}
+
+    if image_format == "raw" and compress_raw and not _is_gzipped(payload):
+        buf = BytesIO()
+        with gzip.GzipFile(fileobj=buf, mode="wb") as f:
+            f.write(payload)
+        payload = buf.getvalue()
+        headers["Content-Encoding"] = "gzip"
+        headers["Content-Length"] = str(len(payload))
+    elif _is_gzipped(payload):
+        headers["Content-Encoding"] = "gzip"
+
+    return Response(content=payload, media_type=supported_passthrough_formats[image_format], headers=headers)
 
 
 def process_image_region(slide, image_region, image_channels):
@@ -74,25 +151,15 @@ def process_image_region_raw(image_region, image_channels):
 
 
 def make_response(slide, image_region, image_format, image_quality, image_channels=None):
-    if image_format != "raw":
-        if isinstance(image_region, bytes):
-            if image_format == "jpeg":
-                return Response(image_region, media_type=supported_image_formats[image_format])
-            else:
-                image_region = Image.open(BytesIO(image_region))
-    else:
-        buf = BytesIO()
-        with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-            f.write(image_region)
-        compressed_data = buf.getvalue()
-        return Response(
-            content=compressed_data,
-            media_type="application/octet-stream",
-            headers={
-                "Content-Encoding": "gzip",
-                "Content-Length": str(len(compressed_data)),
-            }
-        )
+    image_format = normalize_image_format(image_format)
+
+    if is_passthrough_format(image_format):
+        return make_passthrough_response(image_region, image_format)
+
+    if isinstance(image_region, bytes):
+        if image_format == "jpeg":
+            return Response(image_region, media_type=supported_image_formats[image_format])
+        image_region = Image.open(BytesIO(image_region))
 
     if image_format == "tiff":
         # return raw image region as tiff
@@ -105,8 +172,7 @@ def make_response(slide, image_region, image_format, image_quality, image_channe
 
 
 def make_image_response(pil_image, image_format, image_quality):
-    if image_format in alternative_spellings:
-        image_format = alternative_spellings[image_format]
+    image_format = normalize_image_format(image_format)
 
     if image_format not in supported_image_formats:
         raise HTTPException(status_code=400, detail="Provided image format parameter not supported")
@@ -116,8 +182,7 @@ def make_image_response(pil_image, image_format, image_quality):
 
 
 def make_tif_response(narray, image_format):
-    if image_format in alternative_spellings:
-        image_format = alternative_spellings[image_format]
+    image_format = normalize_image_format(image_format)
 
     if image_format not in supported_image_formats:
         raise HTTPException(status_code=400, detail="Provided image format parameter not supported for OME tiff")
@@ -136,9 +201,10 @@ def make_tif_response(narray, image_format):
 
 
 def validate_image_request(image_format, image_quality):
-    if image_format not in supported_image_formats and image_format not in alternative_spellings:
+    image_format = normalize_image_format(image_format)
+    if image_format not in supported_image_formats and image_format not in supported_passthrough_formats:
         raise HTTPException(status_code=400, detail="Provided image format parameter not supported")
-    if image_quality < 0 or image_quality > 100:
+    if image_quality is not None and (image_quality < 0 or image_quality > 100):
         raise HTTPException(status_code=400, detail="Provided image quality parameter not supported")
 
 

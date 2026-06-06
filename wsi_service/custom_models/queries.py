@@ -10,7 +10,12 @@ IdQuery = Query(
 )
 
 ImageFormatsQuery = Query(
-    "jpeg", description="Image format (e.g. bmp, gif, jpeg, png, tiff). For raw image data choose 'tiff'. For raw byte stream choose 'raw'."
+    "jpeg",
+    description=(
+        "Output format (e.g. bmp, gif, jpeg, png, tiff, raw, json, geojson, mvt, pbf). "
+        "Raster formats are encoded by WSI-Service. Passthrough formats are returned directly when the plugin "
+        "provides bytes or text payloads."
+    ),
 )
 
 ImageQualityQuery = Query(

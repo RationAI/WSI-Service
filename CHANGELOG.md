@@ -1,8 +1,13 @@
 # Changelog
 
+## 0.16.0
+- Support for vector data
+- MVT plugin introduction.
+
 ## 0.15.0
 - Support for `context` argument in getting slides to allow dynamic case browsing.
 - Mappers are now separated into context-free and context-bound iterators.
+- Fix rooth path parsing.
 
 ## 0.14.0
 - ICC Profile Support
