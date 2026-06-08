@@ -100,8 +100,8 @@ re-prioritized via `WS_PLUGIN_PRIORITY_<NAME>` env vars (see [Plugin development
 | --- | --- |
 | [openslide](./wsi_service_base_plugins/openslide/) | 3DHISTECH (`.mrxs`), HAMAMATSU (`.ndpi`), LEICA (`.scn`), VENTANA (`.bif`), ZEISS (`.czi`), DICOM folders |
 | [pil](./wsi_service_base_plugins/pil/) | JPEG (`.jpeg`, `.jpg`), PNG (`.png`) |
-| [tifffile](./wsi_service_base_plugins/tifffile/) | OME-TIFF (`.ome.tif`, `.ome.tiff`, `.ome.tf2`, `.ome.tf8`, `.ome.btf`) |
-| [tiffslide](./wsi_service_base_plugins/tiffslide/) | APERIO (`.svs`), generic TIFF (`.tif`, `.tiff`) |
+| [tifffile](./wsi_service_base_plugins/tifffile/) | OME-TIFF (`.ome.tif`, `.ome.tiff`, `.ome.tf2`, `.ome.tf8`, `.ome.btf`); generic multichannel TIFF (`.tif`, `.tiff`, `.tf2`, `.tf8`, `.btf`) — page-per-channel or chunky `SamplesPerPixel>1` layouts, non-RGB photometric |
+| [tiffslide](./wsi_service_base_plugins/tiffslide/) | APERIO (`.svs`), generic RGB(A) TIFF (`.tif`, `.tiff`) |
 | [wsidicom](./wsi_service_base_plugins/wsidicom/) | DICOM folders |
 | [mvt](./wsi_service_base_plugins/mvt/) | **Vector tiles** — see [next section](#vector-tile-datasets) |
 
