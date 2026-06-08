@@ -1,10 +1,10 @@
 import re
-import xml.etree.ElementTree as xml
 from threading import Lock
 from PIL import Image
 
 import numpy as np
 import tifffile
+from defusedxml import ElementTree as xml
 from fastapi import HTTPException
 from skimage import transform, util
 
@@ -154,6 +154,26 @@ class Slide(BaseSlide):
         if self.layout == _LAYOUT_CHUNKY_SAMPLES:
             # Single page holds all channels in the last axis (samplesperpixel).
             page = tif_level.pages[0]
+            if not page.keyframe.is_tiled:
+                # __read_region_of_page_untiled allocates a 2-D (H, W) output and would crash
+                # when assigning the (H, W, S) slice from page.asarray(). Read directly here.
+                page_frame = page.keyframe
+                page_width, page_height = page_frame.imagewidth, page_frame.imagelength
+                page_array = page.asarray()
+                if page_array.ndim == 2:
+                    page_array = np.expand_dims(page_array, axis=-1)
+                new_height = page_height - start_y if (start_y + size_y > page_height) else size_y
+                new_width = page_width - start_x if (start_x + size_x > page_width) else size_x
+                S = page_frame.samplesperpixel
+                out = np.empty((S, size_y, size_x), dtype=page_frame.dtype)
+                for s in range(S):
+                    fill_val = self.__get_color_for_channel(s, self.slide_info.channel_depth, padding_color)
+                    out[s].fill(fill_val)
+                if new_height > 0 and new_width > 0:
+                    crop = page_array[start_y : start_y + new_height, start_x : start_x + new_width]
+                    out[:, 0:new_height, 0:new_width] = np.moveaxis(crop, -1, 0)
+                return out
+
             channel_data = self.__read_region_of_page(page, 0, start_y, start_x, size_y, size_x, padding_color)
             # channel_data shape from tiled path: (Z, H, W, S); from untiled path: (1, H, W, 1).
             arr = np.asarray(channel_data)
@@ -480,7 +500,7 @@ class Slide(BaseSlide):
         try:
             ij = getattr(self.tif_slide, "imagej_metadata", None) or {}
             labels = ij.get("Labels")
-            if isinstance(labels, (list, tuple)) and len(labels) >= num_channels:
+            if isinstance(labels, (list, tuple)) and len(labels) > 0:
                 return [str(x) for x in labels[:num_channels]]
         except Exception:
             pass
@@ -491,11 +511,11 @@ class Slide(BaseSlide):
             if description:
                 # Bio-Formats: "Channel:0:Name=DAPI"
                 bf = re.findall(r"Channel:\d+:Name=([^\r\n]+)", description)
-                if len(bf) >= num_channels:
+                if len(bf) > 0:
                     return [s.strip() for s in bf[:num_channels]]
                 # Generic "ChannelName=Foo" or "Channel 0 Name = Foo"
                 generic = re.findall(r"Channel(?:Name|\s*\d+\s*Name)\s*=\s*([^\r\n]+)", description)
-                if len(generic) >= num_channels:
+                if len(generic) > 0:
                     return [s.strip() for s in generic[:num_channels]]
         except Exception:
             pass
@@ -507,17 +527,17 @@ class Slide(BaseSlide):
         try:
             ij = getattr(self.tif_slide, "imagej_metadata", None) or {}
             luts = ij.get("LUTs")
-            if isinstance(luts, (list, tuple)) and len(luts) >= num_channels:
+            if isinstance(luts, (list, tuple)) and len(luts) > 0:
                 colors = []
-                for lut in luts[:num_channels]:
-                    arr = np.asarray(lut)
-                    if arr.shape == (3, 256):
-                        # Top entry of each LUT row is the channel's display color.
-                        colors.append((int(arr[0, -1]), int(arr[1, -1]), int(arr[2, -1])))
-                    else:
-                        colors.append(None)
-                if all(c is not None for c in colors):
-                    return colors
+                for i in range(num_channels):
+                    if i < len(luts):
+                        arr = np.asarray(luts[i])
+                        if arr.shape == (3, 256):
+                            # Top entry of each LUT row is the channel's display color.
+                            colors.append((int(arr[0, -1]), int(arr[1, -1]), int(arr[2, -1])))
+                            continue
+                    colors.append(_DEFAULT_PALETTE[i % len(_DEFAULT_PALETTE)])
+                return colors
         except Exception:
             pass
 
@@ -556,7 +576,7 @@ class Slide(BaseSlide):
 
     @staticmethod
     def __rational_to_float(value):
-        if isinstance(value, tuple) and len(value) == 2:
+        if isinstance(value, (tuple, list)) and len(value) == 2:
             num, den = value
             if den == 0:
                 return 0.0

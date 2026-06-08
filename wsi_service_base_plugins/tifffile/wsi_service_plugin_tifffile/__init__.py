@@ -7,7 +7,7 @@ from wsi_service_plugin_tifffile.slide import Slide
 
 priority = 2
 
-_OME_SUFFIXES = ("ome.tif", "ome.tiff", "ome.tf2", "ome.tf8", "ome.btf")
+_OME_SUFFIXES = (".ome.tif", ".ome.tiff", ".ome.tf2", ".ome.tf8", ".ome.btf")
 _TIFF_SUFFIXES = (".tif", ".tiff", ".tf2", ".tf8", ".btf")
 
 # tifffile.PHOTOMETRIC values
