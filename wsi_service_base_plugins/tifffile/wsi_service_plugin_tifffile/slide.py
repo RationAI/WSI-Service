@@ -147,8 +147,10 @@ class Slide(BaseSlide):
 
     def __get_tif_level_for_slide_level(self, slide_level):
         for level in self.tif_slide.series[0].levels:
-            if level.shape[1] == slide_level.extent.y:
+            keyframe = level.keyframe
+            if keyframe.imagelength == slide_level.extent.y and keyframe.imagewidth == slide_level.extent.x:
                 return level
+        return None
 
     def __assemble_region(self, tif_level, start_x, start_y, size_x, size_y, padding_color):
         if self.layout == _LAYOUT_CHUNKY_SAMPLES:
@@ -248,6 +250,14 @@ class Slide(BaseSlide):
     def __read_region_of_page_tiled(self, page, channel_index, start_x, start_y, size_x, size_y, padding_color):
         page_frame = page.keyframe
         image_width, image_height = page_frame.imagewidth, page_frame.imagelength
+
+        # Region entirely outside the image — let the caller produce a padding-only tile via the
+        # `result.size == 0` branch instead of letting np.full crash on a negative dimension.
+        if start_x >= image_height or start_y >= image_width or start_x + size_x <= 0 or start_y + size_y <= 0:
+            return np.empty(
+                (page_frame.imagedepth, 0, 0, page_frame.samplesperpixel),
+                dtype=page_frame.dtype,
+            )
 
         tile_width, tile_height = page_frame.tilewidth, page_frame.tilelength
         end_x = (start_x + size_x) if (start_x + size_x) < image_height else image_height
