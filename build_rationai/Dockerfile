@@ -6,25 +6,25 @@ ENV DEBIAN_FRONTEND=noninteractive
 COPY . /wsi-service
 
 WORKDIR /wsi-service
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/mvt
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/openslide
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/pil
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/tifffile
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/tiffslide
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/wsidicom
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 
 FROM registry.gitlab.com/empaia/integration/ci-docker-images/python-base:0.3.8@sha256:c1a82816aef0f5e2ff605843df0bb2c41bc1bf5df1bec2c2fe9532874f53a9d0 AS wsi_service_intermediate

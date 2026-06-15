@@ -5,25 +5,25 @@ ENV DEBIAN_FRONTEND=noninteractive
 COPY . /wsi-service
 
 WORKDIR /wsi-service
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/mvt
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/openslide
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/pil
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/tifffile
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/tiffslide
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 WORKDIR /wsi-service/wsi_service_base_plugins/wsidicom
-RUN poetry build && poetry export -f requirements.txt > requirements.txt
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
 
 FROM wsi_service_build AS wsi_service_dev
