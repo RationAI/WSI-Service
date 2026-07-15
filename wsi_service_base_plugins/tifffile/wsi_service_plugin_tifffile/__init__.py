@@ -15,6 +15,34 @@ _PHOTOMETRIC_RGB = 2
 _PHOTOMETRIC_YCBCR = 6
 
 
+def _has_supported_axis_layout(series, samples):
+    axes = str(getattr(series, "axes", "") or "")
+    shape = tuple(getattr(series, "shape", ()) or ())
+
+    for index, axis_name in enumerate(axes):
+        if axis_name in ("X", "Y"):
+            continue
+        if axis_name in ("C", "S", "Z") and index < len(shape) and shape[index] > 1:
+            if axis_name in ("C", "S"):
+                return True
+            if axis_name == "Z":
+                return True
+        if axis_name not in ("X", "Y", "C", "S", "Z") and index < len(shape) and shape[index] > 1:
+            return False
+
+    return samples > 1
+
+
+def _has_nontrivial_axis(series, axis_name):
+    axes = str(getattr(series, "axes", "") or "")
+    shape = tuple(getattr(series, "shape", ()) or ())
+    try:
+        index = axes.index(axis_name)
+    except ValueError:
+        return False
+    return index < len(shape) and shape[index] > 1
+
+
 def is_supported(filepath):
     if not os.path.isfile(filepath):
         return False
@@ -37,24 +65,20 @@ def is_supported(filepath):
             samples = int(getattr(keyframe, "samplesperpixel", 1) or 1)
             photometric = int(getattr(keyframe, "photometric", 0) or 0)
 
-            # Plain RGB(A) — let tiffslide handle it.
-            if photometric in (_PHOTOMETRIC_RGB, _PHOTOMETRIC_YCBCR) and samples in (3, 4):
+            # Plain RGB(A) — let tiffslide handle it. RGB Z-stacks are different:
+            # tiffslide/openslide do not expose their individual Z pages reliably.
+            if (
+                photometric in (_PHOTOMETRIC_RGB, _PHOTOMETRIC_YCBCR)
+                and samples in (3, 4)
+                and not _has_nontrivial_axis(series, "Z")
+            ):
                 return False
 
             # Chunky multichannel (SamplesPerPixel > 1, non-RGB photometric).
             if samples > 1:
                 return True
 
-            # Page-per-channel: multi-page series with a channel-like axis.
-            axes = str(getattr(series, "axes", "") or "")
-            shape = tuple(getattr(series, "shape", ()) or ())
-            for ch in ("C", "S"):
-                if ch in axes:
-                    idx = axes.index(ch)
-                    if idx < len(shape) and shape[idx] > 1:
-                        return True
-
-            return False
+            return _has_supported_axis_layout(series, samples)
     except Exception:
         return False
 

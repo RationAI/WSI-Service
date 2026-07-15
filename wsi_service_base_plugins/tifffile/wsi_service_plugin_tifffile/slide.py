@@ -18,6 +18,10 @@ from wsi_service.utils.slide_utils import get_original_levels
 _LAYOUT_PAGE_PER_CHANNEL = "page-per-channel"
 _LAYOUT_CHUNKY_SAMPLES = "chunky-samples"
 _LAYOUT_SINGLE_CHANNEL = "single-channel"
+_LAYOUT_PAGE_PER_Z = "page-per-z"
+_LAYOUT_PAGE_PER_Z_CHANNEL = "page-per-z-channel"
+_UNTILED_TILE_MAX_DIMENSION = 2048
+_UNTILED_TILE_SIZE = 512
 
 # Fallback palette cycled through for synthesized channels with no metadata hint.
 _DEFAULT_PALETTE = [
@@ -45,10 +49,10 @@ class Slide(BaseSlide):
                 self.parsed_metadata = xml.fromstring(self.ome_metadata)
             except Exception as ex:
                 raise HTTPException(status_code=400, detail=f"Could not obtain ome metadata ({ex})")
+            self.layout_info = self.__inspect_series_layout(self.tif_slide.series[0])
             self.slide_info = self.__get_slide_info_ome_tif()
-            self.layout = _LAYOUT_PAGE_PER_CHANNEL
         else:
-            self.slide_info, self.layout = self.__get_slide_info_generic_tif()
+            self.slide_info, self.layout_info = self.__get_slide_info_generic_tif()
 
         self._icc = ICCProfile()
 
@@ -66,7 +70,7 @@ class Slide(BaseSlide):
         level_slide = self.slide_info.levels[level]
         tif_level = self.__get_tif_level_for_slide_level(level_slide)
 
-        result = self.__assemble_region(tif_level, start_x, start_y, size_x, size_y, padding_color)
+        result = self.__assemble_region(tif_level, start_x, start_y, size_x, size_y, padding_color, z)
 
         if icc_profile_intent is not None:
             try:
@@ -116,7 +120,7 @@ class Slide(BaseSlide):
             self.slide_info.tile_extent.x,
             self.slide_info.tile_extent.y,
             padding_color,
-            0,
+            z,
             icc_profile_intent,
             icc_profile_strict,
         )
@@ -152,10 +156,12 @@ class Slide(BaseSlide):
                 return level
         return None
 
-    def __assemble_region(self, tif_level, start_x, start_y, size_x, size_y, padding_color):
-        if self.layout == _LAYOUT_CHUNKY_SAMPLES:
+    def __assemble_region(self, tif_level, start_x, start_y, size_x, size_y, padding_color, z):
+        layout = self.layout_info["mode"]
+
+        if layout == _LAYOUT_CHUNKY_SAMPLES:
             # Single page holds all channels in the last axis (samplesperpixel).
-            page = tif_level.pages[0]
+            page = tif_level.pages[self.__get_series_page_index(z=z, channel=0)]
             if not page.keyframe.is_tiled:
                 # __read_region_of_page_untiled allocates a 2-D (H, W) output and would crash
                 # when assigning the (H, W, S) slice from page.asarray(). Read directly here.
@@ -188,8 +194,8 @@ class Slide(BaseSlide):
                 arr = arr[0:1]
             return arr
 
-        if self.layout == _LAYOUT_SINGLE_CHANNEL:
-            page = tif_level.pages[0]
+        if layout in (_LAYOUT_SINGLE_CHANNEL, _LAYOUT_PAGE_PER_Z):
+            page = tif_level.pages[self.__get_series_page_index(z=z, channel=0)]
             channel_data = self.__read_region_of_page(page, 0, start_y, start_x, size_y, size_x, padding_color)
             arr = np.asarray(channel_data)
             # Drop trailing sample axis if present (== 1), keep leading Z axis as the single channel.
@@ -197,10 +203,19 @@ class Slide(BaseSlide):
                 arr = arr[:, :, :, 0]
             return arr
 
-        # _LAYOUT_PAGE_PER_CHANNEL — original behavior, one page per channel.
+        # One page per channel, optionally repeated for each z plane.
         result_array = []
-        for i, page in enumerate(tif_level.pages):
-            temp_channel = self.__read_region_of_page(page, i, start_y, start_x, size_y, size_x, padding_color)
+        for channel_index in range(self.layout_info["num_channels"]):
+            page = tif_level.pages[self.__get_series_page_index(z=z, channel=channel_index)]
+            temp_channel = self.__read_region_of_page(
+                page,
+                channel_index,
+                start_y,
+                start_x,
+                size_y,
+                size_x,
+                padding_color,
+            )
             result_array.append(temp_channel)
         return np.concatenate(result_array, axis=0)[:, :, :, 0]
 
@@ -334,7 +349,7 @@ class Slide(BaseSlide):
         result = out[:, new_start_x : new_start_x + size_x, new_start_y : new_start_y + size_y :]
         return result
 
-    def __get_levels_from_series(self, tif_slide):
+    def __get_levels_from_series(self, tif_slide, num_z=1):
         levels = tif_slide.series[0].levels
         level_count = len(levels)
         level_dimensions = []
@@ -347,7 +362,104 @@ class Slide(BaseSlide):
             else:
                 level_downsamples.append(1)
 
-        return get_original_levels(level_count, level_dimensions, level_downsamples)
+        levels = get_original_levels(level_count, level_dimensions, level_downsamples)
+        for level in levels:
+            level.extent.z = num_z
+        return levels
+
+    def __inspect_series_layout(self, serie):
+        keyframe = serie.keyframe
+        axes = str(getattr(serie, "axes", "") or "")
+        shape = tuple(getattr(serie, "shape", ()) or ())
+        samples = int(getattr(keyframe, "samplesperpixel", 1) or 1)
+        page_count = len(serie.pages)
+        page_axes = []
+        page_dims = []
+        num_channels = samples if samples > 1 else 1
+        num_z = 1
+        unsupported = []
+
+        for index, axis_name in enumerate(axes):
+            axis_size = shape[index]
+            if axis_name in ("X", "Y"):
+                continue
+            if axis_name == "Z":
+                num_z = axis_size
+                if axis_size > 1:
+                    page_axes.append(axis_name)
+                    page_dims.append(axis_size)
+                continue
+            if axis_name == "C":
+                num_channels = axis_size
+                if samples == 1 and axis_size > 1:
+                    page_axes.append(axis_name)
+                    page_dims.append(axis_size)
+                continue
+            if axis_name == "S":
+                num_channels = axis_size
+                if samples == 1 and axis_size > 1:
+                    page_axes.append(axis_name)
+                    page_dims.append(axis_size)
+                continue
+            if axis_size > 1:
+                unsupported.append((axis_name, axis_size))
+
+        if unsupported:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported TIFF axes for tifffile plugin: {unsupported}",
+            )
+
+        expected_pages = int(np.prod(page_dims)) if page_dims else 1
+        if page_count < expected_pages:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unexpected TIFF page layout. Expected at least {expected_pages} pages, got {page_count}.",
+            )
+
+        if samples > 1:
+            mode = _LAYOUT_CHUNKY_SAMPLES
+        elif "Z" in page_axes and any(axis_name in ("C", "S") for axis_name in page_axes):
+            mode = _LAYOUT_PAGE_PER_Z_CHANNEL
+        elif any(axis_name in ("C", "S") for axis_name in page_axes):
+            mode = _LAYOUT_PAGE_PER_CHANNEL
+        elif "Z" in page_axes:
+            mode = _LAYOUT_PAGE_PER_Z
+        else:
+            mode = _LAYOUT_SINGLE_CHANNEL
+
+        return {
+            "mode": mode,
+            "axes": axes,
+            "shape": shape,
+            "page_axes": tuple(page_axes),
+            "page_dims": tuple(page_dims),
+            "num_channels": int(num_channels),
+            "num_z": int(num_z),
+        }
+
+    def __get_series_page_index(self, z, channel):
+        page_axes = self.layout_info["page_axes"]
+        if not page_axes:
+            return 0
+
+        axis_indices = []
+        for axis_name, axis_size in zip(page_axes, self.layout_info["page_dims"]):
+            if axis_name == "Z":
+                selected_index = z
+            elif axis_name in ("C", "S"):
+                selected_index = channel
+            else:
+                selected_index = 0
+
+            if selected_index >= axis_size:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Requested axis index {selected_index} exceeds available TIFF axis size {axis_size}.",
+                )
+            axis_indices.append(selected_index)
+
+        return int(np.ravel_multi_index(tuple(axis_indices), self.layout_info["page_dims"]))
 
     def __get_xml_namespace(self):
         m = re.match(r"\{.*\}", self.parsed_metadata.tag)
@@ -407,7 +519,7 @@ class Slide(BaseSlide):
         serie = self.tif_slide.series[0]
         channels = self.__get_channels_ome_tif()
         pixel_size = self.__get_pixel_size_ome_tif()
-        levels = self.__get_levels_from_series(self.tif_slide)
+        levels = self.__get_levels_from_series(self.tif_slide, self.layout_info["num_z"])
         try:
             slide_info = SlideInfo(
                 id="",
@@ -416,7 +528,7 @@ class Slide(BaseSlide):
                 extent=SlideExtent(
                     x=serie.keyframe.imagewidth,
                     y=serie.keyframe.imagelength,
-                    z=serie.keyframe.imagedepth,
+                    z=self.layout_info["num_z"],
                 ),
                 pixel_size_nm=pixel_size,
                 tile_extent=SlideExtent(
@@ -438,10 +550,10 @@ class Slide(BaseSlide):
         serie = self.tif_slide.series[0]
         keyframe = serie.keyframe
 
-        layout, num_channels = self.__detect_generic_layout(serie, keyframe)
-        channels = self.__get_channels_generic(num_channels, keyframe)
+        layout_info = self.__inspect_series_layout(serie)
+        channels = self.__get_channels_generic(layout_info["num_channels"], keyframe)
         pixel_size = self.__get_pixel_size_generic(keyframe)
-        levels = self.__get_levels_from_series(self.tif_slide)
+        levels = self.__get_levels_from_series(self.tif_slide, layout_info["num_z"])
 
         if keyframe.is_tiled:
             tile_extent = SlideExtent(
@@ -450,7 +562,7 @@ class Slide(BaseSlide):
                 z=keyframe.tiledepth,
             )
         else:
-            tile_extent = SlideExtent(x=256, y=256, z=1)
+            tile_extent = self.__get_untiled_tile_extent(keyframe)
 
         try:
             slide_info = SlideInfo(
@@ -460,7 +572,7 @@ class Slide(BaseSlide):
                 extent=SlideExtent(
                     x=keyframe.imagewidth,
                     y=keyframe.imagelength,
-                    z=keyframe.imagedepth,
+                    z=layout_info["num_z"],
                 ),
                 pixel_size_nm=pixel_size,
                 tile_extent=tile_extent,
@@ -468,29 +580,9 @@ class Slide(BaseSlide):
                 levels=levels,
                 format="tiff-multichannel",
             )
-            return slide_info, layout
+            return slide_info, layout_info
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
-
-    def __detect_generic_layout(self, serie, keyframe):
-        axes = str(getattr(serie, "axes", "") or "")
-        shape = tuple(getattr(serie, "shape", ()) or ())
-        samples = int(getattr(keyframe, "samplesperpixel", 1) or 1)
-        page_count = len(serie.pages)
-
-        for ch in ("C", "S"):
-            if ch in axes:
-                idx = axes.index(ch)
-                if idx < len(shape) and shape[idx] > 1 and page_count > 1:
-                    return _LAYOUT_PAGE_PER_CHANNEL, int(shape[idx])
-
-        if page_count > 1 and samples == 1:
-            return _LAYOUT_PAGE_PER_CHANNEL, page_count
-
-        if samples > 1:
-            return _LAYOUT_CHUNKY_SAMPLES, samples
-
-        return _LAYOUT_SINGLE_CHANNEL, 1
 
     def __get_channels_generic(self, num_channels, keyframe):
         names = self.__extract_channel_names(num_channels, keyframe)
@@ -504,6 +596,26 @@ class Slide(BaseSlide):
                 SlideChannel(id=i, name=name, color=SlideColor(r=r, g=g, b=b, a=0))
             )
         return channels
+
+    def __get_untiled_tile_extent(self, keyframe):
+        image_width = int(keyframe.imagewidth)
+        image_height = int(keyframe.imagelength)
+        if max(image_width, image_height) <= _UNTILED_TILE_MAX_DIMENSION:
+            tile_width, tile_height = image_width, image_height
+            layout = "full-level"
+        else:
+            tile_width = tile_height = _UNTILED_TILE_SIZE
+            layout = "fallback"
+
+        logger.info(
+            "tifffile plugin: untiled level %sx%s, effective tile %sx%s (%s)",
+            image_width,
+            image_height,
+            tile_width,
+            tile_height,
+            layout,
+        )
+        return SlideExtent(x=tile_width, y=tile_height, z=1)
 
     def __extract_channel_names(self, num_channels, keyframe):
         # 1) ImageJ metadata (tifffile parses Labels into imagej_metadata).
@@ -579,10 +691,11 @@ class Slide(BaseSlide):
             return SlidePixelSizeNm(
                 x=unit_nm / x_pixels_per_unit,
                 y=unit_nm / y_pixels_per_unit,
+                z=self.__get_z_spacing_generic(),
             )
         except Exception as e:
             logger.warning("tifffile plugin: falling back to default pixel size (1 um/px): %s", e)
-            return SlidePixelSizeNm(x=1000.0, y=1000.0)
+            return SlidePixelSizeNm(x=1000.0, y=1000.0, z=self.__get_z_spacing_generic())
 
     @staticmethod
     def __rational_to_float(value):
@@ -592,3 +705,27 @@ class Slide(BaseSlide):
                 return 0.0
             return float(num) / float(den)
         return float(value)
+
+    def __get_z_spacing_generic(self):
+        """Read ImageJ's optional distance between Z planes in nanometers."""
+        try:
+            metadata = getattr(self.tif_slide, "imagej_metadata", None) or {}
+            spacing = metadata.get("spacing")
+            unit = str(metadata.get("unit", "")).strip().lower()
+            if spacing is None or not unit:
+                return None
+
+            unit = unit.replace("μ", "µ")
+            unit_scale_nm = {
+                "nm": 1.0,
+                "µm": 1_000.0,
+                "um": 1_000.0,
+                "mm": 1_000_000.0,
+                "cm": 10_000_000.0,
+                "m": 1_000_000_000.0,
+            }.get(unit)
+            if unit_scale_nm is None:
+                return None
+            return float(spacing) * unit_scale_nm
+        except (TypeError, ValueError):
+            return None

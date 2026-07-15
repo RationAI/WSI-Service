@@ -133,15 +133,9 @@ class Slide(BaseSlide):
         tile_height = 256
         tile_width = 256
 
-        # some tiles can have an unequal tile height and width that can cause problems in the slide viewer
-        # since the tile route is soley used for viewing, we provide the default tile width and height
         base_level = self.dicom_slide.levels[0]
-        temp_height = base_level.tile_size.height
-        temp_width = base_level.tile_size.width
-
-        if temp_height == temp_width:
-            tile_height = temp_height
-            tile_width = temp_width
+        tile_height = base_level.tile_size.height
+        tile_width = base_level.tile_size.width
 
         return SlideExtent(x=tile_width, y=tile_height, z=1)
 

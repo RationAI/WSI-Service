@@ -42,11 +42,18 @@ class LRUCache:
 def get_tile_width(slide_info, level, tile_x, tile_y):
     level_extent = slide_info.levels[level].extent
     tile_extent = slide_info.tile_extent
-    tile_count_x = int(level_extent.x / tile_extent.x)
-    tile_count_y = int(level_extent.y / tile_extent.y)
+    start_x = tile_x * tile_extent.x
+    start_y = tile_y * tile_extent.y
+
+    def effective_size(start, extent, tile_size):
+        # Keep full-size reads outside the image so callers can produce padding.
+        if start < 0 or start >= extent:
+            return tile_size
+        return min(tile_size, extent - start)
+
     return (
-        tile_extent.x if tile_x < tile_count_x else level_extent.x % tile_extent.x,
-        tile_extent.y if tile_y < tile_count_y else level_extent.y %tile_extent.y,
+        effective_size(start_x, level_extent.x, tile_extent.x),
+        effective_size(start_y, level_extent.y, tile_extent.y),
     )
 
 

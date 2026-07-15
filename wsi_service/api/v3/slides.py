@@ -324,37 +324,53 @@ def add_routes_slides(app, settings, slide_manager):
         validate_image_z(slide_info, z)
         validate_image_channels(slide_info, image_channels)
 
-        if is_passthrough_format(image_format):
-            image_tile = await slide.get_tile(
-                level, tile_x, tile_y,
-                padding_color=vp_color,
-                z=z,
-                icc_profile_intent=icc_profile_intent,
-                icc_profile_strict=icc_profile_strict,
+        try:
+            if is_passthrough_format(image_format):
+                image_tile = await slide.get_tile(
+                    level, tile_x, tile_y,
+                    padding_color=vp_color,
+                    z=z,
+                    icc_profile_intent=icc_profile_intent,
+                    icc_profile_strict=icc_profile_strict,
+                )
+            elif check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
+                image_tile = await slide.get_tile(
+                    level, tile_x, tile_y,
+                    padding_color=vp_color,
+                    z=z,
+                    icc_profile_intent=icc_profile_intent,
+                    icc_profile_strict=icc_profile_strict,
+                )
+            elif settings.get_tile_apply_padding:
+                image_tile = await get_extended_tile(
+                    slide.get_tile, slide_info, level, tile_x, tile_y,
+                    padding_color=vp_color, z=z,
+                    icc_profile_intent=icc_profile_intent, icc_profile_strict=icc_profile_strict,
+                    extend=True,  # pad to full tile
+                )
+            else:
+                image_tile = await get_extended_tile(
+                    slide.get_tile, slide_info, level, tile_x, tile_y,
+                    padding_color=vp_color, z=z,
+                    icc_profile_intent=icc_profile_intent, icc_profile_strict=icc_profile_strict,
+                    extend=False,  # pad to full tile
+                )
+            return make_response(slide, image_tile, image_format, image_quality, image_channels)
+        except Exception as ex:
+            logger.exception(
+                "Tile request failed: slide_id=%s plugin=%s level=%s tile=(%s,%s) z=%s "
+                "format=%s channels=%s detail=%s",
+                slide_id,
+                getattr(slide, "plugin", plugin),
+                level,
+                tile_x,
+                tile_y,
+                z,
+                image_format,
+                image_channels,
+                getattr(ex, "detail", str(ex)),
             )
-        elif check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
-            image_tile = await slide.get_tile(
-                level, tile_x, tile_y,
-                padding_color=vp_color,
-                z=z,
-                icc_profile_intent=icc_profile_intent,
-                icc_profile_strict=icc_profile_strict,
-            )
-        elif settings.get_tile_apply_padding:
-            image_tile = await get_extended_tile(
-                slide.get_tile, slide_info, level, tile_x, tile_y,
-                padding_color=vp_color, z=z,
-                icc_profile_intent=icc_profile_intent, icc_profile_strict=icc_profile_strict,
-                extend=True,  # pad to full tile
-            )
-        else:
-            image_tile = await get_extended_tile(
-                slide.get_tile, slide_info, level, tile_x, tile_y,
-                padding_color=vp_color, z=z,
-                icc_profile_intent=icc_profile_intent, icc_profile_strict=icc_profile_strict,
-                extend=False,  # pad to full tile
-            )
-        return make_response(slide, image_tile, image_format, image_quality, image_channels)
+            raise
 
     @app.get("/slides/download", tags=["Main Routes"])
     async def _(slide_id=IdQuery, plugin: str = PluginQuery, payload=api_integration.global_depends()):

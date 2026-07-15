@@ -165,13 +165,8 @@ class Slide(BaseSlide):
             "tiffslide.level[0].tile-height" in self.slide.properties
             and "tiffslide.level[0].tile-width" in self.slide.properties
         ):
-            # some tiles can have an unequal tile height and width that can cause problems in the slide viewer
-            # since the tile route is used for viewing only, we provide the default tile width and height
-            temp_height = self.slide.properties["tiffslide.level[0].tile-height"]
-            temp_width = self.slide.properties["tiffslide.level[0].tile-width"]
-            if temp_height == temp_width:
-                tile_height = temp_height
-                tile_width = temp_width
+            tile_height = int(self.slide.properties["tiffslide.level[0].tile-height"])
+            tile_width = int(self.slide.properties["tiffslide.level[0].tile-width"])
 
         return SlideExtent(x=tile_width, y=tile_height, z=1)
 

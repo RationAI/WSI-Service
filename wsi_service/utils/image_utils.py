@@ -123,6 +123,10 @@ def get_multi_channel_as_rgb(separate_channels):
         if len(temp_array) == 3:
             break
         temp_array.append(channel)
+    if len(temp_array) == 2:
+        # Pillow RGB output requires three planes. Keep the two source channels
+        # and use black for the missing third channel.
+        temp_array.append(np.zeros_like(temp_array[0]))
     return temp_array
 
 
@@ -292,12 +296,6 @@ async def get_extended_region(
         return out
 
 
-def check_complete_tile_overlap(slide_info, level, tile_x, tile_y):
-    tile_count_x = int(slide_info.levels[level].extent.x / slide_info.tile_extent.x)
-    tile_count_y = int(slide_info.levels[level].extent.y / slide_info.tile_extent.y)
-    return tile_x >= 0 and tile_y >= 0 and tile_x < tile_count_x and tile_y < tile_count_y
-
-
 def check_complete_tile_overlap(slide_info, level: int, tile_x: int, tile_y: int) -> bool:
     """
     Returns True if the (tile_x, tile_y) tile at 'level' is fully contained within the level extent.
@@ -360,6 +358,11 @@ async def get_extended_tile(
 
     # Fast path: interior tile (already exact full tile)
     if ov_w == tile_w and ov_h == tile_h:
+        return tile
+
+    # The requested tile is completely outside the level. Plugins return a
+    # padded tile for this case; keep it non-empty so image encoders can handle it.
+    if ov_w == 0 or ov_h == 0:
         return tile
 
     # Edge path

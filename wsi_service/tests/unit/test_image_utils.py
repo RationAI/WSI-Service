@@ -1,8 +1,10 @@
 import numpy as np
+import pytest
+from types import SimpleNamespace
 from PIL import Image
 from PIL.ImageStat import Stat
 
-from wsi_service.models.v3.slide import SlideColor
+from wsi_service.models.v3.slide import SlideColor, SlideExtent
 from wsi_service.utils.image_utils import (
     convert_int_to_rgba_array,
     convert_narray_to_pil_image,
@@ -12,6 +14,7 @@ from wsi_service.utils.image_utils import (
     get_requested_channels_as_array,
     get_requested_channels_as_rgb_array,
     get_single_channel,
+    get_extended_tile,
     rgba_to_rgb_with_background_color,
 )
 
@@ -100,3 +103,26 @@ def test_rgba_to_rgb_with_background_color():
     Image.Image.paste(image_rgba, image_rgba_half)
     image_rgb = rgba_to_rgb_with_background_color(image_rgba, padding_color=(255, 255, 255))
     assert sum(Stat(image_rgb).mean) / 3 == 127.5
+
+
+@pytest.mark.asyncio
+async def test_get_extended_tile_keeps_completely_outside_tile_nonempty():
+    slide_info = SimpleNamespace(
+        levels=[SimpleNamespace(extent=SlideExtent(x=4, y=4, z=1))],
+        tile_extent=SlideExtent(x=4, y=4, z=1),
+    )
+    tile = np.ones((3, 4, 4), dtype=np.uint8)
+
+    async def get_tile(*args, **kwargs):
+        return tile
+
+    result = await get_extended_tile(
+        get_tile,
+        slide_info,
+        level=0,
+        tile_x=1,
+        tile_y=0,
+        extend=False,
+    )
+
+    assert result.shape == (3, 4, 4)

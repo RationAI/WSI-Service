@@ -1,4 +1,7 @@
-from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list
+from types import SimpleNamespace
+
+from wsi_service.models.v3.slide import SlideExtent
+from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list, get_tile_width
 
 
 def test_get_original_levels():
@@ -27,3 +30,14 @@ def test_get_rgb_channel_list():
         assert channels[i].color.g == rgba[i][1]
         assert channels[i].color.b == rgba[i][2]
         assert channels[i].color.a == rgba[i][3]
+
+
+def test_get_tile_width_handles_non_square_and_edge_tiles():
+    slide_info = SimpleNamespace(
+        levels=[SimpleNamespace(extent=SlideExtent(x=1404, y=1596, z=1))],
+        tile_extent=SlideExtent(x=512, y=768, z=1),
+    )
+
+    assert get_tile_width(slide_info, 0, 0, 0) == (512, 768)
+    assert get_tile_width(slide_info, 0, 2, 2) == (380, 60)
+    assert get_tile_width(slide_info, 0, 3, 3) == (512, 768)
