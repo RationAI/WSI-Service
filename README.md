@@ -322,6 +322,8 @@ CSWS_PATH=4
 IDs come out as `group_1.group_2.w.slide_id` and `group_1.group_2.c.case_id`. Useful when you want
 group-level access control without an external database.
 
+> **Note:** parsed data is cached to `local_mapper.p`; CSV edits aren't picked up by a restart (nor `docker restart`, the pickle sits on the mounted volume) — delete `local_mapper.p` or force a refresh.
+
 #### Iterator mapper
 
 Proof-of-concept directory walker with wildcard rules. Unfinished — contributions welcome.

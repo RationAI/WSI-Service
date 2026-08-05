@@ -101,6 +101,18 @@ class CSVMapper(BaseMapper):
     All slides that belong to the same case must specify case id, which will be created as
     group_1.group_2.c.case_id (of the first group_1/group_2 found). All slides
     of a case should be within same group_2 and group_1.
+
+    CACHING NOTE:
+    Parsed data is cached to a pickle file (local_mapper.p). On startup the mapper only
+    re-reads the CSV if the pickle is missing or the data_dir changed - the cache is NOT
+    keyed on CSV content or mtime. This means editing the CSV (e.g. adding new file
+    definitions) is NOT picked up by a plain restart: old entries keep working, new ones
+    return 404. To pick up CSV changes, delete local_mapper.p (it will be rebuilt on next
+    start) or trigger refresh(force_refresh=True).
+
+    When running via Docker, a simple `docker restart` does NOT help - the pickle lives on
+    the mounted volume and survives the restart. Delete local_mapper.p on the volume (or
+    force a refresh) before restarting.
     """
 
     def __init__(self, data_dir):
