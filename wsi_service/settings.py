@@ -1,5 +1,7 @@
+import os
 from typing import Set
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from wsi_service.version import __version__
@@ -41,3 +43,12 @@ class Settings(BaseSettings):
     get_tile_apply_padding: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", env_prefix="ws_", extra="ignore")
+
+    @field_validator("data_dir")
+    @classmethod
+    def _resolve_data_dir(cls, value: str) -> str:
+        # data_dir may be given relative (e.g. "./data"). Resolve it once at startup against the
+        # current working directory, so later changes of the process CWD cannot move the data root.
+        # Normalized to forward slashes because storage addresses are made relative by string prefix
+        # stripping (see utils.app_utils.local_mode_abs_file_path_to_relative).
+        return os.path.abspath(os.path.expanduser(value)).replace(os.sep, "/")

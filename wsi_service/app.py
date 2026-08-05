@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -24,7 +25,9 @@ slide_manager = SlideManager(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("🚀 LIFESPAN: startup")
+    logger.info("🚀 LIFESPAN: startup (data dir: %s)", settings.data_dir)
+    if not os.path.isdir(settings.data_dir):
+        logger.warning("Data directory does not exist: %s", settings.data_dir)
     for plugin_name, plugin in plugins.items():
         if hasattr(plugin, "start") and callable(getattr(plugin, "start")):
             plugin.start()
