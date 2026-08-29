@@ -11,10 +11,11 @@ from wsi_service.utils.slide_utils import get_rgb_channel_list
 class Slide(BaseSlide):
     async def open(self, filepath):
         try:
-            self.slide_image = Image.open(filepath)
+            image = Image.open(filepath)
         except UnidentifiedImageError:
             raise HTTPException(status_code=500, detail="PIL Unidentified Image Error")
-        self.slide_image = Image.open(filepath).convert("RGB")
+        self.format = (image.format or "unknown").lower()
+        self.slide_image = image.convert("RGB")
         width, height = self.slide_image.size
         self._icc = ICCProfile()
 
@@ -28,6 +29,7 @@ class Slide(BaseSlide):
             pixel_size_nm=SlidePixelSizeNm(x=-1, y=-1),  # pixel size unknown
             tile_extent=SlideExtent(x=width, y=height, z=1) if width < 5000 and height < 5000 else SlideExtent(x=1024, y=1024, z=1),
             levels=[SlideLevel(extent=SlideExtent(x=width, y=height, z=1), downsample_factor=1.0)],
+            format=self.format,
         )
 
     async def close(self):
