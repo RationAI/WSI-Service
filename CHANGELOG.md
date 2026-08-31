@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.17.0
+- Support for NIFTI
+- added missing WSI_APPLY_PADDING
+- fixed PNG encoding
+
 ## 0.16.0
 - Support for vector data
 - MVT plugin introduction.
