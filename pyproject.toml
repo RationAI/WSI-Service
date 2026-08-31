@@ -43,6 +43,7 @@ pytest-cov = "^4.0.0"
 pytest = "^8.0.0"
 requests-mock = "^1.9.3"
 wsi-service-plugin-mvt = { path = "wsi_service_base_plugins/mvt", develop = true }
+wsi-service-plugin-nifti = { path = "wsi_service_base_plugins/nifti", develop = true }
 wsi-service-plugin-openslide = { path = "wsi_service_base_plugins/openslide", develop = true }
 wsi-service-plugin-pil = { path = "wsi_service_base_plugins/pil", develop = true }
 wsi-service-plugin-tifffile = { path = "wsi_service_base_plugins/tifffile", develop = true }
@@ -75,6 +76,7 @@ disable = "R,C,W0613,E0213,W0603,W0231,E1136,W0707,W0622,W0201,E0401,W3101,W0212
 addopts = "--asyncio-mode=strict"
 testpaths = [
     "wsi_service/tests",
+    "wsi_service_base_plugins/nifti/wsi_service_plugin_nifti/tests",
     "wsi_service_base_plugins/openslide/wsi_service_plugin_openslide/tests",
     "wsi_service_base_plugins/pil/wsi_service_plugin_pil/tests",
     "wsi_service_base_plugins/tifffile/wsi_service_plugin_tifffile/tests",

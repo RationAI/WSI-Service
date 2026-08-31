@@ -100,6 +100,7 @@ re-prioritized via `WS_PLUGIN_PRIORITY_<NAME>` env vars (see [Plugin development
 | --- | --- |
 | [openslide](./wsi_service_base_plugins/openslide/) | 3DHISTECH (`.mrxs`), HAMAMATSU (`.ndpi`), LEICA (`.scn`), VENTANA (`.bif`), ZEISS (`.czi`), DICOM folders |
 | [pil](./wsi_service_base_plugins/pil/) | JPEG (`.jpeg`, `.jpg`), PNG (`.png`) |
+| [nifti](./wsi_service_base_plugins/nifti/) | NIfTI-1/2 (`.nii`, `.nii.gz`), 2D/3D scalar images rendered as grayscale RGB; select slices with `z` |
 | [tifffile](./wsi_service_base_plugins/tifffile/) | OME-TIFF (`.ome.tif`, `.ome.tiff`, `.ome.tf2`, `.ome.tf8`, `.ome.btf`); generic multichannel TIFF (`.tif`, `.tiff`, `.tf2`, `.tf8`, `.btf`) — page-per-channel or chunky `SamplesPerPixel>1` layouts, non-RGB photometric |
 | [tiffslide](./wsi_service_base_plugins/tiffslide/) | APERIO (`.svs`), generic RGB(A) TIFF (`.tif`, `.tiff`) |
 | [wsidicom](./wsi_service_base_plugins/wsidicom/) | DICOM folders |
@@ -229,6 +230,7 @@ Set environment variables in your shell or a `.env` file. The most common ones:
 | `WS_MAX_THUMBNAIL_SIZE` | Max thumbnail edge. |
 | `WS_GET_TILE_APPLY_PADDING` | Pad `get_tile` like `get_region` when out-of-bounds. |
 | `WS_PLUGIN_PRIORITY_<NAME>` | Override a plugin's priority. Negative disables it. |
+| `WS_APPLY_PADDING` | Normalize out-of-bounds regions to the requested size (default `true`); when disabled, use the plugin's native region behavior. |
 | `COMPOSE_RESTART` | Compose `restart` policy. |
 | `COMPOSE_NETWORK` | Docker network. |
 | `COMPOSE_WS_PORT` | External port (default `8080`). |
@@ -420,9 +422,9 @@ COPY wsi-service-plugin-<name>.whl /tmp/
 RUN pip3 install /tmp/wsi-service-plugin-<name>.whl
 ```
 
-The five canonical base plugins (`openslide`, `pil`, `tifffile`, `tiffslide`, `wsidicom`) and the
-newer `mvt` plugin are good references — they all use Poetry and share an integration-test pattern
-based on parametrized pytest fixtures.
+The base plugins (`openslide`, `pil`, `tifffile`, `tiffslide`, `wsidicom`, `mvt`, `nifti`) are
+references for plugin development. They use Poetry; the `nifti` tests generate their own
+fixtures without an external slide dataset or running server.
 
 See [`wsi_service_base_plugins/README.md`](./wsi_service_base_plugins/README.md) for the integration
 checklist.

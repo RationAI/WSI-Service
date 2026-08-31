@@ -7,6 +7,8 @@ class Extensions:
             ".isyntax",
             ".mrxs",
             ".ndpi",
+            ".nii",
+            ".nii.gz",
             ".ome.btf",
             ".ome.tf2",
             ".ome.tf8",

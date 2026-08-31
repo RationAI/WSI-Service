@@ -11,6 +11,9 @@ RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 WORKDIR /wsi-service/wsi_service_base_plugins/mvt
 RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
+WORKDIR /wsi-service/wsi_service_base_plugins/nifti
+RUN poetry build && poetry export -f requirements.txt -o requirements.txt
+
 WORKDIR /wsi-service/wsi_service_base_plugins/openslide
 RUN poetry build && poetry export -f requirements.txt -o requirements.txt
 
@@ -39,6 +42,8 @@ RUN pip install -r /artifacts/requirements.txt --break-system-packages
 
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/mvt/requirements.txt /artifacts/requirements_mvt.txt
 RUN pip install -r /artifacts/requirements_mvt.txt --break-system-packages
+COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/nifti/requirements.txt /artifacts/requirements_nifti.txt
+RUN pip install -r /artifacts/requirements_nifti.txt --break-system-packages
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/openslide/requirements.txt /artifacts/requirements_openslide.txt
 RUN pip install -r /artifacts/requirements_openslide.txt --break-system-packages
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/pil/requirements.txt /artifacts/requirements_pil.txt
@@ -52,6 +57,7 @@ RUN pip install -r /artifacts/requirements_wsidicom.txt --break-system-packages
 
 COPY --from=wsi_service_build /wsi-service/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/mvt/dist/ /wsi-service/dist/
+COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/nifti/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/openslide/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/pil/dist/ /wsi-service/dist/
 COPY --from=wsi_service_build /wsi-service/wsi_service_base_plugins/tifffile/dist/ /wsi-service/dist/
