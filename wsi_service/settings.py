@@ -40,6 +40,7 @@ class Settings(BaseSettings):
 
     # default color for padding of image regions out of image extent
     padding_color: tuple = (255, 255, 255)
+    apply_padding: bool = True
     get_tile_apply_padding: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", env_prefix="ws_", extra="ignore")

@@ -9,6 +9,8 @@ def get_extension(file_path):
     _, splitted_second = os.path.splitext(base)
     if splitted_second.lower() == ".ome":
         return splitted_second.lower() + splitted_last.lower()
+    if splitted_second.lower() == ".nii" and splitted_last.lower() == ".gz":
+        return ".nii.gz"
     return splitted_last.lower()
 
 
