@@ -13,7 +13,7 @@ from wsi_service.singletons import logger, settings
 from wsi_service.slide import Slide as BaseSlide
 from wsi_service.utils.icc_profile import ICCProfile, ICCProfileError
 from wsi_service.utils.image_utils import convert_int_to_rgba_array, convert_narray_to_pil_image
-from wsi_service.utils.slide_utils import get_original_levels
+from wsi_service.utils.slide_utils import get_original_levels, get_rgb_channel_list
 
 _LAYOUT_PAGE_PER_CHANNEL = "page-per-channel"
 _LAYOUT_CHUNKY_SAMPLES = "chunky-samples"
@@ -22,6 +22,26 @@ _LAYOUT_PAGE_PER_Z = "page-per-z"
 _LAYOUT_PAGE_PER_Z_CHANNEL = "page-per-z-channel"
 _UNTILED_TILE_MAX_DIMENSION = 2048
 _UNTILED_TILE_SIZE = 512
+
+# tifffile.PHOTOMETRIC values that denote a directly displayable colour image.
+_RGB_PHOTOMETRICS = (2, 6)  # RGB, YCBCR
+
+# OME length units mapped to nanometres. The OME schema defaults PhysicalSize*Unit to µm.
+_OME_UNIT_TO_NM = {
+    "m": 1e9,
+    "dm": 1e8,
+    "cm": 1e7,
+    "mm": 1e6,
+    "µm": 1e3,
+    "um": 1e3,
+    "nm": 1.0,
+    "pm": 1e-3,
+    "å": 0.1,
+    "angstrom": 0.1,
+    "in": 2.54e7,
+    "inch": 2.54e7,
+}
+_OME_DEFAULT_UNIT = "µm"
 
 # Fallback palette cycled through for synthesized channels with no metadata hint.
 _DEFAULT_PALETTE = [
@@ -72,10 +92,14 @@ class Slide(BaseSlide):
 
         result = self.__assemble_region(tif_level, start_x, start_y, size_x, size_y, padding_color, z)
 
+        if self.layout_info["is_rgb"]:
+            # Plain RGB slides are served as pillow images so they skip the channel-stack path.
+            result = convert_narray_to_pil_image(narray=result)
+
         if icc_profile_intent is not None:
             try:
                 profile = tif_level.pages[0].tags.get("ICCProfile")
-                result_data = convert_narray_to_pil_image(narray=result)
+                result_data = result if isinstance(result, Image.Image) else convert_narray_to_pil_image(narray=result)
                 result = self._icc.process_pil_image(
                     result_data, profile, icc_profile_strict, icc_profile_intent, True
                 )
@@ -93,10 +117,13 @@ class Slide(BaseSlide):
         level_extent_x = self.slide_info.levels[thumb_level].extent.x
         level_extent_y = self.slide_info.levels[thumb_level].extent.y
 
-        if max_x > max_y:
-            max_y = max_y * (level_extent_y / level_extent_x)
+        # Fit inside the requested box while keeping the aspect ratio. The limiting axis keeps
+        # its requested value exactly so callers can rely on one dimension hitting the bound.
+        if level_extent_x / max_x >= level_extent_y / max_y:
+            max_y = max(1, round(level_extent_y * max_x / level_extent_x))
         else:
-            max_x = max_x * (level_extent_x / level_extent_y)
+            max_x = max(1, round(level_extent_x * max_y / level_extent_y))
+
         thumbnail_org = await self.get_region(thumb_level, 0, 0, level_extent_x, level_extent_y,
                                               settings.padding_color, 0, icc_profile_intent, icc_profile_strict)
         if type(thumbnail_org) is np.ndarray:
@@ -136,7 +163,7 @@ class Slide(BaseSlide):
             detail=f"Associated image {associated_image_name} does not exist.",
         )
 
-    def __get_color_for_channel(self, channel_index, channel_depth, padding_color):
+    def __get_color_for_channel(self, channel_index, channel_depth, padding_color, dtype=None):
         if channel_depth == 8:
             if padding_color is None:
                 padding_color = settings.padding_color
@@ -147,6 +174,14 @@ class Slide(BaseSlide):
             # depending on lowest and highest intensity. therefore mapping colors back and forth will
             # result in undefined behaviour of the padding color
             rgb_color = 0
+
+        if dtype is not None:
+            # Signed 8bit pages cannot hold a padding value of 255, and numpy raises instead
+            # of wrapping, so clamp into whatever the page dtype can represent.
+            dtype = np.dtype(dtype)
+            if np.issubdtype(dtype, np.integer):
+                info = np.iinfo(dtype)
+                rgb_color = int(min(max(rgb_color, info.min), info.max))
         return rgb_color
 
     def __get_tif_level_for_slide_level(self, slide_level):
@@ -175,7 +210,9 @@ class Slide(BaseSlide):
                 S = page_frame.samplesperpixel
                 out = np.empty((S, size_y, size_x), dtype=page_frame.dtype)
                 for s in range(S):
-                    fill_val = self.__get_color_for_channel(s, self.slide_info.channel_depth, padding_color)
+                    fill_val = self.__get_color_for_channel(
+                        s, self.slide_info.channel_depth, padding_color, page_frame.dtype
+                    )
                     out[s].fill(fill_val)
                 if new_height > 0 and new_width > 0:
                     crop = page_array[start_y : start_y + new_height, start_x : start_x + new_width]
@@ -227,9 +264,12 @@ class Slide(BaseSlide):
                 page, channel_index, start_x, start_y, size_x, size_y, padding_color
             )
             if result.size == 0:
+                # Keep the 4-D (depth, height, width, samples) shape the callers unpack.
                 result = np.full(
-                    (size_x, size_y),
-                    self.__get_color_for_channel(channel_index, self.slide_info.channel_depth, padding_color),
+                    (page_frame.imagedepth, size_x, size_y, 1),
+                    self.__get_color_for_channel(
+                        channel_index, self.slide_info.channel_depth, padding_color, page_frame.dtype
+                    ),
                     dtype=page_frame.dtype,
                 )
         else:
@@ -239,7 +279,9 @@ class Slide(BaseSlide):
             if result.size == 0:
                 result = np.full(
                     (page_frame.imagedepth, size_x, size_y, page_frame.samplesperpixel),
-                    self.__get_color_for_channel(channel_index, self.slide_info.channel_depth, padding_color),
+                    self.__get_color_for_channel(
+                        channel_index, self.slide_info.channel_depth, padding_color, page_frame.dtype
+                    ),
                     dtype=page_frame.dtype,
                 )
 
@@ -248,6 +290,12 @@ class Slide(BaseSlide):
     def __read_region_of_page_untiled(self, page, channel_index, start_x, start_y, size_x, size_y, padding_color):
         page_frame = page.keyframe
         page_width, page_height = page_frame.imagewidth, page_frame.imagelength
+
+        # Region entirely outside the image — let the caller produce a padding-only tile via the
+        # `result.size == 0` branch instead of slicing with a negative extent.
+        if start_x >= page_height or start_y >= page_width or start_x + size_x <= 0 or start_y + size_y <= 0:
+            return np.empty((page_frame.imagedepth, 0, 0, 1), dtype=page_frame.dtype)
+
         page_array = page.asarray()
 
         new_height = page_height - start_x if (start_x + size_x > page_height) else size_x
@@ -255,7 +303,9 @@ class Slide(BaseSlide):
 
         out = np.full(
             (size_x, size_y),
-            self.__get_color_for_channel(channel_index, self.slide_info.channel_depth, padding_color),
+            self.__get_color_for_channel(
+                channel_index, self.slide_info.channel_depth, padding_color, page_frame.dtype
+            ),
             dtype=page_frame.dtype,
         )
 
@@ -283,6 +333,12 @@ class Slide(BaseSlide):
 
         tile_per_line = int(np.ceil(image_width / tile_width))
 
+        # With PLANARCONFIG=SEPARATE each sample lives in its own tile grid, so the page holds
+        # samplesperpixel consecutive grids and a tile decodes to a single sample plane.
+        separate_planes = int(getattr(page_frame, "planarconfig", 1) or 1) == 2
+        tiles_per_plane = tile_per_line * int(np.ceil(image_height / tile_height))
+        plane_count = page_frame.samplesperpixel if separate_planes else 1
+
         # initialize array with size of all relevant tiles
         out = np.full(
             (
@@ -291,7 +347,9 @@ class Slide(BaseSlide):
                 (end_tile_yn - start_tile_y0) * tile_width,
                 page_frame.samplesperpixel,
             ),
-            self.__get_color_for_channel(channel_index, self.slide_info.channel_depth, padding_color),
+            self.__get_color_for_channel(
+                channel_index, self.slide_info.channel_depth, padding_color, page_frame.dtype
+            ),
             dtype=page_frame.dtype,
         )
         fh = page.parent.filehandle
@@ -306,40 +364,50 @@ class Slide(BaseSlide):
         if jpegtables is not None:
             jpegtables = jpegtables.value
 
-        used_offsets = []
         # iterate through tiles starting at the top left to the bottom right
-        for i in range(start_tile_x0, end_tile_xn):
-            for j in range(start_tile_y0, end_tile_yn):
-                with self.locker:
-                    index = int(i * tile_per_line + j)
+        for plane in range(plane_count):
+            used_offsets = set()
+            for i in range(start_tile_x0, end_tile_xn):
+                for j in range(start_tile_y0, end_tile_yn):
+                    with self.locker:
+                        index = int(plane * tiles_per_plane + i * tile_per_line + j)
 
-                    if len(page.dataoffsets) <= index:
-                        continue
+                        if len(page.dataoffsets) <= index:
+                            continue
 
-                    offset = page.dataoffsets[index]
-                    bytecount = page.databytecounts[index]
+                        offset = page.dataoffsets[index]
+                        bytecount = page.databytecounts[index]
 
-                    if offset in used_offsets:
-                        continue
+                        if offset in used_offsets:
+                            continue
 
-                    used_offsets.append(offset)
+                        used_offsets.add(offset)
 
-                    # search to tile offset and read image tile
-                    fh.seek(offset)
-                    if fh.tell() != offset:
-                        raise HTTPException(status_code=500, detail="Failed reading to tile offset")
-                    data = fh.read(bytecount)
-                    tile, _, _ = page.decode(data, index, jpegtables=jpegtables)
+                        # search to tile offset and read image tile
+                        fh.seek(offset)
+                        if fh.tell() != offset:
+                            raise HTTPException(status_code=500, detail="Failed reading to tile offset")
+                        data = fh.read(bytecount)
+                        tile, _, _ = page.decode(data, index, jpegtables=jpegtables)
 
-                    # insert tile in temporary output array
-                    tile_position_i = (i - start_tile_x0) * tile_height
-                    tile_position_j = (j - start_tile_y0) * tile_width
+                        # insert tile in temporary output array
+                        tile_position_i = (i - start_tile_x0) * tile_height
+                        tile_position_j = (j - start_tile_y0) * tile_width
 
-                    out[
-                        :,
-                        tile_position_i : tile_position_i + tile_height,
-                        tile_position_j : tile_position_j + tile_width :,
-                    ] = tile
+                        if separate_planes:
+                            # tile decodes to (depth, height, width, 1) — one sample plane
+                            out[
+                                :,
+                                tile_position_i : tile_position_i + tile_height,
+                                tile_position_j : tile_position_j + tile_width,
+                                plane : plane + 1,
+                            ] = tile
+                        else:
+                            out[
+                                :,
+                                tile_position_i : tile_position_i + tile_height,
+                                tile_position_j : tile_position_j + tile_width :,
+                            ] = tile
 
         # determine the new start positions of our region
         new_start_x = start_x - start_tile_x0 * tile_height
@@ -428,6 +496,16 @@ class Slide(BaseSlide):
         else:
             mode = _LAYOUT_SINGLE_CHANNEL
 
+        # Plain RGB brightfield: served as a pillow image instead of a channel stack, matching
+        # what tiffslide/openslide return for the same slide. Restricted to exactly 3 samples
+        # because convert_narray_to_pil_image only builds mode "RGB".
+        is_rgb = (
+            mode == _LAYOUT_CHUNKY_SAMPLES
+            and samples == 3
+            and num_z == 1
+            and int(getattr(keyframe, "photometric", 0) or 0) in _RGB_PHOTOMETRICS
+        )
+
         return {
             "mode": mode,
             "axes": axes,
@@ -436,6 +514,7 @@ class Slide(BaseSlide):
             "page_dims": tuple(page_dims),
             "num_channels": int(num_channels),
             "num_z": int(num_z),
+            "is_rgb": is_rgb,
         }
 
     def __get_series_page_index(self, z, channel):
@@ -466,60 +545,101 @@ class Slide(BaseSlide):
         return m.group(0) if m else ""
 
     def __get_channels_ome_tif(self):
+        if self.layout_info["is_rgb"]:
+            return get_rgb_channel_list()
+
         namespace = self.__get_xml_namespace()
-        xml_channels = (
-            self.parsed_metadata.find(f"{ namespace }Image")
-            .find(f"{ namespace }Pixels")
-            .findall(f"{ namespace }Channel")
-        )
+        xml_channels = self.__get_ome_pixels().findall(f"{ namespace }Channel")
+
+        # OME may describe an interleaved channel with a single element carrying
+        # SamplesPerPixel > 1, so expand each element into one entry per plane.
+        expanded = []
+        for xmlc in xml_channels:
+            try:
+                samples = int(xmlc.get("SamplesPerPixel") or 1)
+            except (TypeError, ValueError):
+                samples = 1
+            expanded.extend([xmlc] * max(samples, 1))
+
+        num_channels = self.layout_info["num_channels"]
         channels = []
-        for i, xmlc in enumerate(xml_channels):
-            color_int = convert_int_to_rgba_array(int(xmlc.get("Color")))
-            temp_channel = SlideChannel(
-                id=i,
-                name=xmlc.get("Name"),
-                color=SlideColor(r=color_int[0], g=color_int[1], b=color_int[2], a=color_int[3]),
-            )
-            channels.append(temp_channel)
+        for i in range(num_channels):
+            xmlc = expanded[i] if i < len(expanded) else None
+            name = (xmlc.get("Name") if xmlc is not None else None) or f"Channel {i}"
+            color = self.__get_ome_channel_color(xmlc, i)
+            channels.append(SlideChannel(id=i, name=name, color=color))
         return channels
 
-    def __get_pixel_size_ome_tif(self):
+    @staticmethod
+    def __get_ome_channel_color(xmlc, channel_index):
+        raw_color = xmlc.get("Color") if xmlc is not None else None
+        if raw_color is not None:
+            try:
+                # OME stores the colour as a signed 32bit RGBA integer.
+                rgba = convert_int_to_rgba_array(int(raw_color))
+                return SlideColor(r=rgba[0], g=rgba[1], b=rgba[2], a=rgba[3])
+            except (TypeError, ValueError):
+                pass
+        r, g, b = _DEFAULT_PALETTE[channel_index % len(_DEFAULT_PALETTE)]
+        return SlideColor(r=r, g=g, b=b, a=0)
+
+    def __get_ome_pixels(self):
         namespace = self.__get_xml_namespace()
-        pixel_unit_x = (
-            self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").get("PhysicalSizeXUnit")
-        )
-        pixel_unit_y = (
-            self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").get("PhysicalSizeYUnit")
-        )
-        if pixel_unit_x != pixel_unit_y:
-            raise HTTPException(
-                status_code=500,
-                detail="Different pixel size unit in x- and y-direction not supported.",
+        return self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels")
+
+    @staticmethod
+    def __ome_length_to_nm(size, unit):
+        """Convert an OME PhysicalSize* / unit pair to nm, or None if not usable."""
+        if size is None:
+            return None
+        # OME defaults the unit attribute to µm when it is absent.
+        unit = str(unit or _OME_DEFAULT_UNIT).strip().lower().replace("μ", "µ")
+        scale_nm = _OME_UNIT_TO_NM.get(unit)
+        if scale_nm is None:
+            return None
+        try:
+            value = float(size)
+        except (TypeError, ValueError):
+            return None
+        return value * scale_nm if value > 0 else None
+
+    def __get_pixel_size_ome_tif(self, keyframe):
+        pixels = self.__get_ome_pixels()
+        x = self.__ome_length_to_nm(pixels.get("PhysicalSizeX"), pixels.get("PhysicalSizeXUnit"))
+        y = self.__ome_length_to_nm(pixels.get("PhysicalSizeY"), pixels.get("PhysicalSizeYUnit"))
+        z = self.__ome_length_to_nm(pixels.get("PhysicalSizeZ"), pixels.get("PhysicalSizeZUnit"))
+
+        if x is None or y is None:
+            # Fall back to the TIFF resolution tags and finally to the generic default.
+            logger.warning(
+                "tifffile plugin: OME PhysicalSize missing or unsupported (x=%s %s, y=%s %s), "
+                "falling back to TIFF resolution tags",
+                pixels.get("PhysicalSizeX"),
+                pixels.get("PhysicalSizeXUnit"),
+                pixels.get("PhysicalSizeY"),
+                pixels.get("PhysicalSizeYUnit"),
             )
-        pixel_size_x = (
-            self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").get("PhysicalSizeX")
-        )
-        pixel_size_y = (
-            self.parsed_metadata.find(f"{ namespace }Image").find(f"{ namespace }Pixels").get("PhysicalSizeY")
-        )
-        if pixel_unit_x == "nm":
-            return SlidePixelSizeNm(x=float(pixel_size_x), y=float(pixel_size_y))
-        elif pixel_unit_x == "µm":
-            x = float(pixel_size_x) * 1000
-            y = float(pixel_size_y) * 1000
-            return SlidePixelSizeNm(x=x, y=y)
-        elif pixel_unit_x == "cm":
-            x = float(pixel_size_x) * 1e6
-            y = float(pixel_size_y) * 1e6
-            return SlidePixelSizeNm(x=x, y=y)
-        else:
-            raise HTTPException(status_code=500, detail=f"Invalid pixel size unit ({pixel_unit_x})")
+            generic = self.__get_pixel_size_generic(keyframe)
+            return SlidePixelSizeNm(x=generic.x, y=generic.y, z=z if z is not None else generic.z)
+
+        return SlidePixelSizeNm(x=x, y=y, z=z)
 
     def __get_slide_info_ome_tif(self):
         serie = self.tif_slide.series[0]
+        keyframe = serie.keyframe
         channels = self.__get_channels_ome_tif()
-        pixel_size = self.__get_pixel_size_ome_tif()
+        pixel_size = self.__get_pixel_size_ome_tif(keyframe)
         levels = self.__get_levels_from_series(self.tif_slide, self.layout_info["num_z"])
+
+        if keyframe.is_tiled:
+            tile_extent = SlideExtent(
+                x=keyframe.tilewidth,
+                y=keyframe.tilelength,
+                z=keyframe.tiledepth,
+            )
+        else:
+            tile_extent = self.__get_untiled_tile_extent(keyframe)
+
         try:
             slide_info = SlideInfo(
                 id="",
@@ -531,11 +651,7 @@ class Slide(BaseSlide):
                     z=self.layout_info["num_z"],
                 ),
                 pixel_size_nm=pixel_size,
-                tile_extent=SlideExtent(
-                    x=serie.keyframe.tilewidth,
-                    y=serie.keyframe.tilelength,
-                    z=serie.keyframe.tiledepth,
-                ),
+                tile_extent=tile_extent,
                 num_levels=len(levels),
                 levels=levels,
                 format="ome-tiff",
@@ -551,7 +667,7 @@ class Slide(BaseSlide):
         keyframe = serie.keyframe
 
         layout_info = self.__inspect_series_layout(serie)
-        channels = self.__get_channels_generic(layout_info["num_channels"], keyframe)
+        channels = self.__get_channels_generic(layout_info["num_channels"], keyframe, layout_info["is_rgb"])
         pixel_size = self.__get_pixel_size_generic(keyframe)
         levels = self.__get_levels_from_series(self.tif_slide, layout_info["num_z"])
 
@@ -584,7 +700,10 @@ class Slide(BaseSlide):
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Failed to gather slide infos. [{e}]")
 
-    def __get_channels_generic(self, num_channels, keyframe):
+    def __get_channels_generic(self, num_channels, keyframe, is_rgb=False):
+        if is_rgb:
+            return get_rgb_channel_list()
+
         names = self.__extract_channel_names(num_channels, keyframe)
         colors = self.__extract_channel_colors(num_channels)
 
