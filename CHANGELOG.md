@@ -4,6 +4,7 @@
 - Support for NIFTI
 - added missing WSI_APPLY_PADDING
 - fixed PNG encoding
+- OME-TIFF RGB fix
 
 ## 0.16.0
 - Support for vector data
