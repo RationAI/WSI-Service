@@ -54,7 +54,7 @@ class IdTemplate:
     """
     An ID template compiled against the configured column indexes, e.g.
     "{group_1}.{group_2}.w.{slide_id}" or "{0}-{7}". Deliberately not str.format:
-    only column references are allowed, and the Rust port implements the same grammar.
+    only column references are allowed.
     """
 
     def __init__(self, template, settings):
