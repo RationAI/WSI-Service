@@ -16,7 +16,7 @@ from wsi_service.utils.app_batch_utils import (
     safe_get_slide_icc_profile
 )
 from .singletons import api_integration
-from ...custom_models.queries import ICCProfileIntent
+from ...models.v3.slide import ICCProfileIntent
 
 
 async def info(paths: str, plugin: str, payload, slide_manager):

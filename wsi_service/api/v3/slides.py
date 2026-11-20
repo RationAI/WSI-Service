@@ -6,7 +6,7 @@ from PIL import Image
 from zipfly import ZipFly
 from wsi_service.singletons import logger
 
-from wsi_service.custom_models.queries import (
+from wsi_service.models.queries import (
     ImageChannelQuery,
     ImageFormatsQuery,
     ImagePaddingColorQuery,
@@ -14,7 +14,7 @@ from wsi_service.custom_models.queries import (
     PluginQuery,
     ZStackQuery, IdQuery, ICCProfileIntent, ICCProfileIntentQuery, ICCProfileIsStrictQuery,
 )
-from wsi_service.custom_models.responses import ImageRegionResponse, ImageResponses
+from wsi_service.models.responses import ImageRegionResponse, ImageResponses
 from wsi_service.models.v3.slide import SlideInfo
 from wsi_service.utils.app_utils import (
     is_passthrough_format,
@@ -26,7 +26,7 @@ from wsi_service.utils.app_utils import (
     validate_image_size,
     validate_image_z,
 )
-from wsi_service.custom_models.batch_queries import (
+from wsi_service.models.batch_queries import (
     IdListQuery,
     TileLevelListQuery,
     TileXListQuery,

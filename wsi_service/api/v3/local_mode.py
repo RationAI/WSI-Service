@@ -4,8 +4,9 @@ from fastapi import Query
 from fastapi.responses import JSONResponse
 
 from wsi_service.api.v3.singletons import api_integration, localmapper
-from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper, SlideStorage
-from wsi_service.custom_models.queries import IdQuery
+from wsi_service.models.local_mapper import CaseLocalMapper, SlideLocalMapper
+from wsi_service.models.v3.storage import SlideStorage
+from wsi_service.models.queries import IdQuery
 
 
 def add_routes_local_mode(app, settings):

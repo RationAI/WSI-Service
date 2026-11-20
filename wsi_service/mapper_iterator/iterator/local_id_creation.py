@@ -1,7 +1,7 @@
 import os
 import re
 import uuid
-from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper
+from wsi_service.models.local_mapper import CaseLocalMapper, SlideLocalMapper
 from wsi_service.models.v3.storage import SlideStorage, StorageAddress
 
 

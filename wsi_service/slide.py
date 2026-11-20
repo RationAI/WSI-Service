@@ -1,4 +1,4 @@
-from wsi_service.custom_models.queries import ICCProfileIntent
+from wsi_service.models.v3.slide import ICCProfileIntent
 
 
 class Slide(object):

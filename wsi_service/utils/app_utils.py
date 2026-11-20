@@ -13,7 +13,7 @@ from fastapi import HTTPException
 from PIL import Image
 from starlette.responses import Response
 
-from wsi_service.custom_models.old_v3.storage import StorageAddress
+from wsi_service.models.v3.storage import StorageAddress
 from wsi_service.singletons import settings, logger
 from wsi_service.utils.image_utils import (
     convert_narray_to_pil_image,

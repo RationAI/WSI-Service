@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from wsi_service.custom_models.local_mapper_models import CaseLocalMapper, SlideLocalMapper
+from wsi_service.models.local_mapper import CaseLocalMapper, SlideLocalMapper
 
 
 class BaseMapper(ABC):

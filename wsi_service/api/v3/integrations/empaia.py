@@ -6,7 +6,7 @@ from fastapi.security import OAuth2
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from ....empaia_receiver_auth import Auth
+from ....auth.empaia_receiver import Auth
 
 
 class AuthSettings(BaseSettings):

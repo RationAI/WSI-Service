@@ -154,3 +154,6 @@ local_mapper.p
 local_mapper.lock
 
 .idea/
+
+rust/
+rust/*

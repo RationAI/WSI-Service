@@ -5,6 +5,11 @@
   referencing row columns by name (`{slide_id}`, `{case_id}`, `{group_1}`, `{group_2}`, `{path}`) or
   by index (`{5}`). Defaults keep the existing `group_1.group_2.w.slide_id` / `group_1.group_2.c.case_id`.
 - CSV mapper: group columns are required, and limited to 5 characters, only when a template uses them.
+- Removed EMPAIA git submodules (`models`, `empaia_sender_auth`, `empaia_receiver_auth`). The parts in use are now
+  regular files: `wsi_service/models` (same import path) and `wsi_service/auth`. Only `rationai_receiver_auth`
+  remains a submodule.
+- `wsi_service/custom_models` merged into `wsi_service/models` (`local_mapper`, `service_status`, `queries`,
+  `batch_queries`, `responses`, `v3/storage`). Single `ICCProfileIntent` in `models/v3/slide.py`.
 
 ## 0.17.0
 - Support for NIFTI

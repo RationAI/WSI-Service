@@ -1,6 +1,6 @@
 from fastapi import status
 
-from wsi_service.custom_models.service_status import WSIServiceStatus
+from wsi_service.models.service_status import WSIServiceStatus
 from wsi_service.plugins import get_plugins_overview
 
 

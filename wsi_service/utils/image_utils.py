@@ -5,7 +5,7 @@ import numpy as np
 from fastapi import HTTPException
 from PIL import Image
 
-from wsi_service.custom_models.queries import ICCProfileIntent
+from wsi_service.models.v3.slide import ICCProfileIntent
 
 
 def rgba_to_rgb_with_background_color(image_rgba, padding_color):
