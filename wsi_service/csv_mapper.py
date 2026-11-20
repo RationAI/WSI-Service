@@ -23,6 +23,11 @@ class CSVMapperSettings(BaseSettings):
     slide_id: int = 2
     case_id: int = 3
     path: int = 4
+    # Shape of the generated IDs. Placeholders: {group_1}, {group_2}, {slide_id}, {case_id},
+    # {path} (the columns configured above) or {N} for any zero-based column index.
+    # Use {{ and }} for literal braces.
+    slide_id_template: str = "{group_1}.{group_2}.w.{slide_id}"
+    case_id_template: str = "{group_1}.{group_2}.c.{case_id}"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", env_prefix="csws_")
 
@@ -42,18 +47,76 @@ class IteratedSlideLocalMapper(SlideLocalMapper):
     to_import: bool
 
 
-def create_case_object(settings, row):
+NAMED_COLUMNS = ("group_1", "group_2", "slide_id", "case_id", "path")
+
+
+class IdTemplate:
+    """
+    An ID template compiled against the configured column indexes, e.g.
+    "{group_1}.{group_2}.w.{slide_id}" or "{0}-{7}". Deliberately not str.format:
+    only column references are allowed, and the Rust port implements the same grammar.
+    """
+
+    def __init__(self, template, settings):
+        columns = {name: getattr(settings, name) for name in NAMED_COLUMNS}
+        self.parts = []  # str = literal text, int = column index
+        literal = []
+        i = 0
+        while i < len(template):
+            ch = template[i]
+            if template.startswith("{{", i) or template.startswith("}}", i):
+                literal.append(ch)
+                i += 2
+            elif ch == "{":
+                end = template.find("}", i)
+                if end == -1:
+                    raise ValueError(f"ID template '{template}': unclosed '{{'")
+                name = template[i + 1 : end].strip()
+                if name.isascii() and name.isdigit():
+                    column = int(name)
+                elif name in columns:
+                    column = columns[name]
+                else:
+                    raise ValueError(
+                        f"ID template '{template}': unknown placeholder '{{{name}}}', "
+                        f"expected a column index or one of {', '.join(NAMED_COLUMNS)}"
+                    )
+                if literal:
+                    self.parts.append("".join(literal))
+                    literal = []
+                self.parts.append(column)
+                i = end + 1
+            elif ch == "}":
+                raise ValueError(f"ID template '{template}': unmatched '}}' (use '}}}}' for a literal brace)")
+            else:
+                literal.append(ch)
+                i += 1
+        if literal:
+            self.parts.append("".join(literal))
+        self.columns = {part for part in self.parts if isinstance(part, int)}
+        if not self.columns:
+            raise ValueError(f"ID template '{template}' must reference at least one column")
+
+    def render(self, row):
+        return "".join(part if isinstance(part, str) else row[part] for part in self.parts)
+
+
+def _column_or_empty(row, index):
+    return row[index] if index < len(row) else ""
+
+
+def create_case_object(settings, row, template, checked_groups):
     context_id = row[settings.case_id]
-    group_1 = row[settings.group_1]
-    group_2 = row[settings.group_2]
-    type = "c"
+    group_1 = _column_or_empty(row, settings.group_1)
+    group_2 = _column_or_empty(row, settings.group_2)
 
     # todo pydantic
-    assert len(group_2) <= 5
-    assert len(group_1) <= 5
+    # only groups that end up in an ID are constrained
+    for column in checked_groups:
+        assert len(row[column]) <= 5
 
     namespace = uuid.uuid5(uuid.NAMESPACE_DNS, context_id)
-    local_id = group_1 + "." + group_2 + "." + type + "." + context_id
+    local_id = template.render(row)
     case = IteratedCaseLocalMapper(
         id=local_id,
         context_id=context_id,
@@ -67,11 +130,10 @@ def create_case_object(settings, row):
     return case
 
 
-def create_slide_object(settings, case, row, server_root):
+def create_slide_object(settings, case, row, server_root, template):
     slide_local_id = row[settings.slide_id]
-    type = "w"
 
-    local_id = case.group_1 + "." + case.group_2 + "." + type + "." + str(slide_local_id)
+    local_id = template.render(row)
     addresses = local_mode_collect_secondary_files_v3(row[settings.path], local_id, local_id, server_root)
     slide = IteratedSlideLocalMapper(
         id=local_id,
@@ -102,6 +164,16 @@ class CSVMapper(BaseMapper):
     group_1.group_2.c.case_id (of the first group_1/group_2 found). All slides
     of a case should be within same group_2 and group_1.
 
+    ID TEMPLATES:
+    The shape of both IDs is configurable through CSWS_SLIDE_ID_TEMPLATE and
+    CSWS_CASE_ID_TEMPLATE (defaults "{group_1}.{group_2}.w.{slide_id}" and
+    "{group_1}.{group_2}.c.{case_id}"). A placeholder is either one of the configured
+    columns - {group_1}, {group_2}, {slide_id}, {case_id}, {path} - or {N}, the zero-based
+    index of any column in the file. {{ and }} give literal braces. The slide template must
+    produce a unique value per row; IDs travel in URL paths, so avoid columns containing '/'.
+    Group columns are only required (and limited to 5 characters) when a template uses them.
+    Templates are not part of the cache key either: delete local_mapper.p after changing one.
+
     CACHING NOTE:
     Parsed data is cached to a pickle file (local_mapper.p). On startup the mapper only
     re-reads the CSV if the pickle is missing or the data_dir changed - the cache is NOT
@@ -117,6 +189,13 @@ class CSVMapper(BaseMapper):
 
     def __init__(self, data_dir):
         self.settings = CSVMapperSettings()
+        # raises ValueError on a malformed template: fail at startup, not on first request
+        self.slide_template = IdTemplate(self.settings.slide_id_template, self.settings)
+        self.case_template = IdTemplate(self.settings.case_id_template, self.settings)
+        used_columns = self.slide_template.columns | self.case_template.columns
+        self.checked_groups = [
+            column for column in (self.settings.group_1, self.settings.group_2) if column in used_columns
+        ]
         super().__init__(data_dir)
         self.hash = None
         self.case_map = {}
@@ -160,9 +239,17 @@ class CSVMapper(BaseMapper):
                 case_id = data[settings.case_id]
                 case = case_map.get(case_id, None)
                 if case is None:
-                    case = create_case_object(settings=settings, row=data)
+                    case = create_case_object(
+                        settings=settings, row=data, template=self.case_template, checked_groups=self.checked_groups
+                    )
                     case_map[case.id] = case
-                slide = create_slide_object(settings=settings, case=case, row=data, server_root=self.data_dir)
+                slide = create_slide_object(
+                    settings=settings,
+                    case=case,
+                    row=data,
+                    server_root=self.data_dir,
+                    template=self.slide_template,
+                )
                 case.slides.append(slide.id)
                 slide_map[slide.id] = slide
         # successful: merge only now

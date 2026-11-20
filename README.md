@@ -319,12 +319,36 @@ CSWS_GROUP_2=1
 CSWS_SLIDE_ID=2
 CSWS_CASE_ID=3
 CSWS_PATH=4
+CSWS_SLIDE_ID_TEMPLATE='{group_1}.{group_2}.w.{slide_id}'
+CSWS_CASE_ID_TEMPLATE='{group_1}.{group_2}.c.{case_id}'
 ```
 
-IDs come out as `group_1.group_2.w.slide_id` and `group_1.group_2.c.case_id`. Useful when you want
-group-level access control without an external database.
+By default IDs come out as `group_1.group_2.w.slide_id` and `group_1.group_2.c.case_id`. Useful when
+you want group-level access control without an external database.
 
-> **Note:** parsed data is cached to `local_mapper.p`; CSV edits aren't picked up by a restart (nor `docker restart`, the pickle sits on the mounted volume) — delete `local_mapper.p` or force a refresh.
+The two `*_TEMPLATE` settings choose the final shape of the IDs. A placeholder references a column of
+the current row:
+
+| Placeholder | Column |
+| --- | --- |
+| `{group_1}`, `{group_2}`, `{slide_id}`, `{case_id}`, `{path}` | the column configured by the matching `CSWS_*` index |
+| `{N}` | any column by zero-based index, e.g. `{5}` |
+| `{{`, `}}` | a literal brace |
+
+```bash
+CSWS_SLIDE_ID_TEMPLATE='{slide_id}'              # bare slide id
+CSWS_SLIDE_ID_TEMPLATE='{case_id}_{5}_{slide_id}' # mix in an extra column
+CSWS_CASE_ID_TEMPLATE='{group_1}-{case_id}'
+```
+
+- A malformed template (unknown placeholder, unbalanced brace, no column referenced) stops the service
+  at startup. A row too short for a referenced column fails the CSV parse.
+- The slide template must give a unique ID per row; rows rendering to the same ID overwrite each other.
+- IDs travel in URL paths and query strings: avoid columns containing `/` (such as `{path}`).
+- `group_1`/`group_2` columns are required, and limited to 5 characters, only when a template uses them.
+- The LSAAI integrations parse the default dotted shape. Changing it while using them breaks access checks.
+
+> **Note:** parsed data is cached to `local_mapper.p`; CSV edits aren't picked up by a restart (nor `docker restart`, the pickle sits on the mounted volume) — delete `local_mapper.p` or force a refresh. The same applies after changing an ID template.
 
 #### Iterator mapper
 

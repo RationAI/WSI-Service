@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.18.0
+- CSV mapper: `CSWS_SLIDE_ID_TEMPLATE` and `CSWS_CASE_ID_TEMPLATE` select the final shape of the IDs,
+  referencing row columns by name (`{slide_id}`, `{case_id}`, `{group_1}`, `{group_2}`, `{path}`) or
+  by index (`{5}`). Defaults keep the existing `group_1.group_2.w.slide_id` / `group_1.group_2.c.case_id`.
+- CSV mapper: group columns are required, and limited to 5 characters, only when a template uses them.
+
 ## 0.17.0
 - Support for NIFTI
 - added missing WSI_APPLY_PADDING
